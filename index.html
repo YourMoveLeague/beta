@@ -155,6 +155,10 @@
   .votebar .vb.ok{color:var(--win);border-color:#cfe5d4;}
   .votebar .vb.ko{color:var(--lose);border-color:#eed3cf;}
   .votebar .vb.sel{box-shadow:0 0 0 3px rgba(27,45,79,.10);background:#fff;}
+  .toastbox{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--text);color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:90;box-shadow:var(--sh-md);opacity:0;transition:opacity .25s ease;pointer-events:none;max-width:86vw;text-align:center;}
+  .toastbox.show{opacity:1;}
+  .btn.vok{background:linear-gradient(160deg,#3fae73,#2f9e63);box-shadow:0 2px 8px rgba(47,158,99,.30),inset 0 1px 0 rgba(255,255,255,.18);}
+  .btn.vko{background:linear-gradient(160deg,#e05555,#d64545);box-shadow:0 2px 8px rgba(214,69,69,.30),inset 0 1px 0 rgba(255,255,255,.18);}
   details{margin-bottom:16px;}
   details summary{cursor:pointer;font-size:13px;color:var(--dim);font-weight:600;padding:8px 4px;transition:color .15s ease;list-style-position:inside;}
   details summary:hover{color:var(--text);}
@@ -221,6 +225,8 @@
   <button class="btn sec" onclick="closeModal('sup')">Cerrar</button></div>
 </div></div>
 
+<div id="vote" class="modal"></div>
+
 <div id="ov"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -230,8 +236,12 @@
 const SB_URL='https://mbnwujxbckvroitzttgi.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ibnd1anhiY2t2cm9pdHp0dGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5Mjk1MDIsImV4cCI6MjEwMzUwNTUwMn0.1kf0ADGQhYYMRFOWXHE6fdHlolOo3Fanhka3mjTLMBE';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
-const VERSION='web v0.8-dev';
-const DEV=true;   // ⚠️ Versión de desarrollador. Para la versión con dominio: poner en false.
+/* Entorno detectado AUTOMÁTICAMENTE por hostname (v0.9): ya no se edita a mano.
+   beta.yourmoveleague.com  → DEV=true  (modo desarrollador, tiempo desplazable)
+   yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
+   El mismo index.html se publica en ambos repos sin tocar nada. */
+const DEV=location.hostname.startsWith('beta.');
+const VERSION='web v0.9'+(DEV?'-dev':'');
 /* Tiempo de juego: en DEV la liga puede llevar un desplazamiento de días + minutos
    (config.devOffset / devOffsetMin, compartido por todos). En producción, tiempo real siempre. */
 function nowT(){
@@ -425,14 +435,33 @@ function buildNav(){
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 function vPriv(){ document.getElementById('priv').classList.add('show'); }
 function vSup(){ document.getElementById('sup').classList.add('show'); }
+/* aviso no bloqueante (v0.9: fuera los alert() del navegador) */
+let toastT=null;
+function toast(msg){
+  let el=document.getElementById('toastbox');
+  if(!el){ el=document.createElement('div'); el.id='toastbox'; el.className='toastbox'; document.body.appendChild(el); }
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2000);
+}
 function copyTxt(t,msg){
-  const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
-  ta.select(); try{ document.execCommand('copy'); alert(msg||'Copiado'); }catch(e){ prompt('Copia:',t); }
-  document.body.removeChild(ta);
+  const done=()=>toast(msg||'Copiado');
+  const legacy=()=>{
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
+    ta.select(); let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    if(ok) done(); else prompt('Copia:',t);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(legacy);
+  else legacy();
+}
+/* Enter = pulsar el botón principal del formulario en pantalla */
+function bindEnter(id,fn){
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fn(); } });
 }
 
 /* ============ HOME / AUTH ============ */
-function vHome(){
+function vHome(notice){
   $('#nav').classList.remove('on');
   const adminBox = USER
     ? `<p class="msg">Sesión: <b>${esc(USER.email)}</b></p>
@@ -445,11 +474,13 @@ function vHome(){
        <button class="btn sec" onclick="signupAdmin()">Registrarme</button></div>
        <div class="err" id="aErr"></div>`;
   $('#main').innerHTML=`
+  ${notice?`<div class="card" style="border-color:#eed3cf"><p class="msg">${notice}</p></div>`:''}
   <div class="card"><h2>${ic('users')} Entrar en mi liga</h2>
     <label>Código de la liga</label><input id="jCode" maxlength="10" style="text-transform:uppercase" placeholder="p. ej. K7KM2X">
     <button class="btn" onclick="openLeague()">Entrar</button><div class="err" id="jErr"></div>
   </div>
   <div class="card"><h2>${ic('key')} Inicia sesión o regístrate</h2>${adminBox}</div>`;
+  bindEnter('jCode',openLeague); bindEnter('aEmail',loginAdmin); bindEnter('aPass',loginAdmin);
   if(USER) loadMyLeagues();
 }
 async function loadMyLeagues(){
@@ -511,7 +542,8 @@ async function createLeague(){
     prize:$('#cPrize').value.trim(), start:$('#cStart').value,
     weeks:parseInt($('#cWeeks').value)||12, maxDays:parseInt($('#cMax').value),
     bonusDay:parseInt($('#cBonus').value), quedada:$('#cQuedada').checked,
-    oculto:$('#cOculto').checked, levels:$('#cLevels').value, version:VERSION
+    oculto:$('#cOculto').checked, levels:$('#cLevels').value, version:VERSION,
+    beta:DEV   // v0.9: las ligas creadas en beta quedan marcadas y no se abren en producción
   };
   try{
     const {data,error}=await sb.rpc('create_league',{p_name:$('#cName').value,p_email:USER?USER.email:null,
@@ -551,6 +583,13 @@ async function goLeague(code){
     const {data,error}=await sb.rpc('get_league',{p_code:code});
     if(error) throw error;
     if(!data){ if($('#jErr'))$('#jErr').textContent='Código no válido.'; return; }
+    /* Las ligas creadas en beta llevan config.beta y NO se abren en la web
+       pública: allí el tiempo es real y los contadores no cuadrarían. */
+    if(!DEV&&data.league.config&&data.league.config.beta){
+      L=null; CUR=null; localStorage.removeItem('yml_cur');
+      vHome(`<b>${esc(data.league.name)}</b> es una liga del entorno de pruebas. Ábrela en <a href="https://beta.yourmoveleague.com/?l=${encodeURIComponent(code.trim().toUpperCase())}">beta.yourmoveleague.com</a>.`);
+      return;
+    }
     L=data; CUR=code.toUpperCase(); saveMem(); TAB='jornada'; render();
   }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else alert(e.message); }
 }
@@ -564,12 +603,21 @@ async function refresh(){
 function softRefresh(){ if(L&&CUR&&Date.now()-lastFetch>8000) refresh(); }
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) softRefresh(); });
 function exitLeague(){ L=null; CUR=null; localStorage.removeItem('yml_cur'); vHome(); }
+/* Cerrar sesión (v0.9): olvida quién eres en esta liga en este dispositivo
+   (y cierra la sesión de admin si la hay). Al volver, se vuelve a preguntar. */
+async function logoutLeague(){
+  if(CUR&&MEM[CUR]){ delete MEM[CUR]; localStorage.setItem('yml_mem',JSON.stringify(MEM)); }
+  if(USER){ try{ await sb.auth.signOut(); }catch(e){} USER=null; }
+  L=null; CUR=null; localStorage.removeItem('yml_cur');
+  toast('Sesión cerrada'); vHome();
+}
 
 /* ============ RENDER ============ */
 function render(){
   if(!L){ vHome(); return; }
-  /* el admin tiene su jugador fijado en la config de la liga: se adopta solo */
-  if(!ses()&&L.league.is_admin&&L.league.config.adminPlayer&&L.players.some(p=>p.id===L.league.config.adminPlayer)){
+  /* el admin tiene su jugador fijado en la config de la liga: se adopta solo
+     (v0.9: solo si ese jugador no tiene PIN; con PIN se pide como a cualquiera) */
+  if(!ses()&&L.league.is_admin&&L.league.config.adminPlayer&&L.players.some(p=>p.id===L.league.config.adminPlayer&&!p.has_pin)){
     MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:L.league.config.adminPlayer,pin:null}); saveMem();
   }
   $('#nav').classList.add('on');
@@ -584,12 +632,25 @@ function render(){
 
 /* ---- JORNADA ---- */
 function fmtHM(ts){ if(!ts) return '—'; const d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-/* medallas conseguidas por un jugador en la semana, como iconos (oro→bronce) */
+/* v0.9: símbolos de los Moves extra — social (actividad conjunta, +1) y
+   regularidad (bonus al llegar al día N, +1). Máx. 1 a la semana de cada tipo. */
+function xtraSVG(kind,s){
+  const sz=s||20;
+  if(kind==='social')
+    return `<svg class="medal" width="${sz}" height="${sz}" viewBox="0 0 24 24"><title>Move social: actividad conjunta (+1)</title><circle cx="12" cy="12" r="9" fill="#2b6cb0" stroke="#1d4e80" stroke-width="1.5"/><g transform="translate(6.9,7.1) scale(0.42)" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3.5 20a5.5 5.5 0 0 1 11 0M16 11a3 3 0 1 0 0-6M17 20h4.5a4.5 4.5 0 0 0-3-4.2"/></g></svg>`;
+  return `<svg class="medal" width="${sz}" height="${sz}" viewBox="0 0 24 24"><title>Move de regularidad: bonus por días de deporte (+1)</title><circle cx="12" cy="12" r="9" fill="#2f9e63" stroke="#1f6e44" stroke-width="1.5"/><g transform="translate(6.9,6.9) scale(0.42)"><path d="M13 2 3 14h7l-1 8 11-12h-7l1-8z" fill="#fff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></g></svg>`;
+}
+/* medallas + Moves extra de un jugador en la semana, como iconos (oro→bronce, luego social y regularidad) */
 function medIcons(pid,w,size){
-  const acts=actsOfWeek(pid,w).filter(a=>!isQOnly(a)).slice(0,L.league.config.maxDays||7);
+  const cfg=L.league.config;
+  const all=actsOfWeek(pid,w);
+  const acts=all.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
   const c=[0,0,0]; acts.forEach(a=>c[a.level-1]++);
   let h='';
   for(let l=3;l>=1;l--) for(let i=0;i<c[l-1];i++) h+=medalSVG(l,size||12);
+  const social=all.filter(a=>isQOnly(a)||a.quedada).length;   // asistencia o entreno en la conjunta
+  for(let i=0;i<social;i++) h+=xtraSVG('social',size||12);
+  if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) h+=xtraSVG('bonus',size||12);
   return h;
 }
 function medianMoves(w){
@@ -612,32 +673,20 @@ function duelRow(a,b,w,r){
     <span class="dn b"><span class="${wb?'wname':''}">${esc(b)}</span></span>
   </div>`;
 }
-/* última jornada resuelta hace menos de 2 h (tiempo real): panel de estreno o banner de resultado */
-function latestRecent(){
-  let best=null;
-  (L.rounds||[]).forEach(r=>{
-    if(!r.resolved_at) return;
-    if(Date.now()-new Date(r.resolved_at).getTime()<7200000){ if(!best||r.number>best.number) best=r; }
-  });
-  return best;
-}
-function resolvedPanel(){
-  const s=ses(); if(!s) return '';
-  const me=L.players.find(p=>p.id===s.playerId); if(!me) return '';
-  const rec=latestRecent(); if(!rec) return '';
-  const j=rec.number-1;
-  if(!watched(j)){
-    const myPair=pairsFor(j).find(([a,b])=>a===me.name||b===me.name);
-    return `<div class="card" style="text-align:center">
-      <div class="cdlbl">Se ha resuelto la</div>
-      <div class="bigjt">JORNADA ${j+1}</div>
-      <button class="playbig" onclick="watchRound(${j},'all')" title="Ver la jornada">${ic('play',32)}</button>
-      <div class="minirow">
-        ${myPair?`<button onclick="watchRound(${j},'mine')">Mi enfrentamiento</button>`:''}
-        <button onclick="setWatched(${j});render()">Resultados</button>
-      </div></div>`;
-  }
-  return resultBanner(j);
+/* v0.9: al resolverse la jornada, hasta que la veas SOLO existe este panel.
+   Cualquiera de sus 3 botones (play / mi enfrentamiento / resultados) marca
+   la jornada como vista y da paso a la pantalla de jornada resuelta. */
+function playPanel(j){
+  const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
+  const myPair=me?pairsFor(j).find(([a,b])=>a===me.name||b===me.name):null;
+  return `<div class="card" style="text-align:center">
+    <div class="cdlbl">Se ha resuelto la</div>
+    <div class="bigjt">JORNADA ${j+1}</div>
+    <button class="playbig" onclick="watchRound(${j},'all')" title="Ver la jornada">${ic('play',32)}</button>
+    <div class="minirow">
+      ${myPair?`<button onclick="watchRound(${j},'mine')">Mi enfrentamiento</button>`:''}
+      <button onclick="setWatched(${j});render()">Resultados</button>
+    </div></div>`;
 }
 function resultBanner(j){
   const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
@@ -696,11 +745,15 @@ function tJornada(){
     return;
   }
   if(w>=cfg.weeks||firstUnresolved()>=cfg.weeks){
-    $('#main').innerHTML=resolvedPanel()+`<div class="card"><h2>${ic('trophy')} Liga terminada</h2><p class="msg">Campeón: <b>${esc(standings()[0].name)}</b>. ¡Gracias por jugar!</p>
+    const jl=cfg.weeks-1, rl=roundOf(jl);
+    if(rl&&!watched(jl)){ $('#main').innerHTML=playPanel(jl)+btnBar(); return; }
+    $('#main').innerHTML=(rl&&nowT()<weekEnd(jl)?resultBanner(jl):'')+`<div class="card"><h2>${ic('trophy')} Liga terminada</h2><p class="msg">Campeón: <b>${esc(standings()[0].name)}</b>. ¡Gracias por jugar!</p>
     ${DEV?'<p class="msg">Modo dev: esta liga está completa — crea otra de prueba o amplía las jornadas desde Admin → Configuración.</p>':''}</div>`+btnBar(); return;
   }
   const me=L.players.find(p=>p.id===s.playerId);
   const r=roundOf(w), t=nowT();
+  /* jornada resuelta y aún no vista: SOLO el panel de estreno */
+  if(r&&!watched(w)){ $('#main').innerHTML=playPanel(w)+btnBar(); return; }
   const pair=pairsFor(w).find(([a,b])=>a===me.name||b===me.name);
   // tarjeta de estado: cuenta atrás en juego / descanso verde / resolviendo
   let cdHtml='', stick='';
@@ -745,8 +798,10 @@ function tJornada(){
   // los demás duelos + resultados de la jornada anterior
   const others=pairsFor(w).filter(([a,b])=>!pair||(a!==me.name&&b!==me.name));
   const prevR=w>0?roundOf(w-1):null;
+  /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
+  const banner=(r&&t<weekEnd(w))?resultBanner(w):'';
   $('#main').innerHTML=`
-  ${resolvedPanel()}
+  ${banner}
   <div class="card${stick}">${cdHtml}</div>
   <div class="card"><h2>${ic('zap')} Mi duelo · jornada ${w+1}</h2>${duelHtml}</div>
   ${others.length?`<div class="card"><h2>${ic('users')} Los demás duelos</h2>${others.map(([a,b])=>duelRow(a,b,w,r)).join('')}</div>`:''}
@@ -774,7 +829,11 @@ async function watchRound(w,mode){
 function tMoves(){
   const s=ses(), cfg=L.league.config, cw=calWeek(), w=activeW();
   if(!s){ pickPlayer('moves'); return; }
-  if(cw<0){ $('#main').innerHTML=`<div class="card"><p class="msg">La liga empieza el ${cfg.start}.</p></div>`+btnBar(); return; }
+  if(cw<0){
+    $('#main').innerHTML=`
+    <div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>
+    <div class="card"><p class="msg">La liga empieza el ${cfg.start}. Desde ese día podrás registrar aquí tu actividad.</p></div>`+btnBar(); return;
+  }
   if(w>=cfg.weeks){ $('#main').innerHTML=`<div class="card"><p class="msg">La liga ha terminado.</p></div>`+btnBar(); return; }
   const me=L.players.find(p=>p.id===s.playerId);
   const t=nowT();
@@ -838,48 +897,70 @@ async function registrar(){
     if(qChecked){ level=1; texto='[conjunta]'; quedada=false; }   // solo asistencia: +1 Move, no cuenta como día
     else{ $('#aErr').textContent='Elige el nivel (bronce, plata u oro) o marca la actividad conjunta.'; return; }
   }
-  if(!confirm('El registro es DEFINITIVO: no se puede modificar ni borrar, y solo se admite una actividad por día. ¿Confirmas?')) return;
   try{
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_level:level,p_activity:texto||null,p_quedada:quedada});
     if(error) throw error;
-    selType=null; selLevel=0;
+    selType=null; selLevel=0; toast('Actividad registrada');
     await refresh(); TAB='jornada'; render();
   }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; }
 }
 async function registrarConjunta(){
   const s=ses(); if($('#aErr'))$('#aErr').textContent='';
-  if(!confirm('Registrar tu asistencia a la actividad conjunta (+1 Move). El registro es DEFINITIVO. ¿Confirmas?')) return;
   try{
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_level:1,p_activity:'[conjunta]',p_quedada:false});
     if(error) throw error;
-    await refresh();
+    toast('Asistencia registrada'); await refresh();
   }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al registrar'; }
 }
+/* Funciones de desarrollador: inertes fuera de beta (DEV=false → no hacen nada)
+   y desactivadas sobre ligas no marcadas como de pruebas (config.beta). */
 async function devSetOffset(n){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:{devOffset:n},p_reason:'modo desarrollador: tiempo +'+n+'d'});
   if(error) throw error;
+  L.league.config.devOffset=n;   // nowT() ve el salto sin esperar al refresh
+}
+async function devMarkBeta(){
+  if(!DEV) return;
+  if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin.'; return; }
+  try{
+    const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:{beta:true},p_reason:''});
+    if(error) throw error;
+    await refresh();
+  }catch(e){ $('#dErr').textContent=e.message||'Error'; }
+}
+/* v0.9: los Moves aleatorios respetan 1 actividad/día (días transcurridos de la
+   semana y máx. del admin) y 1 Move social + 1 de regularidad por semana. */
+function devMaxActs(w){
+  const elapsed=Math.floor((nowT()-weekStart(w))/86400000)+1;   // días de la semana ya vividos
+  return Math.max(0,Math.min(7,L.league.config.maxDays||7,elapsed));
 }
 async function devAdvance(days){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin.'; return; }
   $('#dErr').textContent='Adelantando…';
   try{
     const w=Math.max(activeW(),0);
     await devSetOffset((L.league.config.devOffset||0)+days);
-    // puntuaciones aleatorias a jugadores al azar
+    // puntuaciones aleatorias a jugadores al azar (máx. 1 actividad por día vivido)
+    const maxActs=devMaxActs(w);
     for(const p of L.players){
-      if(Math.random()<0.55){
-        const tot=Math.min(6,1+Math.floor(Math.random()*days)+Math.floor(Math.random()*2));
-        const g=Math.random()<.25?1:0, sl=Math.min(tot-g,Math.floor(Math.random()*2));
+      if(Math.random()<0.55&&maxActs>0){
+        const bd=L.league.config.bonusDay||0;
+        let tot=Math.min(maxActs,1+Math.floor(Math.random()*days)+Math.floor(Math.random()*2));
+        if(bd>0&&maxActs>=bd&&Math.random()<.5) tot=Math.max(tot,bd);   // a veces, Move de regularidad
+        const g=Math.random()<.25?1:0, sl=Math.min(Math.max(0,tot-g),Math.floor(Math.random()*2));
         await sb.rpc('admin_set_week',{p_code:CUR,p_player:p.id,p_week_start:isoDay(weekStart(w)),
-          p_bronze:Math.max(0,tot-g-sl),p_silver:sl,p_gold:g,p_quedadas:Math.random()<.3?1:0});
+          p_bronze:Math.max(0,tot-g-sl),p_silver:sl,p_gold:g,p_quedadas:Math.random()<.3?1:0});   // máx. 1 social/semana
       }
     }
     await refresh();
   }catch(e){ $('#dErr').textContent=e.message||'Error'; }
 }
 async function devToClose(){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin.'; return; }
   try{
     const w=Math.max(activeW(),0);
@@ -889,15 +970,19 @@ async function devToClose(){
   }catch(e){ $('#dErr').textContent=e.message||'Error'; }
 }
 async function devPlusHour(){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin.'; return; }
   try{ await devSetOffsetMin((L.league.config.devOffsetMin||0)+60); await refresh(); }
   catch(e){ $('#dErr').textContent=e.message||'Error'; }
 }
 async function devSetOffsetMin(n){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:{devOffsetMin:n},p_reason:''});
   if(error) throw error;
+  L.league.config.devOffsetMin=n;
 }
 async function devStartNow(){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin.'; return; }
   const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7));   // lunes de esta semana
   try{
@@ -907,14 +992,17 @@ async function devStartNow(){
   }catch(e){ $('#dErr').textContent=e.message; }
 }
 async function devFill(w){
+  if(!DEV||!L||!L.league.config.beta) return;   // solo ligas de pruebas en beta
   if(!L.league.is_admin){ $('#dErr').textContent='Necesitas sesión de admin para simular.'; return; }
   $('#dErr').textContent='Rellenando…';
   try{
+    const maxActs=devMaxActs(w), bd=L.league.config.bonusDay||0;
     for(const p of L.players){
-      const g=Math.random()<.3?1:0, sl=Math.floor(Math.random()*3), b=Math.floor(Math.random()*4);
-      const maxB=Math.max(0,6-g-sl);
+      let tot=Math.min(maxActs,Math.floor(Math.random()*(maxActs+1)));   // máx. 1 actividad/día vivido
+      if(bd>0&&maxActs>=bd&&Math.random()<.5) tot=Math.max(tot,bd);      // a veces, Move de regularidad
+      const g=Math.min(tot,Math.random()<.3?1:0), sl=Math.min(tot-g,Math.floor(Math.random()*3));
       await sb.rpc('admin_set_week',{p_code:CUR,p_player:p.id,p_week_start:isoDay(weekStart(w)),
-        p_bronze:Math.min(b,maxB),p_silver:sl,p_gold:g,p_quedadas:Math.random()<.4?1:0});
+        p_bronze:Math.max(0,tot-g-sl),p_silver:sl,p_gold:g,p_quedadas:Math.random()<.4?1:0});   // máx. 1 social/semana
     }
     await refresh();
   }catch(e){ $('#dErr').textContent=e.message||'Error'; }
@@ -925,7 +1013,7 @@ async function delDay(day){
     const {error}=await sb.rpc('delete_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_day:day});
     if(error) throw error;
     await refresh();
-  }catch(e){ alert(e.message||'Error'); }
+  }catch(e){ toast(e.message||'Error'); }
 }
 function pickPlayer(backTab){
   $('#main').innerHTML=`
@@ -937,18 +1025,42 @@ function pickPlayer(backTab){
   window.pick=(id,hasPin)=>{
     document.querySelectorAll('.pickbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
     $('#pinBox').innerHTML=`
-      <label>${hasPin?'Tu PIN':'Crea un PIN (opcional, evita que otros registren por ti)'}</label>
-      <input id="pPin" type="password" maxlength="8">
-      <button class="btn" onclick="confirmPick('${id}','${backTab}')">Confirmar</button>`;
+      <label>${hasPin?'Tu PIN (obligatorio: este participante está protegido)':'Crea un PIN (opcional, evita que otros entren por ti)'}</label>
+      <input id="pPin" type="password" maxlength="8" autocomplete="off">
+      <button class="btn" onclick="confirmPick('${id}','${backTab}')">Confirmar</button>
+      <div class="err" id="pErr"></div>`;
+    bindEnter('pPin',()=>confirmPick(id,backTab));
+    $('#pPin').focus();
   };
 }
-function confirmPick(id,backTab){
-  MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:id,pin:$('#pPin').value||null}); saveMem();
+/* v0.9: el PIN se comprueba (y se crea) en el SERVIDOR al identificarse.
+   Antes solo se guardaba en el navegador y se comprobaba al registrar: desde
+   otro dispositivo se podía entrar como cualquiera sin PIN. Ya no. */
+async function confirmPick(id,backTab){
+  const pin=($('#pPin')?$('#pPin').value:'').trim()||null;
+  const p=L.players.find(x=>x.id===id);
+  const err=t=>{ const e=$('#pErr'); if(e) e.textContent=t; };
+  if(p&&p.has_pin){
+    if(!pin){ err('Este participante tiene PIN: introdúcelo para entrar.'); return; }
+    try{
+      const {data,error}=await sb.rpc('verify_pin',{p_code:CUR,p_player:id,p_pin:pin});
+      if(error) throw error;
+      if(!data||!data.ok){ err('PIN incorrecto.'); return; }
+    }catch(e){ err(e.message||'No se pudo comprobar el PIN.'); return; }
+  } else if(pin){
+    try{
+      const {error}=await sb.rpc('set_pin',{p_code:CUR,p_player:id,p_pin:pin});
+      if(error) throw error;
+      toast('PIN creado: te hará falta en cada nuevo dispositivo');
+    }catch(e){ err(e.message||'No se pudo crear el PIN.'); return; }
+  }
+  MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:id,pin:pin}); saveMem();
   /* el admin fija su jugador en la config de la liga: no vuelve a elegir, en ningún dispositivo */
   if(L.league.is_admin&&L.league.config.adminPlayer!==id){
     L.league.config.adminPlayer=id;
     sb.rpc('admin_update_league',{p_code:CUR,p_patch:{adminPlayer:id},p_reason:''});
   }
+  await refresh();   // recoge has_pin actualizado
   TAB=backTab||'moves'; render();
 }
 
@@ -956,7 +1068,9 @@ function confirmPick(id,backTab){
 function tLiga(){
   const cfg=L.league.config, w=activeW(), s=ses();
   const nP=L.players.length, umbral=Math.ceil(nP*0.4), mayoria=Math.floor(nP/2)+1;
-  let h=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
+  /* v0.9: si la liga aún no ha empezado, el contador también vive aquí */
+  let h=calWeek()<0?`<div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>`:'';
+  h+=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
     <p class="msg" style="margin-top:6px">Victoria 3 pts · derrota con 4+ días 1 pt · desempate por regularidad.</p></div>`;
   h+=`<div class="card"><h2>${ic('calendar')} Calendario</h2>`;
   for(let j=0;j<cfg.weeks;j++){
@@ -980,14 +1094,11 @@ function tLiga(){
     const myV=MEM[CUR]&&MEM[CUR].votes?MEM[CUR].votes[a.id]:undefined;
     let extra='', side='';
     if(a.verdict==='ok'){
-      extra=`<br><span class="ok" style="font-size:11px;margin-top:2px;display:inline-block">Validada por la liga (${vok} votos)</span>`;
+      extra=`<br><span class="ok" style="font-size:11px;margin-top:2px;display:inline-block">Validada por la liga (${vok} votos) — ya no admite reportes</span>`;
     } else if(rep>=umbral&&!wkResolved){
-      extra=`<br><span class="disputed">EN VOTACIÓN — deciden ${mayoria} de ${nP}</span><br>
-        <span class="votebar">
-          ${(!mine&&s)?`<button class="vb ok ${myV===true?'sel':''}" onclick="voteAct('${a.id}',true)">Mantener · ${vok}</button>
-          <button class="vb ko ${myV===false?'sel':''}" onclick="voteAct('${a.id}',false)">Rechazar · ${vko}</button>`
-          :`<span class="msg">Mantener ${vok} · Rechazar ${vko}</span>`}
-        </span>`;
+      /* anillo completo → botón que abre la caja de votación */
+      extra=`<br><span class="disputed">EN VOTACIÓN — deciden ${mayoria} de ${nP} · Mantener ${vok} · Rechazar ${vko}</span>`;
+      side=(!mine&&s)?ringVote(a.id,myV):'';
     } else if(rep>=umbral&&wkResolved){
       extra=`<br><span class="msg" style="font-size:11px">Disputa caducada al resolverse la jornada — la actividad se mantiene.</span>`;
     } else if(!mine&&s&&!wkResolved){
@@ -1001,7 +1112,7 @@ function tLiga(){
       ${side}
     </div>`;
   }).join(''):'<p class="msg empty">Nada aún. Your move.</p>'}
-  <p class="msg" style="margin-top:8px">Reportar es anónimo (1 por persona; tocar de nuevo lo retira; el anillo marca cuánto falta). Con ${umbral} reportes se abre votación: si ${mayoria} de ${nP} rechazan, el registro se elimina; si ${mayoria} lo mantienen, queda validado. Las disputas pendientes caducan al resolverse la jornada.</p></div>`;
+  <p class="msg" style="margin-top:8px">Reportar es anónimo (1 por persona; tocar de nuevo lo retira; el anillo marca cuánto falta). Con ${umbral} reportes el anillo se completa y se convierte en botón de votación: tócalo para aceptar o rechazar el registro. Si ${mayoria} de ${nP} rechazan, se elimina; si ${mayoria} lo mantienen, queda validado y ya no se puede reportar. Las disputas pendientes caducan al resolverse la jornada.</p></div>`;
   h+=`<details><summary>Normas de la liga</summary><div class="card">
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
@@ -1021,27 +1132,62 @@ function ringFlag(id,rep,thr){
     </svg>${rep>0?`<span style="font-size:10px">${rep}</span>`:''}
   </button>`;
 }
+/* botón de votación: el anillo completo (40 % de reportes alcanzado) */
+function ringVote(id,myV){
+  const C=(2*Math.PI*11).toFixed(1);
+  return `<button class="ringbtn rep" title="Votación abierta: toca para votar" onclick="openVote('${id}')">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="11" stroke="var(--lose)" stroke-width="2.5"/>
+      <g transform="translate(7.5,7.5) scale(0.55)" stroke="currentColor" stroke-width="3" fill="${myV!==undefined?'currentColor':'none'}" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></g>
+    </svg><span style="font-size:10px">VOTA</span>
+  </button>`;
+}
+/* caja de votación: aceptar (verde) o rechazar (rojo) el registro en disputa */
+function openVote(id){
+  const a=L.activities.find(x=>x.id===id); if(!a) return;
+  const p=L.players.find(x=>x.id===a.player_id);
+  const nP=L.players.length, mayoria=Math.floor(nP/2)+1;
+  const vok=a.votes_ok||0, vko=a.votes_ko||0;
+  const myV=MEM[CUR]&&MEM[CUR].votes?MEM[CUR].votes[a.id]:undefined;
+  $('#vote').innerHTML=`<div style="max-width:440px;margin:60px auto" class="card">
+    <h2>${ic('flag')} Votación de la liga</h2>
+    <p class="msg">Registro en disputa: <b>${esc(p?p.name:'?')}</b> · ${a.day} · ${fmtHM(a.created_at)}<br>${esc(isQOnly(a)?'Actividad conjunta (solo asistencia)':(a.activity||''))}</p>
+    <p class="msg" style="margin-top:8px">Deciden ${mayoria} de ${nP}: si votan rechazar, el registro se elimina; si votan mantener, queda validado para siempre. Puedes cambiar tu voto mientras la votación siga abierta.</p>
+    ${myV!==undefined?`<p class="msg" style="margin-top:6px"><b>Tu voto actual:</b> ${myV?'mantener':'rechazar'}.</p>`:''}
+    <div class="row" style="margin-top:4px">
+      <button class="btn vok" onclick="voteAct('${a.id}',true)">${ic('check')} Mantener · ${vok}</button>
+      <button class="btn vko" onclick="voteAct('${a.id}',false)">${ic('x')} Rechazar · ${vko}</button>
+    </div>
+    <button class="btn sec" onclick="closeModal('vote')">Cerrar</button></div>`;
+  $('#vote').classList.add('show');
+}
 async function reportAct(id){
-  const s=ses(); if(!s){ alert('Identifícate primero en Moves.'); return; }
+  const s=ses(); if(!s){ toast('Identifícate primero en Moves'); return; }
   try{
-    const {error}=await sb.rpc('report_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id});
+    const {data,error}=await sb.rpc('report_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id});
     if(error) throw error;
+    toast(data&&data.estado==='retirado'?'Reporte retirado':'Reporte enviado (anónimo)');
     await refresh();
-  }catch(e){ alert(e.message||'Error'); }
+  }catch(e){ toast(e.message||'Error'); }
 }
 async function voteAct(id,accept){
-  const s=ses(); if(!s){ alert('Identifícate primero en Moves.'); return; }
+  const s=ses(); if(!s){ toast('Identifícate primero en Moves'); return; }
   try{
-    const {error}=await sb.rpc('vote_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id,p_accept:accept});
+    const {data,error}=await sb.rpc('vote_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id,p_accept:accept});
     if(error) throw error;
     MEM[CUR]=MEM[CUR]||{}; MEM[CUR].votes=MEM[CUR].votes||{}; MEM[CUR].votes[id]=accept; saveMem();
+    closeModal('vote');
+    if(data&&data.estado==='eliminada') toast('El registro ha sido eliminado por la liga');
+    else if(data&&data.estado==='validada') toast('El registro queda validado por la liga');
+    else toast('Voto registrado');
     await refresh();
-  }catch(e){ alert(e.message||'Error'); }
+  }catch(e){ toast(e.message||'Error'); }
 }
 
 /* ---- ADMIN ---- */
 function tAdmin(){
   const cfg=L.league.config, w=activeW();
+  const isBeta=!!cfg.beta;
   const unresolved=[]; for(let j=0;j<cfg.weeks;j++){ if(!roundOf(j)) unresolved.push(j+1); }
   const weeksOpts=[]; for(let j=0;j<cfg.weeks;j++) weeksOpts.push(j);
   $('#main').innerHTML=`
@@ -1049,8 +1195,12 @@ function tAdmin(){
     <div class="big">${esc(L.league.code)}</div>
     <button class="btn sec" onclick="copyTxt('${esc(L.league.code)}','Código copiado')">${ic('copy')} Copiar código</button>
   </div>
-  ${DEV?`<div class="card" style="border-style:dashed"><h2>${ic('settings')} Modo desarrollador — adelantar el tiempo</h2>
-    <p class="msg">Desplazamiento actual: <b>${cfg.devOffset||0} días${cfg.devOffsetMin?` + ${cfg.devOffsetMin} min`:''}</b>. Los contadores de toda la liga se mueven contigo. Al pasar el cierre (domingo 22:00), la jornada se resuelve sola en el servidor. (La versión con dominio no llevará este panel y el tiempo será siempre real.)</p>
+  ${DEV&&!isBeta?`<div class="card" style="border-style:dashed"><h2>${ic('settings')} Liga real en el entorno beta</h2>
+    <p class="msg">Esta liga no está marcada como liga de pruebas, así que las herramientas de simulación (tiempo, Moves aleatorios, entrada rápida) están desactivadas para no tocarla por error. Si ES una liga de pruebas, márcala: dejará de poder abrirse en la web pública.</p>
+    <button class="btn sec" onclick="devMarkBeta()">Marcar como liga de pruebas</button><div class="err" id="dErr"></div>
+  </div>`:''}
+  ${DEV&&isBeta?`<div class="card" style="border-style:dashed"><h2>${ic('settings')} Modo desarrollador — adelantar el tiempo</h2>
+    <p class="msg">Desplazamiento actual: <b>${cfg.devOffset||0} días${cfg.devOffsetMin?` + ${cfg.devOffsetMin} min`:''}</b>. Los contadores de toda la liga se mueven contigo. Al pasar el cierre (domingo 22:00), la jornada se resuelve sola en el servidor. (Este panel solo existe en beta.yourmoveleague.com: en la web pública no se crea y el tiempo es siempre real.)</p>
     <div class="row">
       ${calWeek()<0?`<button class="btn sec" onclick="devStartNow()">Empezar la liga hoy</button>`:''}
       <button class="btn sec" onclick="devAdvance(1)">+1 día</button>
@@ -1059,11 +1209,9 @@ function tAdmin(){
       <button class="btn sec" onclick="devToClose()">Adelantar al cierre (dom 22:00)</button>
       <button class="btn sec" onclick="devFill(${Math.max(w,0)})">Moves aleatorios (J${Math.max(w,0)+1})</button>
     </div>
-    <p class="msg" style="margin-top:6px">"+X días" también reparte puntuaciones aleatorias de esos días a jugadores al azar (sobrescribe su semana). Jornadas sin resolver: ${unresolved.length?unresolved.join(', '):'ninguna'}.</p>
+    <p class="msg" style="margin-top:6px">"+X días" también reparte puntuaciones aleatorias de esos días a jugadores al azar (sobrescribe su semana, máx. 1 actividad/día y 1 Move social y 1 de regularidad por semana). Jornadas sin resolver: ${unresolved.length?unresolved.join(', '):'ninguna'}.</p>
     <div class="err" id="dErr"></div>
-  </div>`:`<div class="card"><h2>${ic('zap')} Resolución de jornadas</h2>
-    <p class="msg">Activa: ${w>=0&&w<cfg.weeks?w+1:'—'}. La jornada se cierra y se resuelve <b>sola</b> el domingo a las 22:00; el resultado queda congelado en el servidor y es el mismo para toda la liga. No hay que hacer nada.</p>
-  </div>`}
+  </div>
   <div class="card"><h2>${ic('users')} Entrada rápida de Moves (simulación / migración)</h2>
     <p class="msg">Semana entera de un participante de golpe. Sobrescribe esa semana y queda en el registro público.</p>
     <label>Participante</label><select id="qPlayer">${L.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
@@ -1075,7 +1223,7 @@ function tAdmin(){
       <div style="flex:1"><label>Conjuntas</label><input type="number" id="qQ" value="0" min="0" max="7"></div>
     </div>
     <button class="btn sec" onclick="quickWeek()">Aplicar semana</button><div class="err" id="qErr"></div>
-  </div>
+  </div>`:''}
   <div class="card"><h2>${ic('settings')} Configuración (todo cambio queda registrado)</h2>
     <label>Premio / motivación</label><input id="ePrize" value="${esc(cfg.prize||'')}">
     <label>Fecha de inicio</label><input type="date" id="eStart" value="${cfg.start}">
@@ -1203,7 +1351,8 @@ async function playPong(jNum,duels,_){
 function btnBar(){
   return `<div class="row" style="margin-bottom:8px">
     <button class="btn sec" onclick="refresh()">${ic('refresh')} Actualizar</button>
-    <button class="btn sec" onclick="exitLeague()">${ic('logout')} Salir de la liga</button></div>`;
+    <button class="btn sec" onclick="exitLeague()">${ic('logout')} Salir de la liga</button>
+    <button class="btn sec" onclick="logoutLeague()">${ic('lock')} Cerrar sesión</button></div>`;
 }
 
 /* ============ ARRANQUE ============ */
