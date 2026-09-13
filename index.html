@@ -90,10 +90,9 @@
   .duelbox{background:linear-gradient(180deg,#f8f5f0,#f3f1ec);border:1px solid var(--line);border-radius:14px;padding:18px 16px 16px;}
   .duelnames{display:flex;justify-content:space-between;font-family:var(--disp);font-size:19px;letter-spacing:.3px;gap:10px;}
   .duelmoves{display:flex;justify-content:space-between;color:var(--dim);font-size:12.5px;font-weight:600;margin:5px 0 14px;}
-  .bar{height:22px;border-radius:11px;overflow:hidden;display:flex;gap:3px;padding:3px;background:var(--line);box-shadow:inset 0 1px 3px rgba(27,45,79,.12);}
-  .bar .l{background:linear-gradient(180deg,#ff6b4d,#f4502f);border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1);}
-  .bar .r{background:linear-gradient(180deg,#3d7cbe,#2b6cb0);border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1);}
-  .pcts{display:flex;justify-content:space-between;font-family:var(--disp);font-size:20px;margin-top:10px;}
+  /* v1.0: mini-pista del duelo en vivo (pala ∝ Moves, sin porcentajes) */
+  .mini{display:block;width:100%;aspect-ratio:1000/455;border-radius:12px;box-shadow:0 8px 22px rgba(27,45,79,.25),inset 0 1px 0 rgba(255,255,255,.06);touch-action:manipulation;}
+  .minihint{text-align:center;font-size:11.5px;color:var(--dim);margin-top:6px;min-height:15px;}
   .pill{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:1px 8px;background:var(--card2);border:1px solid var(--line);color:var(--dim);margin-left:5px;vertical-align:middle;}
   .chip{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;margin-left:2px;box-shadow:0 1px 2px rgba(27,45,79,.15);}
   .chip.v{background:var(--win);} .chip.d{background:var(--lose);} .chip.n{background:var(--dim);}
@@ -150,14 +149,25 @@
   .ringbtn{background:none;border:none;cursor:pointer;padding:0;color:var(--dim);transition:transform .15s ease;-webkit-tap-highlight-color:transparent;}
   .ringbtn:hover{transform:scale(1.1);color:var(--lose);}
   .ringbtn.rep{color:var(--lose);}
-  .votebar{margin-top:6px;display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .votebar .vb{border:1.5px solid var(--line);background:var(--card2);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);-webkit-tap-highlight-color:transparent;}
-  .votebar .vb.ok{color:var(--win);border-color:#cfe5d4;}
-  .votebar .vb.ko{color:var(--lose);border-color:#eed3cf;}
-  .votebar .vb.sel{box-shadow:0 0 0 3px rgba(27,45,79,.10);background:#fff;}
+  /* v1.0: actividad anulada por la liga (reportes al umbral): tachada, no cuenta */
+  .feeditem.anulada .fi{text-decoration:line-through;color:var(--dim);}
+  .feeditem.anulada .fi .nocuenta{text-decoration:none;display:inline-block;color:var(--lose);font-weight:700;font-size:11px;margin-top:2px;}
+  .xmark{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fbe9e7;color:var(--lose);font-weight:800;font-size:15px;flex:none;}
+  .edited{color:var(--dim);font-size:11px;}
+  .thr{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .thr span{display:inline-flex;align-items:center;gap:4px;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:12px;font-weight:600;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;filter:none;}
+  .qstate{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--dim);}
+  .qstate.ok{color:var(--win);}
+  .prevlist{margin-top:6px;font-size:12px;color:var(--dim);line-height:1.6;}
+  .prevlist b{color:var(--text);}
+  /* v1.0: overlay bloqueante de identidad — única entrada de "quién eres" */
+  #idov{display:none;position:fixed;inset:0;background:rgba(20,25,35,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:80;overflow-y:auto;padding:20px;}
+  #idov.show{display:block;}
+  #idov .card{max-width:480px;margin:40px auto;box-shadow:var(--sh-md);}
+  body.locked{overflow:hidden;}
   .toastbox{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--text);color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:90;box-shadow:var(--sh-md);opacity:0;transition:opacity .25s ease;pointer-events:none;max-width:86vw;text-align:center;}
   .toastbox.show{opacity:1;}
-  .btn.vok{background:linear-gradient(160deg,#3fae73,#2f9e63);box-shadow:0 2px 8px rgba(47,158,99,.30),inset 0 1px 0 rgba(255,255,255,.18);}
   .btn.vko{background:linear-gradient(160deg,#e05555,#d64545);box-shadow:0 2px 8px rgba(214,69,69,.30),inset 0 1px 0 rgba(255,255,255,.18);}
   details{margin-bottom:16px;}
   details summary{cursor:pointer;font-size:13px;color:var(--dim);font-weight:600;padding:8px 4px;transition:color .15s ease;list-style-position:inside;}
@@ -173,19 +183,21 @@
   #ov .prog{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:10px;}
   .pName{font-family:var(--disp);font-size:17px;letter-spacing:.3px;}
   .pMeta{color:var(--dim);font-size:12.5px;margin-top:3px;}
-  .pc{font-weight:800;} .pcW{color:var(--win);} .pcL{color:var(--lose);} .pcN{color:var(--dim);}
   .intro{display:flex;justify-content:space-between;width:100%;max-width:440px;gap:12px;}
-  .court{position:relative;width:100%;max-width:440px;height:200px;background:linear-gradient(180deg,#22375d,#18294a);border-radius:16px;margin:14px 0;overflow:hidden;box-shadow:0 14px 34px rgba(27,45,79,.32),inset 0 1px 0 rgba(255,255,255,.06);}
-  .net{position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.25);}
-  .paddle{position:absolute;width:8px;height:56px;border-radius:4px;top:72px;transition:top .4s ease;}
-  .paddle.A{left:10px;background:var(--duelA);box-shadow:0 0 10px rgba(255,90,60,.5);}
-  .paddle.B{right:10px;background:#7db4e8;box-shadow:0 0 10px rgba(125,180,232,.5);}
-  .pball{position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.5);transition:left .5s linear, top .5s ease;}
+  .court{display:block;width:100%;max-width:440px;aspect-ratio:1000/455;border-radius:16px;margin:14px 0;box-shadow:0 14px 34px rgba(27,45,79,.32),inset 0 1px 0 rgba(255,255,255,.06);}
+  .court.shake{animation:shake .18s ease;}
+  @keyframes shake{25%{transform:translate(3px,-2px);}50%{transform:translate(-3px,2px);}75%{transform:translate(2px,1px);}}
+  #pscore.flash{color:var(--firma);transform:scale(1.15);}
+  #pscore{transition:transform .18s ease,color .18s ease;}
+  .drawlist{display:flex;gap:6px;justify-content:center;margin:8px 0;}
+  .drawlist span{font-family:var(--disp);font-size:15px;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;}
+  .drawlist .dA{background:var(--duelA);} .drawlist .dB{background:var(--duelB);}
   #pscore{font-family:var(--disp);font-size:30px;color:var(--text);min-height:38px;font-variant-numeric:tabular-nums;}
   #pres{font-size:17px;font-weight:800;min-height:24px;margin:6px 0 14px;}
   #pres .w{color:var(--win);}
   @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important;}
+    /* v1.0: el duelo sirve un resumen estático (ver playPong); las palas aparecen sin animación */
   }
 </style>
 </head>
@@ -225,7 +237,7 @@
   <button class="btn sec" onclick="closeModal('sup')">Cerrar</button></div>
 </div></div>
 
-<div id="vote" class="modal"></div>
+<div id="idov" role="dialog" aria-modal="true" aria-label="Identifícate"></div>
 
 <div id="ov"></div>
 
@@ -241,7 +253,10 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const VERSION='web v0.9'+(DEV?'-dev':'');
+const VERSION='web v1.0'+(DEV?'-dev':'');
+/* v1.0: valores por defecto de las claves de config nuevas (setup7 las escribe
+   en las ligas existentes; aquí el fallback por si faltan) */
+const QUEDADA_MIN_DEF=3, REPORT_PCT_DEF=0.70;
 /* Tiempo de juego: en DEV la liga puede llevar un desplazamiento de días + minutos
    (config.devOffset / devOffsetMin, compartido por todos). En producción, tiempo real siempre. */
 function nowT(){
@@ -289,13 +304,34 @@ function medalSVG(l,s){
 const NAV=[['jornada','Jornada','zap'],['moves','Moves','activity'],['liga','Liga','trophy'],['admin','Admin','settings']];
 
 /* ============ ESTADO ============ */
-let L=null, TAB='jornada', USER=null, selType=null, selLevel=0;
+let L=null, TAB='jornada', USER=null, selType=null, selLevel=0, selQ=false, EDITING=false, DELARM=false;
 let MEM=JSON.parse(localStorage.getItem('yml_mem')||'{}');
 let CUR=localStorage.getItem('yml_cur')||null;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function saveMem(){ localStorage.setItem('yml_mem',JSON.stringify(MEM)); if(CUR)localStorage.setItem('yml_cur',CUR); }
-function ses(){ return CUR&&MEM[CUR]?MEM[CUR]:null; }
+/* v1.0: la identidad del OWNER sale de config.adminPlayer en cada carga (no de
+   localStorage): su sesión de admin vale más que un PIN, así que se adopta en
+   silencio. '__none__' = organiza sin jugar. null = liga anterior a v1.0, sin
+   elegir aún (se le pregunta una vez, en el overlay). */
+function ownerIdentity(){
+  if(!L||!L.league.is_admin) return null;
+  const ap=L.league.config.adminPlayer;
+  if(ap==='__none__') return 'none';
+  if(ap&&L.players.some(p=>p.id===ap)) return {playerId:ap,pin:null,owner:true};
+  return null;
+}
+function ses(){
+  if(!CUR) return null;
+  if(L){
+    const o=ownerIdentity();
+    if(o==='none') return null;
+    if(o) return o;
+  }
+  return MEM[CUR]||null;
+}
+/* ¿hace falta el overlay de identidad? (todo el mundo salvo el owner que ya eligió) */
+function needsIdentity(){ return !!L&&!ses()&&ownerIdentity()!=='none'; }
 
 /* ============ JUEGO ============ */
 function roundRobin(names){
@@ -333,16 +369,38 @@ function actsOfWeek(pid,w){
   return L.activities.filter(x=>x.player_id===pid&&x.day>=a&&x.day<=b).sort((x,y)=>x.day<y.day?-1:1);
 }
 function isQOnly(a){ return a.activity==='[conjunta]'; }   // asistencia a la quedada sin entreno: +1 Move, no cuenta como día
+function isAnulada(a){ return a.verdict==='anulada'; }     // v1.0: anulada por reportes — 0 Moves, no cuenta día (solo sobrevive el ajuste del admin)
+function isSocial(a){ return !!a.quedada||isQOnly(a); }     // participó en la conjunta (entrenando o solo asistiendo)
+/* v1.0 · CÁLCULO DE MOVES — réplica exacta de resolve_round (setup7). Cualquier
+   cambio aquí se hace A LA VEZ en el servidor (test de paridad en el banco de pruebas).
+   Reglas:
+   - actividad anulada: ni Moves de nivel, ni social, ni día; su `adj` (corrección
+     del admin) sí cuenta, para que admin_adjust pueda enmendar una anulación.
+   - social (+1): solo si esa semana la conjunta la han marcado >= quedadaMin
+     jugadores distintos (no anulados). Por debajo, la asistencia sin entreno vale 0.
+   - el resto igual que v0.9: orden cronológico, recorte a maxDays, bonus por días. */
+function quedadaMin(){ const v=parseInt(L.league.config.quedadaMin); return v>=QUEDADA_MIN_DEF?v:QUEDADA_MIN_DEF; }
+function reportPct(){ const v=parseFloat(L.league.config.reportPct); return v>=0.3&&v<=1?v:REPORT_PCT_DEF; }
+function quedadaCount(w){
+  const a=isoDay(weekStart(w)), b=isoDay(new Date(weekStart(w).getTime()+6*24*3600*1000));
+  return new Set(L.activities.filter(x=>x.day>=a&&x.day<=b&&!isAnulada(x)&&isSocial(x)).map(x=>x.player_id)).size;
+}
+function quedadaOK(w){ return quedadaCount(w)>=quedadaMin(); }
 function movesOfWeek(pid,w){
-  const cfg=L.league.config, all=actsOfWeek(pid,w);
-  const qonly=all.filter(isQOnly).length;
+  const cfg=L.league.config, raw=actsOfWeek(pid,w), social=quedadaOK(w);
+  const all=raw.filter(a=>!isAnulada(a));
+  const qonly=social?all.filter(isQOnly).length:0;
   const acts=all.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
-  let m=acts.reduce((s,x)=>s+x.level+(x.quedada?1:0)+(x.adj||0),0)+qonly;
+  let m=acts.reduce((s,x)=>s+x.level+((x.quedada&&social)?1:0)+(x.adj||0),0)+qonly;
+  m+=raw.filter(isAnulada).reduce((s,x)=>s+(x.adj||0),0);
   if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) m+=1;
   return Math.max(0,m);
 }
-function daysOfWeek(pid,w){ return Math.min(actsOfWeek(pid,w).filter(a=>!isQOnly(a)).length, L.league.config.maxDays||7); }
-function quedadaUsed(pid,w){ return actsOfWeek(pid,w).some(a=>a.quedada||isQOnly(a)); }
+function daysOfWeek(pid,w){ return Math.min(actsOfWeek(pid,w).filter(a=>!isQOnly(a)&&!isAnulada(a)).length, L.league.config.maxDays||7); }
+function quedadaUsed(pid,w){ return actsOfWeek(pid,w).some(isSocial); }   // máx. 1/semana (también si quedó anulada)
+/* v1.0: umbral de reportes = ceil(reportPct × (jugadores − 1)); el autor no se reporta.
+   Se redondea antes del ceil para que 0,70×10 no dé 7,000000001 → 8. */
+function reportThr(){ const den=Math.max(1,L.players.length-1); return Math.max(1,Math.ceil(+(reportPct()*den).toFixed(6))); }
 function pairsFor(w){ const c=L.league.calendar; return c.length?c[w%c.length]:[]; }
 function byName(n){ return L.players.find(p=>p.name===n)||null; }
 function catBadge(p){
@@ -351,10 +409,29 @@ function catBadge(p){
   if(p.category==='elite')   return ' <span class="pill" title="Élite: umbrales +25%">E</span>';
   return '';
 }
-function parseTypes(){
-  return (L.league.config.levels||PLANTILLA_DEF).split('\n')
+/* v1.0: parser tolerante de la plantilla «Actividad: bronce / plata / oro».
+   Una línea sin los tres tramos entra con los que tenga (el resto en blanco);
+   sin ':' o vacía se ignora. Devuelve [{name, hint, thr:[b,p,o]}]. */
+function parseLevelsText(txt){
+  return String(txt||'').split('\n')
     .map(l=>l.trim()).filter(l=>l&&!l.startsWith('(')&&l.includes(':'))
-    .map(l=>{ const i=l.indexOf(':'); return {name:l.slice(0,i).trim(), hint:l.slice(i+1).trim()}; });
+    .map(l=>{
+      const i=l.indexOf(':'), name=l.slice(0,i).trim(), hint=l.slice(i+1).trim();
+      const parts=hint.split('/').map(x=>x.trim());
+      const thr=[parts[0]||'',parts[1]||'',parts[2]||''];
+      return {name, hint, thr};
+    }).filter(x=>x.name);
+}
+function parseTypes(){ return parseLevelsText(L.league.config.levels||PLANTILLA_DEF); }
+const LEVEL_NAMES=['Bronce','Plata','Oro'];
+/* etiqueta pública de una actividad: «Oro · Natación» (registros viejos sin actividad: «sin especificar») */
+function actLabel(a){
+  if(isQOnly(a)) return 'Conjunta · solo asistencia';
+  return LEVEL_NAMES[a.level-1]+' · '+(a.activity&&a.activity.trim()?a.activity:'sin especificar');
+}
+function editedTag(a){
+  if(!a.edits) return '';
+  return ` <span class="edited">· editado ${a.edits>1?'×'+a.edits+' · ':''}${fmtHM(a.updated_at)}</span>`;
 }
 function formChips(name,n){
   const res=[];
@@ -521,7 +598,11 @@ function vCreate(){
       <div style="flex:1"><label>Máx. días/sem</label><select id="cMax"><option>5</option><option selected>6</option><option>7</option></select></div>
       <div style="flex:1"><label>Bonus regularidad</label><select id="cBonus"><option value="0">No</option><option value="3">Día 3</option><option value="4" selected>Día 4</option><option value="5">Día 5</option></select></div>
     </div>
-    <label style="margin-top:12px"><input type="checkbox" id="cQuedada" checked style="width:auto"> Actividad conjunta semanal (+1 Move)</label>
+    <div class="row" style="margin-top:12px;align-items:flex-end">
+      <label style="flex:2;margin:0"><input type="checkbox" id="cQuedada" checked style="width:auto" onchange="document.getElementById('cQMin').disabled=!this.checked"> Actividad conjunta semanal (+1 Move)</label>
+      <div style="flex:1;min-width:130px"><label style="margin-top:0">Mínimo de personas</label><input type="number" id="cQMin" value="${QUEDADA_MIN_DEF}" min="${QUEDADA_MIN_DEF}" max="99"></div>
+    </div>
+    <p class="msg" style="margin-top:4px">El +1 social solo cuenta si al menos ese número de personas distintas marcan la conjunta en la semana.</p>
     <label><input type="checkbox" id="cOculto" style="width:auto"> Rival oculto (solo se ve el duelo en curso)</label>
     <div class="row"><button class="btn" onclick="createLeague()">Crear liga</button>
     <button class="btn sec" onclick="vHome()">Volver</button></div>
@@ -538,10 +619,13 @@ async function createLeague(){
   });
   const players=roster.map(r=>r.name);
   if(new Set(players).size!==players.length){ $('#cErr').textContent='Hay nombres repetidos.'; return; }
+  const qMin=Math.max(QUEDADA_MIN_DEF,Math.min(players.length,parseInt($('#cQMin').value)||QUEDADA_MIN_DEF));
+  if(parseLevelsText($('#cLevels').value).length===0){ $('#cErr').textContent='La plantilla de actividades no tiene ninguna línea válida («Actividad: bronce / plata / oro»).'; return; }
   const cfg={
     prize:$('#cPrize').value.trim(), start:$('#cStart').value,
     weeks:parseInt($('#cWeeks').value)||12, maxDays:parseInt($('#cMax').value),
     bonusDay:parseInt($('#cBonus').value), quedada:$('#cQuedada').checked,
+    quedadaMin:qMin, reportPct:REPORT_PCT_DEF,   // v1.0
     oculto:$('#cOculto').checked, levels:$('#cLevels').value, version:VERSION,
     beta:DEV   // v0.9: las ligas creadas en beta quedan marcadas y no se abren en producción
   };
@@ -549,8 +633,43 @@ async function createLeague(){
     const {data,error}=await sb.rpc('create_league',{p_name:$('#cName').value,p_email:USER?USER.email:null,
       p_config:cfg,p_calendar:roundRobin(players),p_players:roster});
     if(error) throw error;
-    vCreated(data.code,$('#cName').value,cfg,roster);
+    vAdminPick(data.code,$('#cName').value,cfg,roster);
   }catch(e){ $('#cErr').textContent=e.message||'Error al crear la liga'; }
+}
+/* v1.0 (4.1): nada más crear la liga, el admin dice qué jugador es (o que solo
+   organiza). No se puede salir de aquí sin elegir: queda en config.adminPlayer. */
+let PENDING_CREATE=null;
+async function vAdminPick(code,name,cfg,roster){
+  PENDING_CREATE={code,name,cfg,roster};
+  $('#main').innerHTML=`<div class="card"><p class="msg">Cargando…</p></div>`;
+  let players=[];
+  try{
+    const {data,error}=await sb.rpc('get_league',{p_code:code});
+    if(error) throw error;
+    players=data.players;
+  }catch(e){ $('#main').innerHTML=`<div class="card"><p class="err">${esc(e.message||'Error')}</p><button class="btn" onclick="goLeague('${code}')">Ir a la liga</button></div>`; return; }
+  $('#main').innerHTML=`
+  <div class="card"><h2>${ic('users')} ¿Qué jugador eres tú?</h2>
+    <p class="msg">Tu jugador queda fijado a tu cuenta: entrarás sin PIN y nadie más podrá elegirlo. Se puede cambiar después en Admin (queda en el registro público).</p>
+    <div class="row" style="margin-top:8px">${players.map(p=>
+      `<button class="btn sec" onclick="adminPickChoose('${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
+    <button class="btn sec" style="margin-top:14px" onclick="adminPickChoose('__none__')">${ic('settings')} No juego, solo organizo</button>
+    <div class="err" id="apErr"></div>
+  </div>`;
+}
+async function adminPickChoose(id){
+  const pc=PENDING_CREATE; if(!pc) return;
+  const ok=await setAdminPlayer(pc.code,id,'#apErr');
+  if(ok){ PENDING_CREATE=null; vCreated(pc.code,pc.name,pc.cfg,pc.roster); }
+}
+/* guarda config.adminPlayer (id o '__none__'); devuelve true si fue bien */
+async function setAdminPlayer(code,id,errSel){
+  try{
+    const {error}=await sb.rpc('admin_update_league',{p_code:code,p_patch:{adminPlayer:id},p_reason:''});
+    if(error) throw error;
+    if(L&&L.league.code===code) L.league.config.adminPlayer=id;
+    return true;
+  }catch(e){ const el=errSel?$(errSel):null; if(el) el.textContent=e.message||'Error'; else toast(e.message||'Error'); return false; }
 }
 function whatsText(code,name,cfg,roster){
   const url=location.origin+location.pathname+'?l='+code;
@@ -562,6 +681,9 @@ function whatsText(code,name,cfg,roster){
     `📌 Ábrelo en tu navegador (mejor que el de WhatsApp) y añádelo a la pantalla de inicio: entrarás directo, sin códigos.\n`+
     `\n📸 Foto instantánea al grupo + registra tu día en la web (guarda la hora, que case con tu foto).\n`+
     `\n📏 NIVELES (🥉1 Move · 🥈2 · 🥇3):\n${cfg.levels}\n`+
+    (cfg.quedada?`\n👥 Actividad conjunta: +1 Move, solo si la marcan ${cfg.quedadaMin||QUEDADA_MIN_DEF}+ personas esa semana.\n`:'')+
+    `✏️ Tu registro de hoy se puede corregir hasta el final del día (la hora original se conserva).\n`+
+    `🚩 Reportes anónimos: si reporta el ${Math.round((cfg.reportPct||REPORT_PCT_DEF)*100)} % de los demás, la actividad no cuenta.\n`+
     `\n🎯 Domingo: se resuelve la jornada. Más deporte = más opciones. Garantizado, nada.`;
 }
 function vCreated(code,name,cfg,roster){
@@ -591,7 +713,7 @@ async function goLeague(code){
       return;
     }
     L=data; CUR=code.toUpperCase(); saveMem(); TAB='jornada'; render();
-  }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else alert(e.message); }
+  }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else toast(e.message||'Error de conexión'); }
 }
 let lastFetch=0;
 async function refresh(){
@@ -614,20 +736,23 @@ async function logoutLeague(){
 
 /* ============ RENDER ============ */
 function render(){
-  if(!L){ vHome(); return; }
-  /* el admin tiene su jugador fijado en la config de la liga: se adopta solo
-     (v0.9: solo si ese jugador no tiene PIN; con PIN se pide como a cualquiera) */
-  if(!ses()&&L.league.is_admin&&L.league.config.adminPlayer&&L.players.some(p=>p.id===L.league.config.adminPlayer&&!p.has_pin)){
-    MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:L.league.config.adminPlayer,pin:null}); saveMem();
+  if(!L){ syncIdOverlay(); vHome(); return; }
+  /* v1.0: si el localStorage recuerda un jugador que ya no existe (o que ahora es
+     el del admin y no somos el owner), se olvida y se vuelve a preguntar */
+  const m=MEM[CUR];
+  if(m&&m.playerId&&(!L.players.some(p=>p.id===m.playerId)||(!L.league.is_admin&&m.playerId===L.league.config.adminPlayer))){
+    delete MEM[CUR]; saveMem();
   }
   $('#nav').classList.add('on');
   $('#tabAdmin').style.display=L.league.is_admin?'flex':'none';
+  if(!L.league.is_admin&&TAB==='admin') TAB='jornada';
   maybeResolve();   // si el cierre pasó y hay jornada sin resolver, se resuelve sola (desde cualquier pestaña)
   document.querySelectorAll('#nav button').forEach(b=>{
     const t=NAV[[...b.parentNode.children].indexOf(b)][0];
     b.classList.toggle('on',t===TAB);
   });
   ({jornada:tJornada,moves:tMoves,liga:tLiga,admin:tAdmin}[TAB]||tJornada)();
+  syncIdOverlay();   // overlay bloqueante mientras no haya identidad
 }
 
 /* ---- JORNADA ---- */
@@ -643,12 +768,12 @@ function xtraSVG(kind,s){
 /* medallas + Moves extra de un jugador en la semana, como iconos (oro→bronce, luego social y regularidad) */
 function medIcons(pid,w,size){
   const cfg=L.league.config;
-  const all=actsOfWeek(pid,w);
+  const all=actsOfWeek(pid,w).filter(a=>!isAnulada(a));   // v1.0: las anuladas no pintan
   const acts=all.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
   const c=[0,0,0]; acts.forEach(a=>c[a.level-1]++);
   let h='';
   for(let l=3;l>=1;l--) for(let i=0;i<c[l-1];i++) h+=medalSVG(l,size||12);
-  const social=all.filter(a=>isQOnly(a)||a.quedada).length;   // asistencia o entreno en la conjunta
+  const social=quedadaOK(w)?all.filter(isSocial).length:0;   // v1.0: el Move social solo si la conjunta llega al mínimo
   for(let i=0;i<social;i++) h+=xtraSVG('social',size||12);
   if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) h+=xtraSVG('bonus',size||12);
   return h;
@@ -737,7 +862,9 @@ async function maybeResolve(force){
 }
 function tJornada(){
   const s=ses(), cfg=L.league.config, cw=calWeek(), w=activeW();
-  if(!s){ pickPlayer('jornada'); return; }
+  /* v1.0: sin identidad se pinta igual (el overlay bloquea por encima); el owner
+     que solo organiza ve todos los duelos sin «mi duelo» */
+  const me=s?L.players.find(p=>p.id===s.playerId):null;
   if(cw<0){
     $('#main').innerHTML=`
     <div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>
@@ -750,11 +877,10 @@ function tJornada(){
     $('#main').innerHTML=(rl&&nowT()<weekEnd(jl)?resultBanner(jl):'')+`<div class="card"><h2>${ic('trophy')} Liga terminada</h2><p class="msg">Campeón: <b>${esc(standings()[0].name)}</b>. ¡Gracias por jugar!</p>
     ${DEV?'<p class="msg">Modo dev: esta liga está completa — crea otra de prueba o amplía las jornadas desde Admin → Configuración.</p>':''}</div>`+btnBar(); return;
   }
-  const me=L.players.find(p=>p.id===s.playerId);
   const r=roundOf(w), t=nowT();
   /* jornada resuelta y aún no vista: SOLO el panel de estreno */
   if(r&&!watched(w)){ $('#main').innerHTML=playPanel(w)+btnBar(); return; }
-  const pair=pairsFor(w).find(([a,b])=>a===me.name||b===me.name);
+  const pair=me?pairsFor(w).find(([a,b])=>a===me.name||b===me.name):null;
   // tarjeta de estado: cuenta atrás en juego / descanso verde / resolviendo
   let cdHtml='', stick='';
   if(r){
@@ -774,13 +900,14 @@ function tJornada(){
     cdHtml=`<div class="cdlbl">Cierre de la jornada ${w+1} · domingo 22:00</div><div class="cd" id="cdJ">…</div>`;
   }
   // mi duelo
-  let duelHtml='<p class="msg">Esta semana descansas.</p>';
+  let duelHtml=me?'<p class="msg">Esta semana descansas.</p>':'<p class="msg">Estás como organizador; no participas en esta liga.</p>';
   if(pair){
     const rivalName=pair[0]===me.name?pair[1]:pair[0];
     const rival=byName(rivalName);
     const ma=movesOfWeek(me.id,w);
     const mb=rival?movesOfWeek(rival.id,w):medianMoves(w);
-    const pMe=Math.round(serieProb(ma,mb)*100);
+    /* v1.0: fuera los porcentajes (se leían como certeza). serieProb() se conserva
+       para el script de auditoría del sorteo. */
     const d=r?(r.data.duels||[]).find(x=>x.a===pair[0]&&x.b===pair[1]):null;
     let sMine=0,sRiv=0;
     if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sMine=d.winner===me.name?hi:lo; sRiv=d.winner===me.name?lo:hi; }
@@ -790,26 +917,30 @@ function tJornada(){
       <div class="duelnames"><span style="color:var(--duelA)">${esc(me.name)}</span><span style="color:var(--duelB)">${esc(rivalName)}</span></div>
       <div class="duelmoves"><span>${medIcons(me.id,w,14)}<span class="pill">${ma} Moves</span></span><span><span class="pill">${mb} Moves</span>${rival?medIcons(rival.id,w,14):''}</span></div>
       <div class="duelscore">${d?(d.nulo?'—':sMine+' – '+sRiv):'0 – 0'}</div>
-      <div class="bar"><div class="l" style="width:${pMe}%"></div><div class="r" style="width:${100-pMe}%"></div></div>
-      <div class="pcts"><span style="color:var(--duelA)">${pMe} %</span><span style="color:var(--duelB)">${100-pMe} %</span></div>
+      <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(me.name)} ${ma} Moves, ${esc(rivalName)} ${mb} Moves"></canvas>
+      <div class="minihint" id="miniHint">La pala crece con tus Moves. Más pala, más opciones; garantizado, nada.</div>
       ${resHtml}
     </div>`;
-  }
+    miniSpec={w, a:{pid:me.id,moves:ma,segs:segmentsFor(me.id,w)}, b:{pid:rival?rival.id:'__media__',moves:mb,segs:rival?segmentsFor(rival.id,w):neutralSegs(mb)}};
+  } else miniSpec=null;
   // los demás duelos + resultados de la jornada anterior
   const others=pairsFor(w).filter(([a,b])=>!pair||(a!==me.name&&b!==me.name));
+  const socialNote=(cfg.quedada&&!quedadaOK(w))?`<p class="msg" style="margin-top:8px">${ic('users',12)} Conjunta de la semana: ${quedadaCount(w)} / ${quedadaMin()} — el Move social aún no cuenta.</p>`:'';
   const prevR=w>0?roundOf(w-1):null;
   /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
   const banner=(r&&t<weekEnd(w))?resultBanner(w):'';
   $('#main').innerHTML=`
   ${banner}
   <div class="card${stick}">${cdHtml}</div>
-  <div class="card"><h2>${ic('zap')} Mi duelo · jornada ${w+1}</h2>${duelHtml}</div>
-  ${others.length?`<div class="card"><h2>${ic('users')} Los demás duelos</h2>${others.map(([a,b])=>duelRow(a,b,w,r)).join('')}</div>`:''}
+  <div class="card"><h2>${ic('zap')} ${me?'Mi duelo':'Duelos'} · jornada ${w+1}</h2>${duelHtml}${socialNote}</div>
+  ${others.length?`<div class="card"><h2>${ic('users')} ${me?'Los demás duelos':'Duelos de la jornada'}</h2>${others.map(([a,b])=>duelRow(a,b,w,r)).join('')}</div>`:''}
   ${prevR?`<div class="card"><h2>${ic('play')} Jornada anterior · J${w}</h2>
     ${pairsFor(w-1).map(([a,b])=>duelRow(a,b,w-1,prevR)).join('')}
     <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetir la animación</button></div>`:''}
   `+btnBar();
+  if(miniSpec) renderMini(miniSpec);
 }
+let miniSpec=null;
 function replay(w){
   const r=roundOf(w); if(!r) return;
   playPong(w+1,r.data.duels,null);
@@ -826,15 +957,21 @@ async function watchRound(w,mode){
 }
 
 /* ---- MOVES ---- */
+/* v1.0: registro con actividad OBLIGATORIA (de la plantilla del admin), nivel
+   después de ver los umbrales, y el registro del día se puede EDITAR o ELIMINAR
+   mientras siga siendo el mismo día de liga y no haya pasado el cierre. */
 function tMoves(){
   const s=ses(), cfg=L.league.config, cw=calWeek(), w=activeW();
-  if(!s){ pickPlayer('moves'); return; }
   if(cw<0){
     $('#main').innerHTML=`
     <div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>
     <div class="card"><p class="msg">La liga empieza el ${cfg.start}. Desde ese día podrás registrar aquí tu actividad.</p></div>`+btnBar(); return;
   }
   if(w>=cfg.weeks){ $('#main').innerHTML=`<div class="card"><p class="msg">La liga ha terminado.</p></div>`+btnBar(); return; }
+  if(!s){
+    $('#main').innerHTML=`<div class="card"><h2>${ic('activity')} Registrar actividad</h2>
+      <p class="msg empty">${ownerIdentity()==='none'?'Estás como organizador; no participas en esta liga.':'Identifícate para registrar tu actividad.'}</p></div>`+btnBar(); return;
+  }
   const me=L.players.find(p=>p.id===s.playerId);
   const t=nowT();
   const rest=t>=weekClose(w);   // domingo 22:00 → lunes 00:00: jornada cerrada
@@ -842,68 +979,136 @@ function tMoves(){
   const today=leagueDay();
   const dayN=Math.min(7,Math.floor((t-weekStart(w))/86400000)+1);
   const types=parseTypes();
-  const hint=selType?(types.find(x=>x.name===selType)||{}).hint:null;
+  const legacy=types.length===0;          // plantilla sin ninguna actividad válida → flujo antiguo (solo nivel)
+  const sel=selType?types.find(x=>x.name===selType):null;
   const qUsed=quedadaUsed(s.playerId,w);
   const dias=daysOfWeek(s.playerId,w);
   const maxed=dias>=(cfg.maxDays||7);
-  const already=myActs.some(a=>a.day===today);
+  const todayAct=myActs.find(a=>a.day===today)||null;
+  const qCount=quedadaCount(w), qMin=quedadaMin(), qOK=qOK_(qCount,qMin);
+  const qState=cfg.quedada?(qOK
+    ?`<div class="qstate ok">${ic('check',12)} Conjunta confirmada (${qCount} personas) · +1 Move</div>`
+    :`<div class="qstate">${ic('users',12)} Conjunta de la semana: ${qCount} / ${qMin} — aún no cuenta</div>`):'';
   let formHtml='';
+  const form=(edit)=>{
+    const editingQ=edit&&(todayAct.quedada||isQOnly(todayAct));
+    const qBox=cfg.quedada?((qUsed&&!editingQ)
+      ?`<p class="msg" style="margin-top:10px">${ic('check',12)} Actividad conjunta ya usada esta semana (máx. 1).</p>`
+      :`<label style="margin-top:10px"><input type="checkbox" id="aQuedada" style="width:auto" ${selQ?'checked':''} onchange="setQ(this.checked)"> Fue la <b>actividad conjunta</b> de la semana (+1 Move si la marcan ${qMin}+ personas). Si solo asististe sin entrenar, márcalo sin elegir actividad ni nivel.</label>`):'';
+    const qChecked=selQ&&cfg.quedada&&(!qUsed||editingQ);
+    const canSave=legacy?(selLevel>0||qChecked):((selType&&selLevel>0)||(qChecked&&!selLevel&&!selType));
+    return `
+    ${edit?`<p class="msg" style="margin-top:-4px">Editando tu registro de <b>hoy</b> (${fmtHM(todayAct.created_at)}). La hora original se conserva; los reportes que tuviera, también.</p>`
+          :`<p class="msg" style="margin-top:-4px">Hoy · <b>DÍA ${dayN} · JORNADA ${w+1}</b>. El registro guarda fecha y hora, para que casen con tu foto del grupo.</p>`}
+    ${legacy
+      ?`<p class="msg">La plantilla de actividades de esta liga no tiene ninguna línea válida: elige solo el nivel y avisa a tu admin.</p>`
+      :`<label>1 · ¿Qué actividad?</label>
+        <div class="typegrid">${types.map(x=>`<button class="typebtn ${selType===x.name?'on':''}" onclick="setType('${esc(x.name)}')">${esc(x.name)}</button>`).join('')}</div>
+        ${sel?`<div class="thr">${[0,1,2].map(i=>`<span>${medalSVG(i+1,14)} ${esc(sel.thr[i]||'—')}</span>`).join('')}</div>`:''}`}
+    <label>${legacy?'Nivel':'2 · ¿Qué nivel?'}</label>
+    <div class="medgrid">
+      ${[1,2,3].map(l=>`<button class="medbtn ${selLevel===l?'on':''}" onclick="setLevel(${l})">${medalSVG(l,24)}${['Bronce · 1 Move','Plata · 2 Moves','Oro · 3 Moves'][l-1]}${sel&&sel.thr[l-1]?`<div class="msg" style="font-size:11px;margin-top:2px">${esc(sel.thr[l-1])}</div>`:''}</button>`).join('')}
+    </div>
+    ${qBox}
+    ${qState}
+    <div class="row" style="margin-top:4px">
+      <button class="btn ${edit?'':'full'}" ${canSave?'':'disabled'} onclick="${edit?'guardarEdicion()':'registrar()'}">${edit?ic('check')+' Guardar cambios':'Registrar actividad'}</button>
+      ${edit?`<button class="btn sec" onclick="cancelEdit()">Cancelar</button>`:''}
+    </div>
+    <div class="err" id="aErr"></div>`;
+  };
   if(rest){
     formHtml=`<p class="msg empty">Jornada ${w+1} cerrada. El registro vuelve el lunes a las 00:00.</p>`;
-  } else if(already){
-    formHtml=`<p class="msg empty">Actividad de hoy registrada. Mañana, más.</p>`;
+  } else if(todayAct&&EDITING){
+    formHtml=form(true);
+  } else if(todayAct){
+    const anulada=isAnulada(todayAct);
+    formHtml=`
+    <p class="msg" style="margin-top:-4px">Registro de hoy · ${fmtHM(todayAct.created_at)}${editedTag(todayAct)}</p>
+    <div class="row" style="margin-top:8px;font-size:15px;font-weight:700">${isQOnly(todayAct)?xtraSVG('social',22):medalSVG(todayAct.level,22)} ${esc(actLabel(todayAct))}${todayAct.quedada?' <span class="pill">conjunta</span>':''}</div>
+    ${anulada
+      ?`<p class="err" style="margin-top:8px">Esta actividad ha sido anulada por la liga (${todayAct.reports||0} reportes): no cuenta y ya no se puede editar. Habla con el admin.</p>`
+      :`<div class="row"><button class="btn sec" onclick="startEdit()">${ic('refresh')} Editar</button>
+         <button class="btn sec" style="color:var(--lose)" onclick="borrarHoy()">${ic('x')} ${DELARM?'¿Seguro? Toca otra vez para eliminar':'Eliminar registro de hoy'}</button></div>
+       <p class="msg" style="margin-top:8px">Puedes corregirlo hasta el final del día de hoy. Si cambias algo, los reportes que tuviera se mantienen.</p>`}
+    ${qState}
+    <div class="err" id="aErr"></div>`;
   } else if(maxed){
     formHtml=(cfg.quedada&&!qUsed)
-      ?`<p class="msg">Has llegado al máximo de <b>${cfg.maxDays} días de deporte</b> esta semana. Aún puedes apuntar tu <b>asistencia a la actividad conjunta</b> (+1 Move; no cuenta como día).</p>
-        <button class="btn full" onclick="registrarConjunta()">Registrar asistencia a la conjunta</button><div class="err" id="aErr"></div>`
+      ?`<p class="msg">Has llegado al máximo de <b>${cfg.maxDays} días de deporte</b> esta semana. Aún puedes apuntar tu <b>asistencia a la actividad conjunta</b> (+1 Move si la marcan ${qMin}+ personas; no cuenta como día).</p>
+        <button class="btn full" onclick="registrarConjunta()">Registrar asistencia a la conjunta</button>${qState}<div class="err" id="aErr"></div>`
       :`<p class="msg empty">Máximo de ${cfg.maxDays} días de deporte alcanzado esta semana. A recuperar.</p>`;
   } else {
-    formHtml=`
-    <p class="msg" style="margin-top:-4px">Hoy · <b>DÍA ${dayN} · JORNADA ${w+1}</b>. El registro guarda fecha y hora, para que casen con tu foto del grupo.</p>
-    <label>Tipo de actividad</label>
-    <div class="typegrid">${types.map(x=>`<button class="typebtn ${selType===x.name?'on':''}" onclick="setType('${esc(x.name)}')">${esc(x.name)}</button>`).join('')}</div>
-    ${hint?`<p class="msg" style="margin-top:6px">Niveles: ${esc(hint)}</p>`:''}
-    <label>Nivel</label>
-    <div class="medgrid">
-      ${[1,2,3].map(l=>`<button class="medbtn ${selLevel===l?'on':''}" onclick="setLevel(${l})">${medalSVG(l,24)}${['Bronce · 1 Move','Plata · 2 Moves','Oro · 3 Moves'][l-1]}</button>`).join('')}
-    </div>
-    ${cfg.quedada?(qUsed
-      ?`<p class="msg" style="margin-top:10px">${ic('check',12)} Actividad conjunta ya usada esta semana (máx. 1).</p>`
-      :`<label style="margin-top:10px"><input type="checkbox" id="aQuedada" style="width:auto"> Fue la <b>actividad conjunta</b> de la semana (+1 Move). Si solo asististe sin entrenar, marca esto sin elegir nivel.</label>`):''}
-    <label>Nota (opcional, visible para todos)</label><input id="aWhat" placeholder="p. ej. 6k por el río">
-    <button class="btn full" onclick="registrar()">Registrar actividad</button>
-    <div class="err" id="aErr"></div>`;
+    formHtml=form(false);
   }
   $('#main').innerHTML=`
   ${rest
     ?`<div class="card restcard" style="padding:14px 20px 16px"><div class="cdlbl">Descanso · nueva jornada en</div><div class="cd" id="cdR" style="font-size:36px">…</div></div>`
     :`<div class="card stickcard" style="padding:14px 20px 16px"><div class="cdlbl">Cierre del día</div><div class="cd" id="cdD" style="font-size:36px">…</div></div>`}
-  <div class="card"><h2>${ic('activity')} Registrar actividad — ${esc(me?me.name:'')}</h2>${formHtml}</div>
+  <div class="card"><h2>${ic('activity')} ${todayAct&&!EDITING?'Actividad de hoy':'Registrar actividad'} — ${esc(me?me.name:'')}</h2>${formHtml}</div>
   <div class="card"><h2>${ic('calendar')} Mi semana · ${dias}/${cfg.maxDays||7} días</h2>
-    ${myActs.length?`<table><tr><th>Día</th><th>Hora</th><th>Nivel</th><th>Actividad</th></tr>${
-      myActs.map(a=>`<tr><td>${a.day.slice(5)}</td><td class="num">${fmtHM(a.created_at)}</td><td>${medalSVG(a.level,18)}${a.quedada?' <span class="pill">✚</span>':''}</td><td style="font-size:12.5px">${esc(isQOnly(a)?'Actividad conjunta (solo asistencia)':(a.activity||''))}</td></tr>`).join('')}</table>
-      <p class="msg" style="margin-top:6px">${ic('lock',12)} Los registros son definitivos. Errores: contacta con tu admin.</p>`
+    ${myActs.length?`<table><tr><th>Día</th><th>Hora</th><th>Actividad</th></tr>${
+      myActs.map(a=>`<tr${isAnulada(a)?' style="color:var(--dim);text-decoration:line-through"':''}><td>${a.day.slice(5)}</td><td class="num">${fmtHM(a.created_at)}</td><td style="font-size:12.5px">${isQOnly(a)?xtraSVG('social',16):medalSVG(a.level,16)} ${esc(actLabel(a))}${a.quedada?' <span class="pill">conjunta</span>':''}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}${editedTag(a)}${isAnulada(a)?' <span class="pill" style="color:var(--lose)">no cuenta</span>':''}</td></tr>`).join('')}</table>
+      <p class="msg" style="margin-top:6px">${ic('lock',12)} Solo el registro de hoy se puede editar. Errores de otros días: contacta con tu admin.</p>`
       :'<p class="msg empty">Aún nada esta semana. Your move.</p>'}
   </div>`+btnBar();
 }
+function qOK_(count,min){ return count>=min; }
 function setType(t){ selType=selType===t?null:t; render(); }
 function setLevel(l){ selLevel=selLevel===l?0:l; render(); }
+function setQ(v){ selQ=!!v; render(); }
+function startEdit(){
+  const s=ses(); const a=actsOfWeek(s.playerId,activeW()).find(x=>x.day===leagueDay()); if(!a) return;
+  EDITING=true; DELARM=false;
+  selType=isQOnly(a)?null:(a.activity&&parseTypes().some(x=>x.name===a.activity)?a.activity:null);
+  selLevel=isQOnly(a)?0:a.level;
+  selQ=!!a.quedada||isQOnly(a);
+  render();
+}
+function cancelEdit(){ EDITING=false; selType=null; selLevel=0; selQ=false; render(); }
+/* lee el formulario: devuelve {level, activity, quedada} o un error */
+function readForm(){
+  const legacy=parseTypes().length===0;
+  const qChecked=selQ&&!!$('#aQuedada');
+  if(!selLevel){
+    if(qChecked&&!selType) return {level:1,activity:'[conjunta]',quedada:false};   // solo asistencia: +1 Move (si la conjunta llega al mínimo), no cuenta como día
+    return {error:legacy?'Elige el nivel (bronce, plata u oro) o marca la actividad conjunta.':'Elige la actividad y el nivel, o marca solo la conjunta si asististe sin entrenar.'};
+  }
+  if(!legacy&&!selType) return {error:'Indica qué actividad has hecho.'};
+  return {level:selLevel,activity:legacy?'sin especificar':selType,quedada:qChecked};
+}
 async function registrar(){
   const s=ses(); $('#aErr').textContent='';
-  const qChecked=$('#aQuedada')?$('#aQuedada').checked:false;
-  const nota=$('#aWhat').value.trim();
-  let level=selLevel, texto=(selType||'')+(nota?(selType?' — ':'')+nota:''), quedada=qChecked;
-  if(!selLevel){
-    if(qChecked){ level=1; texto='[conjunta]'; quedada=false; }   // solo asistencia: +1 Move, no cuenta como día
-    else{ $('#aErr').textContent='Elige el nivel (bronce, plata u oro) o marca la actividad conjunta.'; return; }
-  }
+  const f=readForm(); if(f.error){ $('#aErr').textContent=f.error; return; }
   try{
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
-      p_day:leagueDay(),p_level:level,p_activity:texto||null,p_quedada:quedada});
+      p_day:leagueDay(),p_level:f.level,p_activity:f.activity,p_quedada:f.quedada});
     if(error) throw error;
-    selType=null; selLevel=0; toast('Actividad registrada');
+    selType=null; selLevel=0; selQ=false; toast('Actividad registrada');
     await refresh(); TAB='jornada'; render();
   }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; }
+}
+async function guardarEdicion(){
+  const s=ses(); $('#aErr').textContent='';
+  const f=readForm(); if(f.error){ $('#aErr').textContent=f.error; return; }
+  try{
+    const {error}=await sb.rpc('edit_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
+      p_day:leagueDay(),p_activity:f.activity,p_level:f.level,p_quedada:f.quedada});
+    if(error) throw error;
+    EDITING=false; selType=null; selLevel=0; selQ=false; toast('Registro actualizado');
+    await refresh();   // Moves y duelo en vivo al día en el acto
+  }catch(e){ $('#aErr').textContent=e.message||'Error al guardar'; }
+}
+/* eliminar el registro de hoy: sin confirm() del navegador — dos toques */
+async function borrarHoy(){
+  if(!DELARM){ DELARM=true; render(); setTimeout(()=>{ if(DELARM){ DELARM=false; render(); } },4000); return; }
+  DELARM=false;
+  const s=ses(); if($('#aErr'))$('#aErr').textContent='';
+  try{
+    const {error}=await sb.rpc('delete_own_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_day:leagueDay()});
+    if(error) throw error;
+    toast('Registro de hoy eliminado'); await refresh();
+  }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al eliminar'; else toast(e.message||'Error'); }
 }
 async function registrarConjunta(){
   const s=ses(); if($('#aErr'))$('#aErr').textContent='';
@@ -1015,28 +1220,85 @@ async function delDay(day){
     await refresh();
   }catch(e){ toast(e.message||'Error'); }
 }
-function pickPlayer(backTab){
-  $('#main').innerHTML=`
-  <div class="card"><h2>${ic('users')} ¿Quién eres?</h2>
-    <div class="row" style="margin-top:8px">${L.players.map(p=>
-      `<button class="btn sec pickbtn" data-id="${p.id}" onclick="pick('${p.id}',${p.has_pin})">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
-    <div id="pinBox"></div>
-  </div>`+btnBar();
-  window.pick=(id,hasPin)=>{
-    document.querySelectorAll('.pickbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
-    $('#pinBox').innerHTML=`
-      <label>${hasPin?'Tu PIN (obligatorio: este participante está protegido)':'Crea un PIN (opcional, evita que otros entren por ti)'}</label>
-      <input id="pPin" type="password" maxlength="8" autocomplete="off">
-      <button class="btn" onclick="confirmPick('${id}','${backTab}')">Confirmar</button>
-      <div class="err" id="pErr"></div>`;
-    bindEnter('pPin',()=>confirmPick(id,backTab));
-    $('#pPin').focus();
-  };
+/* ---- IDENTIDAD (v1.0: overlay bloqueante) ----
+   Único punto de entrada de "quién eres" en toda la app. Mientras no haya
+   identidad: capa por encima de todo, fondo inerte, sin ESC ni clic fuera ni
+   botón de cerrar. Salidas: elegir jugador (con PIN si lo tiene) o Salir de la liga.
+   El owner con adminPlayer ya fijado nunca lo ve; el owner de una liga anterior a
+   v1.0 lo ve una vez, con la opción «No juego, solo organizo». */
+let IDSEL=null;
+function syncIdOverlay(){
+  const ov=$('#idov'), main=$('#main'), nav=$('#nav');
+  const need=needsIdentity();
+  if(!need){
+    if(ov.classList.contains('show')){ ov.classList.remove('show'); ov.innerHTML=''; IDSEL=null; }
+    document.body.classList.remove('locked');
+    main.removeAttribute('inert'); nav.removeAttribute('inert');
+    return;
+  }
+  document.body.classList.add('locked');
+  main.setAttribute('inert',''); nav.setAttribute('inert','');
+  const owner=!!L.league.is_admin;
+  const ap=L.league.config.adminPlayer;
+  const list=L.players.filter(p=>owner||p.id!==ap);   // los demás no ven al jugador del admin
+  const selP=IDSEL?L.players.find(p=>p.id===IDSEL):null;
+  const typed=$('#pPin')?$('#pPin').value:'', hadFocus=document.activeElement&&document.activeElement.id==='pPin';
+  ov.innerHTML=`<div class="card">
+    <h2>${ic('users')} ¿Quién eres?</h2>
+    <p class="msg">${owner?'Eres el administrador. Elige tu jugador (entrarás sin PIN) o indica que solo organizas.':`Liga <b>${esc(L.league.name)}</b>. Elige tu nombre para entrar.`}</p>
+    <div class="row" style="margin-top:8px">${list.map(p=>
+      `<button class="btn sec pickbtn ${IDSEL===p.id?'on':''}" onclick="idPick('${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
+    ${owner?`<button class="btn sec" style="margin-top:12px" onclick="idOwnerNone()">${ic('settings')} No juego, solo organizo</button>`:''}
+    <div id="pinBox">${selP&&!owner?`
+      <label>${selP.has_pin?'Tu PIN (obligatorio: este participante está protegido)':'Crea un PIN (opcional, evita que otros entren por ti)'}</label>
+      <input id="pPin" type="password" maxlength="8" autocomplete="off" inputmode="numeric">
+      <button class="btn" onclick="idConfirm()">${ic('check')} Confirmar</button>`:''}
+      <div class="err" id="pErr"></div></div>
+    <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+      <button class="btn sec" onclick="exitLeague()">${ic('logout')} Salir de la liga</button>
+    </div>
+  </div>`;
+  ov.classList.add('show');
+  bindEnter('pPin',idConfirm);
+  const pin=$('#pPin');
+  if(pin){ pin.value=typed; if(hadFocus||!ov.contains(document.activeElement)) pin.focus(); }
+  else { const f=ov.querySelector('button'); if(f&&!ov.contains(document.activeElement)) f.focus(); }
 }
-/* v0.9: el PIN se comprueba (y se crea) en el SERVIDOR al identificarse.
-   Antes solo se guardaba en el navegador y se comprobaba al registrar: desde
-   otro dispositivo se podía entrar como cualquiera sin PIN. Ya no. */
-async function confirmPick(id,backTab){
+/* foco atrapado dentro del overlay; ESC no lo cierra; clic en el fondo no lo cierra */
+function idRefocus(){
+  const ov=$('#idov'); if(!ov||!ov.classList.contains('show')) return;
+  if(ov.contains(document.activeElement)&&document.activeElement!==document.body) return;
+  const f=$('#pPin')||ov.querySelector('button'); if(f) f.focus();
+}
+document.addEventListener('focusin',e=>{ const ov=$('#idov'); if(ov&&ov.classList.contains('show')&&!ov.contains(e.target)) idRefocus(); });
+document.addEventListener('mouseup',()=>{ const ov=$('#idov'); if(ov&&ov.classList.contains('show')) setTimeout(idRefocus,0); });
+document.addEventListener('keydown',e=>{
+  const ov=$('#idov'); if(!ov||!ov.classList.contains('show')) return;
+  if(e.key==='Escape'){ e.preventDefault(); return; }
+  if(e.key==='Tab'){
+    const f=[...ov.querySelectorAll('button,input,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled);
+    if(!f.length) return;
+    const first=f[0], last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+    else if(!ov.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+  }
+});
+async function idPick(id){
+  if(L.league.is_admin){   // el owner fija su jugador: sin PIN, y queda bloqueado para los demás
+    const ok=await setAdminPlayer(CUR,id,'#pErr');
+    if(ok){ await refresh(); }
+    return;
+  }
+  IDSEL=id; syncIdOverlay();
+}
+async function idOwnerNone(){
+  const ok=await setAdminPlayer(CUR,'__none__','#pErr');
+  if(ok){ await refresh(); }
+}
+/* v0.9: el PIN se comprueba (y se crea) en el SERVIDOR al identificarse. */
+async function idConfirm(){
+  const id=IDSEL; if(!id) return;
   const pin=($('#pPin')?$('#pPin').value:'').trim()||null;
   const p=L.players.find(x=>x.id===id);
   const err=t=>{ const e=$('#pErr'); if(e) e.textContent=t; };
@@ -1055,19 +1317,14 @@ async function confirmPick(id,backTab){
     }catch(e){ err(e.message||'No se pudo crear el PIN.'); return; }
   }
   MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:id,pin:pin}); saveMem();
-  /* el admin fija su jugador en la config de la liga: no vuelve a elegir, en ningún dispositivo */
-  if(L.league.is_admin&&L.league.config.adminPlayer!==id){
-    L.league.config.adminPlayer=id;
-    sb.rpc('admin_update_league',{p_code:CUR,p_patch:{adminPlayer:id},p_reason:''});
-  }
-  await refresh();   // recoge has_pin actualizado
-  TAB=backTab||'moves'; render();
+  IDSEL=null;
+  await refresh();   // recoge has_pin actualizado; render() cierra el overlay y deja la pestaña que tocaba
 }
 
 /* ---- LIGA ---- */
 function tLiga(){
   const cfg=L.league.config, w=activeW(), s=ses();
-  const nP=L.players.length, umbral=Math.ceil(nP*0.4), mayoria=Math.floor(nP/2)+1;
+  const nP=L.players.length, umbral=reportThr();
   /* v0.9: si la liga aún no ha empezado, el contador también vive aquí */
   let h=calWeek()<0?`<div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>`:'';
   h+=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
@@ -1082,7 +1339,9 @@ function tLiga(){
   }
   h+=`</div>`;
   const fp=FILTERP?byName(FILTERP):null;
-  const feed=[...L.activities].filter(a=>!fp||a.player_id===fp.id).sort((a,b)=>a.day<b.day?1:-1).slice(0,25);
+  const feed=[...L.activities].filter(a=>!fp||a.player_id===fp.id).sort((a,b)=>a.day<b.day?1:(a.day>b.day?-1:((a.created_at||'')<(b.created_at||'')?1:-1))).slice(0,25);
+  /* v1.0: tablón = actividad · nivel · hora; reporte anónimo con anillo reportes/umbral;
+     al umbral la actividad queda ANULADA (✕, tachada, «no cuenta»). Sin votación. */
   h+=`<div class="card"><h2>${ic('activity')} Track ${fp?'de '+esc(FILTERP):'de la liga'}</h2>
   ${fp?`<button class="btn sec" style="margin:0 0 8px" onclick="filterP('${esc(FILTERP)}')">${ic('x',13)} Ver todos</button>`:'<p class="msg" style="margin-bottom:6px">Toca un nombre en la clasificación para ver solo su track.</p>'}
   ${feed.length?feed.map(a=>{
@@ -1090,33 +1349,28 @@ function tLiga(){
     const mine=s&&a.player_id===s.playerId;
     const wk=Math.floor((new Date(a.day+'T00:00:00')-new Date(cfg.start+'T00:00:00'))/(7*24*3600*1000));
     const wkResolved=!!roundOf(wk);
-    const rep=a.reports||0, vok=a.votes_ok||0, vko=a.votes_ko||0;
-    const myV=MEM[CUR]&&MEM[CUR].votes?MEM[CUR].votes[a.id]:undefined;
+    const rep=a.reports||0, anulada=isAnulada(a);
     let extra='', side='';
-    if(a.verdict==='ok'){
-      extra=`<br><span class="ok" style="font-size:11px;margin-top:2px;display:inline-block">Validada por la liga (${vok} votos) — ya no admite reportes</span>`;
-    } else if(rep>=umbral&&!wkResolved){
-      /* anillo completo → botón que abre la caja de votación */
-      extra=`<br><span class="disputed">EN VOTACIÓN — deciden ${mayoria} de ${nP} · Mantener ${vok} · Rechazar ${vko}</span>`;
-      side=(!mine&&s)?ringVote(a.id,myV):'';
-    } else if(rep>=umbral&&wkResolved){
-      extra=`<br><span class="msg" style="font-size:11px">Disputa caducada al resolverse la jornada — la actividad se mantiene.</span>`;
+    if(anulada){
+      extra=`<br><span class="nocuenta">✕ No cuenta — anulada por la liga (${rep} reportes)</span>`;
+      side=`<span class="xmark" title="Anulada por la liga">✕</span>`;
     } else if(!mine&&s&&!wkResolved){
       side=ringFlag(a.id,rep,umbral);
     } else if(rep>0){
-      side=`<span class="msg" style="font-size:11px">${rep}</span>`;
+      side=`<span class="msg" style="font-size:11px" title="Reportes">${rep}/${umbral}</span>`;
     }
-    return `<div class="feeditem">
-      <span>${medalSVG(a.level,18)}</span>
-      <span class="fi"><b>${esc(p?p.name:'?')}</b> · ${a.day.slice(5)} · ${fmtHM(a.created_at)}${a.quedada?' <span class="pill">✚</span>':''}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}<br><span class="msg">${esc(isQOnly(a)?'Actividad conjunta (solo asistencia)':(a.activity||''))}</span>${extra}</span>
+    return `<div class="feeditem ${anulada?'anulada':''}">
+      <span>${isQOnly(a)?xtraSVG('social',18):medalSVG(a.level,18)}</span>
+      <span class="fi"><b>${esc(p?p.name:'?')}</b> · ${a.day.slice(5)}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}<br><span class="msg">${esc(actLabel(a))} · ${fmtHM(a.created_at)}${a.quedada?' <span class="pill">conjunta</span>':''}${editedTag(a)}</span>${extra}</span>
       ${side}
     </div>`;
   }).join(''):'<p class="msg empty">Nada aún. Your move.</p>'}
-  <p class="msg" style="margin-top:8px">Reportar es anónimo (1 por persona; tocar de nuevo lo retira; el anillo marca cuánto falta). Con ${umbral} reportes el anillo se completa y se convierte en botón de votación: tócalo para aceptar o rechazar el registro. Si ${mayoria} de ${nP} rechazan, se elimina; si ${mayoria} lo mantienen, queda validado y ya no se puede reportar. Las disputas pendientes caducan al resolverse la jornada.</p></div>`;
+  <p class="msg" style="margin-top:8px">Reportar es anónimo (1 por persona; tocar de nuevo lo retira; el anillo marca cuánto falta). Con <b>${umbral} reportes</b> (${Math.round(reportPct()*100)} % de los demás ${nP-1} jugadores) la actividad queda <b>anulada</b>: no cuenta ni como Moves ni como día, aunque sigue visible. Solo el admin puede corregir una anulación (queda en el registro público). Los reportes caducan al resolverse la jornada.</p></div>`;
   h+=`<details><summary>Normas de la liga</summary><div class="card">
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
-    <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?'actividad conjunta +1 Move':'sin actividad conjunta'} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p></div></details>`;
+    <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad conjunta +1 Move (cuenta si la marcan ${quedadaMin()}+ personas en la semana)`:'sin actividad conjunta'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
+    <p class="msg" style="margin-top:6px">El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
   const log=(L.league.log||[]).slice().reverse();
   h+=`<details><summary>Registro del administrador</summary><div class="card">${log.length?log.map(x=>
     `<div class="logi">${(x.at||'').slice(0,16).replace('T',' ')} — ${esc(x.action)}${x.reason?` · <i>${esc(x.reason)}</i>`:''}</div>`).join(''):'<p class="msg">Sin cambios.</p>'}</div></details>`;
@@ -1124,7 +1378,7 @@ function tLiga(){
 }
 function ringFlag(id,rep,thr){
   const prog=Math.min(1,rep/thr), C=(2*Math.PI*11).toFixed(1);
-  return `<button class="ringbtn ${rep>0?'rep':''}" title="Reportar (anónimo)" onclick="reportAct('${id}')">
+  return `<button class="ringbtn ${rep>0?'rep':''}" title="Reportar (anónimo) · ${rep}/${thr}" onclick="reportAct('${id}')">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <circle cx="14" cy="14" r="11" stroke="var(--line)" stroke-width="2"/>
       ${prog>0?`<circle cx="14" cy="14" r="11" stroke="var(--lose)" stroke-width="2" stroke-linecap="round" stroke-dasharray="${(prog*2*Math.PI*11).toFixed(1)} ${C}" transform="rotate(-90 14 14)"/>`:''}
@@ -1132,54 +1386,13 @@ function ringFlag(id,rep,thr){
     </svg>${rep>0?`<span style="font-size:10px">${rep}</span>`:''}
   </button>`;
 }
-/* botón de votación: el anillo completo (40 % de reportes alcanzado) */
-function ringVote(id,myV){
-  const C=(2*Math.PI*11).toFixed(1);
-  return `<button class="ringbtn rep" title="Votación abierta: toca para votar" onclick="openVote('${id}')">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="14" r="11" stroke="var(--lose)" stroke-width="2.5"/>
-      <g transform="translate(7.5,7.5) scale(0.55)" stroke="currentColor" stroke-width="3" fill="${myV!==undefined?'currentColor':'none'}" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></g>
-    </svg><span style="font-size:10px">VOTA</span>
-  </button>`;
-}
-/* caja de votación: aceptar (verde) o rechazar (rojo) el registro en disputa */
-function openVote(id){
-  const a=L.activities.find(x=>x.id===id); if(!a) return;
-  const p=L.players.find(x=>x.id===a.player_id);
-  const nP=L.players.length, mayoria=Math.floor(nP/2)+1;
-  const vok=a.votes_ok||0, vko=a.votes_ko||0;
-  const myV=MEM[CUR]&&MEM[CUR].votes?MEM[CUR].votes[a.id]:undefined;
-  $('#vote').innerHTML=`<div style="max-width:440px;margin:60px auto" class="card">
-    <h2>${ic('flag')} Votación de la liga</h2>
-    <p class="msg">Registro en disputa: <b>${esc(p?p.name:'?')}</b> · ${a.day} · ${fmtHM(a.created_at)}<br>${esc(isQOnly(a)?'Actividad conjunta (solo asistencia)':(a.activity||''))}</p>
-    <p class="msg" style="margin-top:8px">Deciden ${mayoria} de ${nP}: si votan rechazar, el registro se elimina; si votan mantener, queda validado para siempre. Puedes cambiar tu voto mientras la votación siga abierta.</p>
-    ${myV!==undefined?`<p class="msg" style="margin-top:6px"><b>Tu voto actual:</b> ${myV?'mantener':'rechazar'}.</p>`:''}
-    <div class="row" style="margin-top:4px">
-      <button class="btn vok" onclick="voteAct('${a.id}',true)">${ic('check')} Mantener · ${vok}</button>
-      <button class="btn vko" onclick="voteAct('${a.id}',false)">${ic('x')} Rechazar · ${vko}</button>
-    </div>
-    <button class="btn sec" onclick="closeModal('vote')">Cerrar</button></div>`;
-  $('#vote').classList.add('show');
-}
 async function reportAct(id){
-  const s=ses(); if(!s){ toast('Identifícate primero en Moves'); return; }
+  const s=ses(); if(!s){ toast('Identifícate primero'); return; }
   try{
     const {data,error}=await sb.rpc('report_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id});
     if(error) throw error;
-    toast(data&&data.estado==='retirado'?'Reporte retirado':'Reporte enviado (anónimo)');
-    await refresh();
-  }catch(e){ toast(e.message||'Error'); }
-}
-async function voteAct(id,accept){
-  const s=ses(); if(!s){ toast('Identifícate primero en Moves'); return; }
-  try{
-    const {data,error}=await sb.rpc('vote_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id,p_accept:accept});
-    if(error) throw error;
-    MEM[CUR]=MEM[CUR]||{}; MEM[CUR].votes=MEM[CUR].votes||{}; MEM[CUR].votes[id]=accept; saveMem();
-    closeModal('vote');
-    if(data&&data.estado==='eliminada') toast('El registro ha sido eliminado por la liga');
-    else if(data&&data.estado==='validada') toast('El registro queda validado por la liga');
-    else toast('Voto registrado');
+    if(data&&data.estado==='anulada') toast('Umbral alcanzado: la actividad queda anulada');
+    else toast(data&&data.estado==='retirado'?'Reporte retirado':'Reporte enviado (anónimo)');
     await refresh();
   }catch(e){ toast(e.message||'Error'); }
 }
@@ -1191,6 +1404,7 @@ function tAdmin(){
   const unresolved=[]; for(let j=0;j<cfg.weeks;j++){ if(!roundOf(j)) unresolved.push(j+1); }
   const weeksOpts=[]; for(let j=0;j<cfg.weeks;j++) weeksOpts.push(j);
   $('#main').innerHTML=`
+  ${parseTypes().length===0?`<div class="card" style="border-color:#eed3cf"><p class="err" style="margin:0">La plantilla de actividades no tiene ninguna línea válida: los participantes registran solo el nivel, sin actividad. Corrígela abajo («Actividad: bronce / plata / oro»).</p></div>`:''}
   <div class="card"><h2>${ic('key')} Código de la liga</h2>
     <div class="big">${esc(L.league.code)}</div>
     <button class="btn sec" onclick="copyTxt('${esc(L.league.code)}','Código copiado')">${ic('copy')} Copiar código</button>
@@ -1232,11 +1446,23 @@ function tAdmin(){
       <div style="flex:1"><label>Máx. días/sem</label><select id="eMax">${[5,6,7].map(x=>`<option ${x===cfg.maxDays?'selected':''}>${x}</option>`).join('')}</select></div>
       <div style="flex:1"><label>Bonus</label><select id="eBonus">${[[0,'No'],[3,'Día 3'],[4,'Día 4'],[5,'Día 5']].map(([v,t])=>`<option value="${v}" ${v===cfg.bonusDay?'selected':''}>${t}</option>`).join('')}</select></div>
     </div>
-    <label style="margin-top:10px"><input type="checkbox" id="eQuedada" ${cfg.quedada?'checked':''} style="width:auto"> Actividad conjunta</label>
+    <div class="row" style="margin-top:10px;align-items:flex-end">
+      <label style="flex:2;margin:0"><input type="checkbox" id="eQuedada" ${cfg.quedada?'checked':''} style="width:auto" onchange="document.getElementById('eQMin').disabled=!this.checked"> Actividad conjunta</label>
+      <div style="flex:1;min-width:130px"><label style="margin-top:0">Mínimo de personas</label><input type="number" id="eQMin" value="${quedadaMin()}" min="${QUEDADA_MIN_DEF}" max="${L.players.length}" ${cfg.quedada?'':'disabled'}></div>
+    </div>
+    <p class="msg" style="margin-top:4px">El +1 social de la semana solo cuenta si al menos ese número de personas distintas (mín. ${QUEDADA_MIN_DEF}, máx. ${L.players.length}) marcan la conjunta.</p>
+    <label>Umbral de reportes para anular una actividad</label>
+    <select id="eRepPct">${[30,35,40,45,50,55,60,65,70,75,80,85,90,95,100].map(x=>`<option value="${(x/100).toFixed(2)}" ${Math.round(reportPct()*100)===x?'selected':''}>${x} % de los demás jugadores${x===Math.round(reportPct()*100)?` (hoy: ${reportThr()} de ${L.players.length-1})`:''}</option>`).join('')}</select>
     <label><input type="checkbox" id="eOculto" ${cfg.oculto?'checked':''} style="width:auto"> Rival oculto</label>
-    <label>Actividades y niveles</label><textarea id="eLevels" style="min-height:130px">${esc(cfg.levels||PLANTILLA_DEF)}</textarea>
+    <label>Actividades y niveles — «Actividad: bronce / plata / oro», una por línea</label><textarea id="eLevels" style="min-height:130px" oninput="previewLevels()">${esc(cfg.levels||PLANTILLA_DEF)}</textarea>
+    <div id="lvlPrev" class="prevlist"></div>
     <label>Motivo del cambio (visible para toda la liga)</label><input id="eReason" placeholder="p. ej. ajustamos el umbral de correr">
     <button class="btn" onclick="saveConfig()">Guardar cambios</button><div class="err" id="eErr"></div>
+  </div>
+  <div class="card"><h2>${ic('users')} Mi jugador en la liga</h2>
+    <p class="msg">${cfg.adminPlayer==='__none__'?'Ahora mismo solo organizas (no participas).':(L.players.some(p=>p.id===cfg.adminPlayer)?`Ahora mismo juegas como <b>${esc((L.players.find(p=>p.id===cfg.adminPlayer)||{}).name)}</b>.`:'Aún no has elegido tu jugador.')} Entras sin PIN y ese jugador queda bloqueado para los demás. Cambiarlo queda en el registro público.</p>
+    <select id="eAdminP"><option value="__none__" ${cfg.adminPlayer==='__none__'?'selected':''}>No juego, solo organizo</option>${L.players.map(p=>`<option value="${p.id}" ${cfg.adminPlayer===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+    <button class="btn sec" onclick="changeAdminPlayer()">Guardar mi jugador</button><div class="err" id="apErr"></div>
   </div>
   <div class="card"><h2>${ic('flag')} Ajuste de Moves (con motivo público)</h2>
     <label>Participante</label><select id="jPlayer">${L.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
@@ -1247,6 +1473,21 @@ function tAdmin(){
     <label>Motivo</label><input id="jReason" placeholder="p. ej. ganó los bolos de la quedada">
     <button class="btn sec" onclick="doAdjust()">Aplicar ajuste</button><div class="err" id="jErr"></div>
   </div>`+btnBar();
+  previewLevels();
+}
+/* v1.0: validación en vivo de la plantilla de actividades (vista previa + recuento) */
+function previewLevels(){
+  const el=$('#lvlPrev'), ta=$('#eLevels'); if(!el||!ta) return;
+  const list=parseLevelsText(ta.value);
+  if(!list.length){ el.innerHTML=`<span class="err">Ninguna actividad reconocida: el registro caerá al modo «solo nivel» hasta que la plantilla tenga al menos una línea «Actividad: bronce / plata / oro».</span>`; return; }
+  const incompletas=list.filter(x=>x.thr.some(t=>!t)).length;
+  el.innerHTML=`<b>${list.length} actividad${list.length===1?'':'es'} reconocida${list.length===1?'':'s'}</b>${incompletas?` · ${incompletas} sin los tres tramos`:''}<br>`+
+    list.map(x=>`${esc(x.name)}: ${[0,1,2].map(i=>x.thr[i]?esc(x.thr[i]):'<i>—</i>').join(' / ')}`).join('<br>');
+}
+async function changeAdminPlayer(){
+  const id=$('#eAdminP').value;
+  const ok=await setAdminPlayer(CUR,id,'#apErr');
+  if(ok){ toast('Jugador del admin guardado'); await refresh(); }
 }
 async function quickWeek(){
   try{
@@ -1259,9 +1500,11 @@ async function quickWeek(){
   }catch(e){ $('#qErr').textContent=e.message; }
 }
 async function saveConfig(){
+  const qMin=Math.max(QUEDADA_MIN_DEF,Math.min(L.players.length,parseInt($('#eQMin').value)||QUEDADA_MIN_DEF));
   const patch={ prize:$('#ePrize').value.trim(), start:$('#eStart').value,
     weeks:parseInt($('#eWeeks').value), maxDays:parseInt($('#eMax').value),
     bonusDay:parseInt($('#eBonus').value), quedada:$('#eQuedada').checked,
+    quedadaMin:qMin, reportPct:parseFloat($('#eRepPct').value)||REPORT_PCT_DEF,
     oculto:$('#eOculto').checked, levels:$('#eLevels').value };
   try{
     const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:patch,p_reason:$('#eReason').value.trim()});
@@ -1281,70 +1524,407 @@ async function doAdjust(){
    el sorteo se ejecuta allí una sola vez, con las mismas reglas que antes,
    y queda congelado. Aquí solo se reproduce la animación con los draws guardados. */
 
-/* ---- PONG (palas casi estáticas, la bola rebota) ---- */
+/* ============ PONG v2 · MOTOR (v1.0) ============
+   Dos capas separadas y sin DOM:
+   1) SIMULADOR (PONG.simulate): físicas deterministas a paso fijo. No sabe quién debe ganar.
+   2) DIRECTOR  (PONG.direct):  rejection sampling de semillas hasta encontrar un peloteo
+      real que termine con el ganador que ya dictó el servidor (d.draws). Si no lo hay,
+      relaja criterios en orden fijo; el resultado nunca cambia.
+   La bola SOLO se mueve integrando velocidad; nunca se interpola hacia un destino.
+   Pista virtual 1000×455; el canvas escala al final. */
+const PONG=(()=>{
+  const W=1000, H=455, R=18, PW=18, XA=45, XB=955, DT=1/120;
+  const V0=950, VMAX=1700, VGAIN=1.06, MAX_ANGLE=52*Math.PI/180, MIN_VX=0.56;
+  const PAD_VMAX=620, PAD_ACC=5000;
+  const H_MIN=0.09*H, H_MAX=0.38*H;
+  const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+  /* PRNG mulberry32 sembrado con texto: (código de liga, jornada, duelo, bola, intento) */
+  function hashStr(s){ let h=1779033703^s.length; for(let i=0;i<s.length;i++){ h=Math.imul(h^s.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return (h>>>0); }
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  const rng=seedTxt=>mulberry32(hashStr(String(seedTxt)));
+  /* altura de la pala en función de los Moves PROPIOS (nunca de la cuota) */
+  function padH(m,movesMax){ return H_MIN+(H_MAX-H_MIN)*clamp(m,0,movesMax)/Math.max(1,movesMax); }
+  /* punto de impacto previsto: desplegar rebotes en pared (plegado con periodo 2·(H−2r)) */
+  function predictY(ball,planeX){
+    const t=(planeX-ball.x)/ball.vx; if(!(t>0)) return ball.y;
+    const y=ball.y+ball.vy*t, span=H-2*R, per=2*span;
+    let u=((y-R)%per+per)%per; if(u>span) u=per-u;
+    return R+u;
+  }
+  /* --- SIMULADOR ---
+     params: {hA,hB, serveDir:'A'|'B', serveAng (rad, con signo), pads:{A:{delay,speed,err[]},B:{...}},
+              fail:{side, k (índice de cruce en el que falla), delay, speed}}
+     Devuelve {trace:[{t,bx,by,ay,by2}], events:[{t,type,side,...}], hits, walls, missSide, margin, duration, ok, err} */
+  function simulate(p){
+    const pad={A:{cy:H/2,vy:0,h:p.hA,x:XA,plane:XA+R,dir:1},B:{cy:H/2,vy:0,h:p.hB,x:XB,plane:XB-R,dir:-1}};
+    const ball={x:W/2,y:H/2,vx:0,vy:0};
+    const dir=p.serveDir==='A'?-1:1;   // hacia A = vx negativo
+    ball.vx=dir*V0*Math.cos(p.serveAng); ball.vy=V0*Math.sin(p.serveAng);
+    const trace=[], events=[];
+    let t=0, crossing=0, toward=p.serveDir, hits=0, walls=0, wallsThisCross=0, lastHitT=0;
+    let missSide=null, margin=null, out=false, tOut=0, err=null;
+    const bodyCross=[];   // aserción: nunca atravesar el cuerpo de una pala
+    const ctl={A:{target:H/2,since:0},B:{target:H/2,since:0}};
+    const aimFor=(side)=>{ // objetivo de la pala a la que va la bola
+      // el perdedor "se cansa" desde el cruce k (retardo y velocidad del fallo); a partir del
+      // cruce 10 todo el mundo se cansa: garantiza que ningún peloteo sea infinito
+      const s=pad[side], isFail=p.fail&&p.fail.side===side&&crossing>=p.fail.k;
+      const pred=predictY(ball,s.plane);
+      const lim=Math.max(0,s.h/2-R*0.6);
+      let e=isFail?0:clamp((p.pads[side].err[crossing]||0),-lim,lim);
+      // golpe decisivo del ganador (cruce k−1): golpea con el canto para mandar la bola a la
+      // mitad contraria de donde está el perdedor (el ángulo sale de la geometría del rebote)
+      if(p.fail&&side!==p.fail.side&&crossing===p.fail.k-1){
+        const other=pad[p.fail.side]; e=(other.cy>H/2?1:-1)*(s.h/2+R*(p.fail.edge||0.5));
+      }
+      const fat=Math.max(0,crossing-9);
+      let delay=isFail?p.fail.delay:p.pads[side].delay, speed=isFail?p.fail.speed:p.pads[side].speed;
+      if(fat>0){ speed*=Math.pow(0.5,fat); delay+=0.15*fat; }
+      return {y:clamp(pred+e,R,H-R), delay, speed};
+    };
+    let aim={A:null,B:null}; aim[toward]=aimFor(toward); ctl[toward].since=t;
+    const MAXT=16;
+    while(!out&&t<MAXT){
+      // palas: seguidor con retardo de reacción, velocidad y aceleración acotadas
+      for(const side of ['A','B']){
+        const s=pad[side], a=aim[side];
+        let want=0;
+        if(a&&t-ctl[side].since>=a.delay){
+          const d=a.y-s.cy, vm=PAD_VMAX*a.speed;
+          want=clamp(d*9,-vm,vm);                   // frenada proporcional cerca del objetivo
+        }
+        const dv=clamp(want-s.vy,-PAD_ACC*DT,PAD_ACC*DT); s.vy+=dv;
+        s.cy=clamp(s.cy+s.vy*DT,s.h/2,H-s.h/2);
+        if(s.cy<=s.h/2||s.cy>=H-s.h/2) s.vy=0;
+      }
+      // bola: subpaso con colisión barrida (CCD) contra el plano de la pala
+      let rem=DT, guard=0;
+      while(rem>1e-9&&guard++<6){
+        const nx=ball.x+ball.vx*rem, ny=ball.y+ball.vy*rem;
+        const s=pad[toward];
+        let tc=null;
+        if(ball.vx*s.dir<0){ // va hacia esa pala
+          if((s.dir>0&&ball.x>s.plane&&nx<=s.plane)||(s.dir<0&&ball.x<s.plane&&nx>=s.plane)) tc=(s.plane-ball.x)/ball.vx;
+        }
+        if(tc!==null&&tc>=0&&tc<=rem){
+          const yc=ball.y+ball.vy*tc;
+          const off=yc-s.cy;
+          if(Math.abs(off)<=s.h/2+R){
+            // GOLPE: ángulo según el punto de impacto; módulo renormalizado; |vx| ≥ 0.56·v
+            const v=Math.min(VMAX,Math.hypot(ball.vx,ball.vy)*VGAIN);
+            const rel=clamp(off/(s.h/2+R),-1,1);
+            let th=rel*MAX_ANGLE;
+            const maxTh=Math.acos(MIN_VX); if(Math.abs(th)>maxTh) th=Math.sign(th)*maxTh;
+            ball.x=s.plane; ball.y=yc;
+            ball.vx=s.dir*v*Math.cos(th); ball.vy=v*Math.sin(th);
+            hits++; events.push({t:t+tc,type:'hit',side:toward,y:yc,rel});
+            lastHitT=t+tc; rem-=tc;
+            crossing++; toward=toward==='A'?'B':'A'; wallsThisCross=0;
+            aim[toward]=aimFor(toward); ctl[toward].since=t+tc; aim[toward==='A'?'B':'A']=null;
+            continue;
+          } else {
+            // FALLO: la bola pasa la pala; margen desde el canto (con el radio)
+            if(Math.abs(off)<s.h/2) bodyCross.push(t);   // imposible por construcción; aserción
+            if(missSide===null){ missSide=toward; margin=Math.abs(off)-(s.h/2+R); events.push({t:t+tc,type:'miss',side:toward,y:yc,margin}); }
+          }
+        }
+        // paredes: espejar el sobrepaso
+        let x=nx, y=ny;
+        if(y<R){ y=2*R-y; ball.vy=-ball.vy; walls++; wallsThisCross++; events.push({t:t+rem,type:'wall'}); }
+        else if(y>H-R){ y=2*(H-R)-y; ball.vy=-ball.vy; walls++; wallsThisCross++; events.push({t:t+rem,type:'wall'}); }
+        ball.x=x; ball.y=y; rem=0;
+      }
+      t+=DT;
+      trace.push({t,bx:ball.x,by:ball.y,ay:pad.A.cy,by2:pad.B.cy,av:pad.A.vy,bv:pad.B.vy});
+      if(ball.x<-R*2||ball.x>W+R*2){ out=true; tOut=t; events.push({t,type:'out'}); }
+      const sp=Math.hypot(ball.vx,ball.vy); if(sp<V0-1||sp>VMAX+1) err='velocidad fuera de rango '+sp.toFixed(1);
+      if(Math.abs(ball.vx)<MIN_VX*sp-1e-6) err='|vx| < 0.56·v';
+      if(ball.y<R-1e-6||ball.y>H-R+1e-6) err='bola fuera de la pista';
+    }
+    if(!out) err=err||'peloteo infinito';
+    if(bodyCross.length) err='la bola atraviesa una pala';
+    return {trace,events,hits,walls,missSide,margin,duration:tOut,ok:!err,err,hA:p.hA,hB:p.hB,serveDir:p.serveDir};
+  }
+  /* --- DIRECTOR --- */
+  const LEVELS=[ // relajación en orden fijo
+    {margin:0.09,maxHits:7,prefHits:5,wall:true,underdog:true},
+    {margin:0.12,maxHits:7,wall:true,underdog:true},
+    {margin:0.12,maxHits:9,wall:true,underdog:true},
+    {margin:0.12,maxHits:9,wall:false,underdog:true},
+    {margin:0.12,maxHits:9,wall:false,underdog:false},
+  ];
+  function validate(sim,winner,hLoser,hWinner,lvl){
+    if(!sim.ok) return sim.err;
+    const loser=winner==='A'?'B':'A';
+    if(sim.missSide!==loser) return 'gana el lado equivocado';
+    if(sim.hits<3||sim.hits>lvl.maxHits) return 'golpes '+sim.hits;
+    if(lvl.wall&&sim.walls<1) return 'sin pared';
+    if(sim.margin<0.02*H||sim.margin>lvl.margin*H) return 'margen '+sim.margin.toFixed(1);
+    const miss=sim.events.find(e=>e.type==='miss'), first=sim.events.find(e=>e.type==='hit');
+    if(!miss) return 'sin fallo';
+    if(sim.duration<2.0||sim.duration>4.5) return 'duración '+sim.duration.toFixed(2);
+    if(miss.t<0.4) return 'fallo demasiado pronto';
+    // la pala perdedora nunca se aleja de la bola en el cruce final
+    const lastHit=sim.events.filter(e=>e.type==='hit').pop();
+    const t0=lastHit?lastHit.t:0;
+    for(const s of sim.trace){ if(s.t<t0||s.t>miss.t) continue;
+      const cy=loser==='A'?s.ay:s.by2, v=loser==='A'?s.av:s.bv;
+      if(Math.abs(v)>120&&Math.sign(v)!==Math.sign(s.by-cy)&&Math.abs(s.by-cy)>25) return 'la pala se aleja'; }
+    // regla del underdog: gana la pala corta
+    if(lvl.underdog&&hWinner<hLoser-1){
+      const wallInFinal=sim.events.some(e=>e.type==='wall'&&e.t>t0&&e.t<miss.t);
+      if(!wallInFinal) return 'underdog: sin pared antes del fallo';
+      const prevHit=sim.events.filter(e=>e.type==='hit'&&e.side===loser).pop();
+      if(prevHit&&Math.sign(prevHit.y-H/2)===Math.sign(miss.y-H/2)) return 'underdog: no arrastrada a la otra mitad';
+    }
+    return null;
+  }
+  /* parámetros de una semilla: saque, palas y en qué cruce (hacia el perdedor) falla */
+  function genParams(r,serveDir,loser,hA,hB,lvl){
+    const cands=[]; for(let k=3;k<=(lvl.prefHits||lvl.maxHits);k++){ const tw=(k%2===0)?serveDir:(serveDir==='A'?'B':'A'); if(tw===loser) cands.push(k); }
+    const k=cands[Math.floor(r()*cands.length)];
+    const ang=(8+r()*20)*Math.PI/180*(r()<.5?-1:1);
+    const mk=()=>({delay:0.03+r()*0.15,speed:0.85+r()*0.15,err:Array.from({length:12},()=>(r()*2-1)*40)});
+    return {hA,hB,serveDir,serveAng:ang,pads:{A:mk(),B:mk()},fail:{side:loser,k,delay:0.05+r()*0.35,speed:0.55+r()*0.45,edge:0.2+r()*0.65}};
+  }
+  const ATTEMPTS=100;   // semillas por nivel de relajación (una simulación ≈ 0,15 ms)
+  /* direct(): busca el peloteo para una bola. Devuelve {sim, level, attempts} */
+  function direct(seedBase,winner,hA,hB,ballIdx){
+    const loser=winner==='A'?'B':'A';
+    const hL=loser==='A'?hA:hB, hW=winner==='A'?hA:hB;
+    for(let li=0;li<LEVELS.length;li++){
+      const lvl=LEVELS[li];
+      for(let a=0;a<ATTEMPTS;a++){
+        const r=rng(seedBase+':'+ballIdx+':'+li+':'+a);
+        const serveDir=ballIdx%2===0?'A':'B';
+        const p=genParams(r,serveDir,loser,hA,hB,lvl);
+        // por semilla: bisección de la velocidad del perdedor en el cruce decisivo, para
+        // que llegue tarde POR POCO (margen en ventana). Físicas intactas: solo cambia un
+        // parámetro de la pala y se vuelve a simular entero.
+        let lo=0.15, hi=1.0;
+        for(let it=0;it<8;it++){
+          const sim=simulate(p);
+          const why=validate(sim,winner,hL,hW,lvl);
+          if(!why) return {sim,level:li,attempts:a+1+li*ATTEMPTS};
+          const k=p.fail.k;
+          if(sim.missSide===loser&&sim.hits===k&&sim.margin>lvl.margin*H){ lo=p.fail.speed; }        // demasiado lejos → más rápido
+          else if(sim.hits>k&&(sim.missSide===null||sim.hits>k)){ hi=p.fail.speed; }                 // llegó → más lento
+          else break;
+          p.fail.speed=(lo+hi)/2;
+          if(hi-lo<0.01) break;
+        }
+      }
+    }
+    // último recurso: peloteo mínimo garantizado (nunca cambia el resultado)
+    const p={hA,hB,serveDir:loser,serveAng:0.2,pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},fail:{side:loser,k:0,delay:9,speed:0}};
+    return {sim:simulate(p),level:LEVELS.length,attempts:LEVELS.length*ATTEMPTS,forced:true};
+  }
+  return {W,H,R,PW,XA,XB,DT,V0,VMAX,H_MIN,H_MAX,padH,simulate,direct,validate,genParams,rng,LEVELS,clamp};
+})();
+/* ============ PONG v2 · FIN MOTOR ============ */
+
+/* ============ PALAS ∝ MOVES ============
+   La pala de cada jugador mide según SUS Moves de la jornada (nunca la cuota) y se
+   dibuja como una pila de segmentos, uno por Move, coloreados por procedencia
+   (medalla del día, azul social, verde regularidad, gris ajuste). Una sola fuente
+   de verdad: movesOfWeek() (que ya excluye anuladas y aplica quedadaMin). */
+const MEDAL_COL=['#c9793a','#b9c2cf','#e8b83a'], SEG_SOCIAL='#2b6cb0', SEG_BONUS='#2f9e63', SEG_ADJ='#9aa3b2', SEG_NEUTRAL='#7d8aa3';
+function movesMax(){ const cfg=L.league.config; return (cfg.maxDays||7)*3+(cfg.bonusDay>0?1:0)+(cfg.quedada?1:0); }
+const DAYN=['dom','lun','mar','mié','jue','vie','sáb'];
+function dayName(d){ return DAYN[new Date(d+'T00:00:00').getDay()]; }
+function segmentsFor(pid,w){
+  const cfg=L.league.config, social=quedadaOK(w), raw=actsOfWeek(pid,w).filter(a=>!isAnulada(a));
+  const acts=raw.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
+  let segs=[];
+  acts.forEach(a=>{
+    const label=(a.activity&&a.activity.trim()?a.activity:'sin especificar')+' · '+LEVEL_NAMES[a.level-1]+' · '+dayName(a.day);
+    for(let i=0;i<a.level;i++) segs.push({kind:'lvl',color:MEDAL_COL[a.level-1],day:a.day,label});
+    if(a.quedada&&social) segs.push({kind:'social',color:SEG_SOCIAL,day:a.day,label:'Conjunta · +1 · '+dayName(a.day)});
+    const adj=a.adj||0;
+    for(let i=0;i<adj;i++) segs.push({kind:'adj',color:SEG_ADJ,day:a.day,label:'Ajuste del admin · +1 · '+dayName(a.day)});
+  });
+  if(social) raw.filter(isQOnly).forEach(a=>segs.push({kind:'social',color:SEG_SOCIAL,day:a.day,label:'Conjunta (asistencia) · +1 · '+dayName(a.day)}));
+  if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) segs.push({kind:'bonus',color:SEG_BONUS,day:null,label:'Regularidad · +1'});
+  /* el total manda: movesOfWeek() (ajustes negativos, adj de anuladas, suelo 0) acotado al techo */
+  const total=Math.max(0,Math.min(movesOfWeek(pid,w),movesMax()));
+  if(segs.length>total) segs=segs.slice(0,total);
+  while(segs.length<total) segs.push({kind:'adj',color:SEG_ADJ,day:null,label:'Ajuste del admin · +1'});
+  return segs;
+}
+function neutralSegs(n){ const s=[]; for(let i=0;i<Math.max(0,Math.min(n,movesMax()));i++) s.push({kind:'neutral',color:SEG_NEUTRAL,day:null,label:'La Media'}); return s; }
+const REDUCED=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const easeBack=t=>{ t=Math.max(0,Math.min(1,t)); const c=1.70158+1, u=t-1; return 1+c*u*u*u+(c-1)*u*u; };
+
+/* ---- dibujo de la pista (compartido: mini-pista y sorteo) ----
+   st = {hA,hB,cyA,cyB,segsA,segsB,ball:{x,y,vx,vy}|null,trail:[{x,y}],squashA,squashB,
+         flashA:{idx:[],a}, flashB, ghostA:{segs,a}, ghostB, glowA, glowB} en unidades virtuales */
+function drawCourt(cv,st){
+  const dpr=window.devicePixelRatio||1, cssW=cv.clientWidth||440, cssH=cssW*PONG.H/PONG.W;
+  if(cv.width!==Math.round(cssW*dpr)||cv.height!==Math.round(cssH*dpr)){ cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr); }
+  const ctx=cv.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr*cssW/PONG.W,dpr*cssW/PONG.W);
+  const W=PONG.W,H=PONG.H,R=PONG.R,PW=st.wide?PONG.PW*1.6:PONG.PW;   // mini-pista: pala más ancha (sin física, solo lectura)
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#22375d'); g.addColorStop(1,'#18294a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.setLineDash([14,12]); ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.restore();
+  const pad=(side)=>{
+    const h=side==='A'?st.hA:st.hB, cy=side==='A'?st.cyA:st.cyB, segs=(side==='A'?st.segsA:st.segsB)||[];
+    const x=side==='A'?PONG.XA+PONG.PW-PW:PONG.XB, sq=side==='A'?(st.squashA||0):(st.squashB||0);
+    const glow=side==='A'?'rgba(255,90,60,.55)':'rgba(125,180,232,.55)';
+    const hh=h*(1-0.08*sq), top=cy-hh/2, n=segs.length, gap=0.004*H;
+    ctx.save(); ctx.shadowColor=glow; ctx.shadowBlur=14;
+    if(n===0){ ctx.strokeStyle=side==='A'?'#ff5a3c':'#7db4e8'; ctx.lineWidth=3; rr(ctx,x+1.5,top+1.5,PW-3,hh-3,5); ctx.stroke(); }
+    else{
+      const sh=(hh-(n-1)*gap)/n, fl=side==='A'?st.flashA:st.flashB;
+      segs.forEach((s,i)=>{ const y=top+i*(sh+gap);
+        ctx.fillStyle=s.color; rr(ctx,x,y,PW,Math.max(1,sh),Math.min(4,sh/2)); ctx.fill();
+        if(fl&&fl.a>0&&fl.idx.includes(i)){ ctx.fillStyle=`rgba(255,255,255,${(0.85*fl.a).toFixed(3)})`; rr(ctx,x-2,y-1,PW+4,Math.max(1,sh)+2,4); ctx.fill(); }
+      });
+    }
+    const gh=side==='A'?st.ghostA:st.ghostB;   // segmentos que se van (anulación/edición a la baja): destello gris
+    if(gh&&gh.a>0){ const gn=gh.segs.length, gsh=(gh.h-(gn-1)*gap)/gn, gtop=cy-gh.h/2;
+      gh.segs.forEach((s,i)=>{ if(i<n) return; ctx.fillStyle=`rgba(190,196,206,${(0.8*gh.a).toFixed(3)})`; rr(ctx,x,gtop+i*(gsh+gap),PW,Math.max(1,gsh),3); ctx.fill(); }); }
+    ctx.restore();
+  };
+  pad('A'); pad('B');
+  if(st.ball){
+    (st.trail||[]).forEach((p,i,arr)=>{ const a=0.28*(1-i/arr.length); ctx.fillStyle=`rgba(255,255,255,${a.toFixed(3)})`; ctx.beginPath(); ctx.arc(p.x,p.y,R*(1-0.12*i),0,Math.PI*2); ctx.fill(); });
+    const b=st.ball, sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0;
+    ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
+    ctx.shadowColor='rgba(255,255,255,.6)'; ctx.shadowBlur=16; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+}
+function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+/* ---- mini-pista del duelo en vivo: palas a escala, sin bola; feedback al cambiar Moves ----
+   Guarda el último estado por (jornada, jugador): un Move nuevo = segmento nuevo +
+   estirón elástico (~320 ms, sobrepaso) + destello (~600 ms); al bajar, contracción con
+   destello gris del segmento que se va. Cambiar solo la actividad (mismo nivel) no anima:
+   se repintan colores/etiquetas. Con reduced-motion: sin animación, solo el conteo. */
+const MINI_PREV={}; let miniRAF=0;
+function renderMini(spec){
+  const cv=$('#miniCourt'); if(!cv) return;
+  cancelAnimationFrame(miniRAF);
+  const MM=movesMax(), key=s=>spec.w+':'+s.pid;
+  const sides={A:spec.a,B:spec.b}, st={cyA:PONG.H/2,cyB:PONG.H/2,ball:null,wide:true}, anims={};
+  for(const k of ['A','B']){
+    const s=sides[k], prev=MINI_PREV[key(s)], hNow=PONG.padH(s.segs.length,MM);
+    st['segs'+k]=s.segs; st['h'+k]=hNow;
+    if(prev&&prev.n!==s.segs.length&&!REDUCED()){
+      const grow=s.segs.length>prev.n;
+      anims[k]={from:prev.h,to:hNow,t0:performance.now(),grow,
+        idx:grow?s.segs.map((_,i)=>i).filter(i=>i>=prev.n):[],
+        ghost:grow?null:{segs:prev.segs,h:prev.h}};
+    }
+    MINI_PREV[key(s)]={n:s.segs.length,h:hNow,segs:s.segs};
+  }
+  const frame=()=>{
+    let live=false; const now=performance.now();
+    for(const k of ['A','B']){ const a=anims[k]; if(!a) continue;
+      const u=(now-a.t0)/320, v=(now-a.t0)/600;
+      st['h'+k]=a.from+(a.to-a.from)*easeBack(u);
+      st['flash'+k]=a.grow?{idx:a.idx,a:Math.max(0,1-v)}:null;
+      st['ghost'+k]=a.ghost?{segs:a.ghost.segs,h:a.from+(a.to-a.from)*easeBack(u),a:Math.max(0,1-v)}:null;
+      if(v<1) live=true; else { st['h'+k]=a.to; st['flash'+k]=null; st['ghost'+k]=null; }
+    }
+    drawCourt(cv,st);
+    if(live) miniRAF=requestAnimationFrame(frame);
+  };
+  frame();
+  /* E3: tocar/pasar por un segmento muestra «Natación · Oro · mié» */
+  const hint=$('#miniHint'), base=hint?hint.textContent:'';
+  const pick=(ev)=>{
+    const r=cv.getBoundingClientRect(), x=(ev.clientX-r.left)*PONG.W/r.width, y=(ev.clientY-r.top)*PONG.W/r.width;
+    const side=x<PONG.W/2?'A':'B', segs=st['segs'+side], h=st['h'+side], cy=st['cy'+side];
+    if(!segs.length||Math.abs(y-cy)>h/2||(side==='A'?x>160:x<PONG.W-160)) return null;
+    const i=Math.min(segs.length-1,Math.floor((y-(cy-h/2))/h*segs.length));
+    return segs[i].label;
+  };
+  cv.onpointermove=cv.onpointerdown=(ev)=>{ if(!hint) return; const l=pick(ev); hint.textContent=l||base; };
+  cv.onpointerleave=()=>{ if(hint) hint.textContent=base; };
+}
+
+/* ---- SORTEO: reproducción del peloteo dictado por el servidor ----
+   Para cada bola de d.draws, el DIRECTOR busca un peloteo real (PONG.direct) y aquí
+   solo se reproduce el trace a paso fijo con acumulador + interpolación (alpha).
+   Palas del tamaño de los Moves congelados (d.ma/d.mb); su tamaño no cambia durante
+   la reproducción. Con reduced-motion: resumen estático (palas, bolas, marcador). */
 async function playPong(jNum,duels,_){
   const ov=$('#ov'); let skip=false;
   const sleep=ms=>new Promise(r=>setTimeout(r,skip?30:ms));
+  const w=jNum-1, MM=movesMax(), reduced=REDUCED();
   ov.classList.add('show');
   for(let i=0;i<duels.length;i++){
     const d=duels[i];
-    const pA=Math.round(serieProb(d.ma,d.mb)*100), pB=100-pA;
-    const cls=p=>p>50?'pcW':(p<50?'pcL':'pcN');
+    const pa=byName(d.a), pb=byName(d.b);
+    const segsA=pa?fitSegs(segmentsFor(pa.id,w),d.ma):neutralSegs(d.ma), segsB=pb?fitSegs(segmentsFor(pb.id,w),d.mb):neutralSegs(d.mb);
+    const hA=PONG.padH(d.ma,MM), hB=PONG.padH(d.mb,MM);
     ov.innerHTML=`<div class="prog">Jornada ${jNum} · duelo ${i+1} de ${duels.length} · al mejor de 3</div>
       <div class="intro">
-        <div style="text-align:left"><div class="pName" style="color:var(--duelA)">${esc(d.a)}</div><div class="pMeta">${d.ma} Moves · <span class="pc ${cls(pA)}">${pA} %</span></div></div>
-        <div style="text-align:right"><div class="pName" style="color:var(--duelB)">${esc(d.b)}</div><div class="pMeta">${d.mb} Moves · <span class="pc ${cls(pB)}">${pB} %</span></div></div>
+        <div style="text-align:left"><div class="pName" style="color:var(--duelA)">${esc(d.a)}</div><div class="pMeta">${d.ma} Moves</div></div>
+        <div style="text-align:right"><div class="pName" style="color:var(--duelB)">${esc(d.b)}</div><div class="pMeta">${d.mb} Moves</div></div>
       </div>
-      <div class="court" id="court"><div class="net"></div>
-        <div class="paddle A" id="padA"></div><div class="paddle B" id="padB"></div>
-        <div class="pball" id="ball" style="left:212px;top:92px"></div>
-      </div>
+      <canvas class="court" id="court"></canvas>
       <div id="pscore">0 – 0</div><div id="pres"></div>
       <div class="row" style="justify-content:center"><button class="btn sec" id="skipBtn">Saltar todo</button></div>`;
     $('#skipBtn').onclick=()=>{ skip=true; };
+    const cv=$('#court');
+    const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,ball:null,trail:[]};
+    drawCourt(cv,st);
     await sleep(2200);
     if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; await sleep(1800); continue; }
-    const ball=$('#ball'), padA=$('#padA'), padB=$('#padB');
-    const court=$('#court'), W=court.clientWidth||440;
-    const LX=26, RX=W-42, MIDX=(W-16)/2;
-    const rndPad=()=>Math.random()*144;               // posición aleatoria de pala (0-144)
     let sc={A:0,B:0};
-    for(const r of d.draws){
-      const rally=2+Math.floor(Math.random()*4);
-      let side=Math.random()<.5?'A':'B';
-      ball.style.transition='none'; ball.style.left=MIDX+'px'; ball.style.top='92px';
-      padA.style.top=rndPad()+'px'; padB.style.top=rndPad()+'px';
-      await sleep(320);
-      ball.style.transition='left .5s linear, top .5s ease';
-      // peloteo: las DOS palas se mueven sin parar; la que golpea siempre llega a la bola
-      for(let k=0;k<rally;k++){
-        const y=20+Math.random()*150;
-        ball.style.left=(side==='A'?LX:RX)+'px'; ball.style.top=y+'px';
-        (side==='A'?padA:padB).style.top=Math.max(0,Math.min(144,y-22))+'px'; // esta llega al golpe
-        (side==='A'?padB:padA).style.top=rndPad()+'px';                        // la otra deambula
-        side=side==='A'?'B':'A';
-        await sleep(520);
-      }
-      // el punto: último golpe desde el campo del ganador…
-      const loser=r==='A'?'B':'A';
-      const yHit=20+Math.random()*150;
-      ball.style.left=(r==='A'?LX:RX)+'px'; ball.style.top=yHit+'px';
-      (r==='A'?padA:padB).style.top=Math.max(0,Math.min(144,yHit-22))+'px';
-      (loser==='A'?padA:padB).style.top=rndPad()+'px';
-      await sleep(520);
-      // …y cruza la pista entrando LEJOS de donde esté la pala del perdedor
-      const lp=parseFloat((loser==='A'?padA:padB).style.top)||72;
-      const yMiss=lp>85? 12+Math.random()*35 : 150+Math.random()*35;   // al hueco contrario
-      (loser==='A'?padA:padB).style.top=(lp>85? 120+Math.random()*24 : Math.random()*24)+'px'; // reacciona tarde y corto
-      ball.style.left=(loser==='A'?-30:W+14)+'px'; ball.style.top=yMiss+'px';
-      sc[r]++; await sleep(560);
-      $('#pscore').textContent=sc.A+' – '+sc.B;
+    if(reduced){
+      $('#pres').innerHTML=`<div class="drawlist">${d.draws.map(r=>`<span class="${r==='A'?'dA':'dB'}">${r}</span>`).join('')}</div><span class="w">${esc(d.winner)}</span> gana ${d.score}`;
+      d.draws.forEach(r=>sc[r]++); $('#pscore').textContent=sc.A+' – '+sc.B;
+      await sleep(3200); continue;
+    }
+    for(let bi=0;bi<d.draws.length;bi++){
+      const r=d.draws[bi];
+      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi);
+      if(DEV&&!res.sim.ok) throw new Error('PONG: '+res.sim.err);
+      if(DEV&&res.level>0) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`);
+      await playTrace(cv,st,res.sim,()=>skip);
+      sc[r]++;
+      const ps=$('#pscore'); ps.textContent=sc.A+' – '+sc.B; ps.classList.add('flash'); cv.classList.add('shake');
+      setTimeout(()=>{ ps.classList.remove('flash'); cv.classList.remove('shake'); },200);
       await sleep(650);
     }
     $('#pres').innerHTML=`<span class="w">${esc(d.winner)}</span> gana ${d.score}`;
     await sleep(2400);
   }
   ov.classList.remove('show');
+}
+/* ajusta los segmentos actuales al total congelado en la jornada (siempre coinciden en
+   jornadas resueltas; por si acaso: recorta o rellena en gris) */
+function fitSegs(segs,total){ segs=segs.slice(0,Math.max(0,Math.min(total,movesMax()))); while(segs.length<Math.min(total,movesMax())) segs.push({kind:'adj',color:SEG_ADJ,label:''}); return segs; }
+/* reproducción de un trace: paso fijo DT con acumulador (máx. 0,25 s por frame), alpha de
+   interpolación, 0,5 s de congelado en el saque, hit-stop 40 ms, squash 120 ms, estela. */
+function playTrace(cv,st,sim,isSkip){
+  return new Promise(resolve=>{
+    const DT=PONG.DT, tr=sim.trace, hits=sim.events.filter(e=>e.type==='hit');
+    let simT=0, acc=0, last=performance.now(), hold=0.5, nextHit=0, sqA=0, sqB=0, done=false;
+    st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0;
+    const frame=(now)=>{
+      let dt=Math.min(0.25,(now-last)/1000); last=now; if(isSkip()) dt*=8;
+      if(hold>0){ hold-=dt; if(hold>0){ drawCourt(cv,st); requestAnimationFrame(frame); return; } dt=-hold; hold=0; }
+      acc+=dt;
+      while(acc>=DT&&!done){
+        simT+=DT; acc-=DT;
+        if(nextHit<hits.length&&simT>=hits[nextHit].t){ hold=0.04; if(hits[nextHit].side==='A') sqA=0.12; else sqB=0.12; nextHit++; acc=0; break; }
+        if(simT>=sim.duration) done=true;
+      }
+      const f=Math.min(tr.length-1,simT/DT), i=Math.floor(f), al=f-i, a=tr[Math.max(0,i)], b=tr[Math.min(tr.length-1,i+1)];
+      const lerp=(p,q)=>p+(q-p)*al;
+      st.ball.vx=(b.bx-a.bx)/DT; st.ball.vy=(b.by-a.by)/DT;
+      st.ball.x=lerp(a.bx,b.bx); st.ball.y=lerp(a.by,b.by); st.cyA=lerp(a.ay,b.ay); st.cyB=lerp(a.by2,b.by2);
+      st.trail=[]; for(let k=1;k<=5;k++){ const s=tr[Math.max(0,i-k*2)]; st.trail.push({x:s.bx,y:s.by}); }
+      sqA=Math.max(0,sqA-dt); sqB=Math.max(0,sqB-dt); st.squashA=sqA/0.12; st.squashB=sqB/0.12;
+      drawCourt(cv,st);
+      if(done){ st.ball=null; st.trail=[]; resolve(); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
 }
 
 /* ============ VARIOS ============ */
