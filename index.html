@@ -215,16 +215,21 @@
 <main id="main"><div class="card"><p class="msg">Cargando…</p></div></main>
 <footer>© 2026 Your Move Game Labs · <a href="#" onclick="vSup();return false">soporte</a> · <a href="#" onclick="vPriv();return false">privacidad</a></footer>
 
-<div id="priv" class="modal"><div style="max-width:560px;margin:20px auto" class="card">
+<div id="priv" class="modal"><div style="max-width:560px;margin:20px auto;max-height:calc(100vh - 40px);overflow:auto" class="card">
   <h2>Aviso de privacidad</h2>
   <div class="msg" style="font-size:13px">
-  <p><b>Responsable:</b> Your Move Game Labs (Your Move League) · soporte@yourmoveleague.com.</p>
-  <p style="margin-top:8px"><b>Qué datos tratamos:</b> correo y contraseña del administrador (gestión de acceso), nombres de participantes introducidos por su administrador, actividades registradas (fecha, nivel, descripción) y un PIN opcional. Sin ubicación ni datos de dispositivos.</p>
-  <p style="margin-top:8px"><b>Para qué:</b> el funcionamiento de la liga y estadísticas internas agregadas y anónimas. No vendemos ni cedemos datos.</p>
-  <p style="margin-top:8px"><b>Dónde:</b> Supabase (servidores en la UE), proveedor técnico.</p>
-  <p style="margin-top:8px"><b>Tus derechos:</b> acceso, corrección o borrado escribiendo a soporte@yourmoveleague.com.</p>
-  <p style="margin-top:8px"><b>Reportes:</b> guardamos quién reporta solo para impedir duplicados; nunca se muestra.</p>
-  <p style="margin-top:8px"><b>Almacenamiento local:</b> guardamos en tu navegador tu liga y participante. Sin cookies de seguimiento ni publicidad.</p>
+  <p><b>Responsable:</b> Your Move Game Labs (Your Move League) · soporte@yourmoveleague.com</p>
+  <p style="margin-top:8px"><b>Qué datos tratamos:</b> del administrador de la liga, su correo electrónico y sus credenciales de acceso (la contraseña se almacena cifrada y no es accesible para nosotros). De los participantes, el nombre o alias que introduce el administrador, las actividades que registran (fecha, tipo de actividad elegido entre las que ha definido el administrador, y nivel) y un PIN opcional. Del uso de la aplicación, datos técnicos como pantallas visitadas, tiempos, acciones realizadas, errores y tipo de dispositivo, asociados a un identificador seudónimo y no a tu nombre. No recogemos ubicación.</p>
+  <p style="margin-top:8px"><b>Para qué y con qué base jurídica:</b> para hacer funcionar la liga, mostrar la clasificación y resolver los duelos, sobre la base de la ejecución del servicio que solicitas (art. 6.1.b RGPD). Para atender tus consultas de soporte, sobre la misma base. Y para elaborar estadísticas internas seudonimizadas que nos permitan entender cómo se usa la aplicación y mejorarla, sobre la base de nuestro interés legítimo (art. 6.1.f RGPD); puedes oponerte a este último tratamiento escribiendo a soporte@yourmoveleague.com, sin que ello afecte a tu participación en la liga. No vendemos ni cedemos datos y no hay publicidad.</p>
+  <p style="margin-top:8px"><b>Quién más los trata:</b> proveedores que actúan como encargados del tratamiento y solo tratan los datos para prestarnos su servicio: Supabase (base de datos y alojamiento, con los servidores de este proyecto en la Unión Europea), Cloudflare (dominio y entrega de la web), GitHub Pages (publicación de la web) y Google (correo de soporte). Cuando alguno pertenece a un grupo con sede fuera del Espacio Económico Europeo, las transferencias se amparan en las cláusulas contractuales tipo de la Comisión Europea.</p>
+  <p style="margin-top:8px"><b>Cuánto tiempo:</b> los datos de la liga se conservan mientras esté activa y hasta doce meses después de su finalización, para poder consultar el historial y las clasificaciones. Los datos de uso seudonimizados se conservan de forma agregada con fines estadísticos. Puedes pedir la supresión antes de esos plazos.</p>
+  <p style="margin-top:8px"><b>Tus derechos:</b> acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad, escribiendo a soporte@yourmoveleague.com e indicando el código de tu liga y tu nombre de participante. Si consideras que no hemos atendido bien tu solicitud, puedes reclamar ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener">www.aepd.es</a>).</p>
+  <p style="margin-top:8px"><b>Quién te ha inscrito:</b> las ligas las crea un administrador, que introduce los nombres o alias de los participantes. Es él quien decide quién juega y quien responde de haberte informado y de contar con tu permiso antes de inscribirte. Puedes salir de la liga y pedir la supresión de tus datos cuando quieras, escribiéndonos a nosotros o al propio administrador.</p>
+  <p style="margin-top:8px"><b>Ajustes del administrador:</b> el administrador puede corregir o añadir Moves y debe escribir un motivo, que queda registrado y es visible para los participantes de esa liga.</p>
+  <p style="margin-top:8px"><b>Menores:</b> los menores de 14 años solo pueden participar si su padre, madre o tutor lo ha autorizado. Es el administrador de cada liga quien debe recabar y conservar esa autorización antes de inscribirlos, y así lo declara al crear la liga. Si detectamos que un menor de 14 años participa sin autorización, suprimiremos sus datos; si eres su padre, madre o tutor y quieres que lo hagamos, escríbenos a soporte@yourmoveleague.com.</p>
+  <p style="margin-top:8px"><b>Reportes:</b> cuando alguien reporta una actividad guardamos quién lo ha hecho únicamente para impedir reportes duplicados. Esa información nunca se muestra al resto de participantes.</p>
+  <p style="margin-top:8px"><b>Almacenamiento local:</b> guardamos en tu navegador el código de tu liga, tu participante y qué jornadas has visto ya, para que no tengas que introducirlos cada vez. No usamos cookies de seguimiento ni publicitarias, ni analítica de terceros: las estadísticas de uso son propias y no se comparten con nadie.</p>
+  <p style="margin-top:8px"><b>Última actualización:</b> 14 de septiembre de 2026</p>
   </div>
   <button class="btn sec" onclick="closeModal('priv')">Cerrar</button>
 </div></div>
@@ -253,7 +258,150 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const VERSION='web v1.0'+(DEV?'-dev':'');
+const VERSION='web v1.0.1'+(DEV?'-dev':'');
+/* ============ TELEMETRÍA (v1.0.1) ============
+   Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
+   await en el camino del usuario; todo en try/catch; si falla el envío, la app sigue
+   igual. Nunca viajan nombres, correos, PIN ni el motivo de los ajustes: el servidor
+   (track_batch) calcula el seudónimo con una sal privada. Apagado: TELEMETRY=false
+   aquí, o config.telemetry='off' en la liga (lo respeta el servidor). */
+const TELEMETRY=true;
+const TM=(()=>{
+  const KEY='yml_tq', MAXQ=200, BATCH=50;
+  let q=[], sending=false, timer=null, sid=null, t0=Date.now(), views=0, lastView=null, lastViewAt=Date.now(), seq=0, seen=new Set();
+  try{ q=JSON.parse(localStorage.getItem(KEY)||'[]'); if(!Array.isArray(q)) q=[]; }catch(e){ q=[]; }
+  try{ sid=sessionStorage.getItem('yml_sid'); if(!sid){ sid=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)); sessionStorage.setItem('yml_sid',sid); } }
+  catch(e){ sid=Math.random().toString(36).slice(2)+Date.now().toString(36); }
+  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(q.slice(-MAXQ))); }catch(e){} };
+  function ctx(){
+    try{
+      const s=(typeof ses==='function'&&L)?ses():null;
+      return { code:(L&&CUR)||null, player:s?s.playerId:null,
+        role:L?(L.league.is_admin?'admin':(s?'player':'anon')):'anon',
+        week:(L&&L.league&&L.league.config&&calWeek()>=0)?Math.max(0,activeW())+1:null };
+    }catch(e){ return {code:null,player:null,role:'anon',week:null}; }
+  }
+  function track(name,props){
+    if(!TELEMETRY) return;
+    try{
+      if(L&&L.league&&L.league.config&&L.league.config.telemetry==='off') return;
+      const c=ctx();
+      q.push({name:String(name), props:props||{}, week:c.week, role:c.role, client_ts:new Date().toISOString(), code:c.code, player:c.player});
+      if(q.length>MAXQ) q=q.slice(-MAXQ);
+      save();
+      if(q.length>=20) flush();
+    }catch(e){}
+  }
+  /* una vez por pantalla pintada (evita repetir en cada render de la misma vista) */
+  function once(key,name,props){ try{ const k=key+':'+seq; if(seen.has(k)) return; seen.add(k); track(name,props); }catch(e){} }
+  function view(tab){ try{ if(tab===lastView) return; const now=Date.now(); const ms=lastView?now-lastViewAt:null; lastView=tab; lastViewAt=now; views++; seq++; seen.clear(); track('view',{pantalla:tab,ms_anterior:ms}); flush(); }catch(e){} }
+  function groups(items){ const g={}; items.forEach(e=>{ const k=(e.code||'')+'|'+(e.player||''); (g[k]=g[k]||[]).push(e); }); return Object.values(g); }
+  function payload(e){ return {name:e.name, props:e.props, week:e.week, role:e.role, client_ts:e.client_ts}; }
+  async function flush(){
+    if(!TELEMETRY||sending||!q.length) return;
+    if(typeof sb==='undefined') return;
+    sending=true;
+    try{
+      const batch=q.slice(0,BATCH); q=q.slice(BATCH); save();
+      for(const g of groups(batch)){
+        try{
+          const {error}=await sb.rpc('track_batch',{p_code:g[0].code,p_player:g[0].player,p_session:sid,p_dev:DEV,p_events:g.map(payload)});
+          if(error) throw error;
+        }catch(e){ q=g.concat(q).slice(-MAXQ); save(); }   // sin red: se reintenta más tarde
+      }
+    }catch(e){}
+    finally{ sending=false; if(q.length>=BATCH) setTimeout(flush,50); }
+  }
+  /* al ocultarse la pestaña: sendBeacon (fetch keepalive de reserva); no espera nada */
+  function beacon(){
+    if(!TELEMETRY||!q.length) return;
+    try{
+      const batch=q.slice(0,BATCH); const rest=q.slice(BATCH);
+      const url=SB_URL+'/rest/v1/rpc/track_batch?apikey='+encodeURIComponent(SB_KEY);
+      let sent=false;
+      for(const g of groups(batch)){
+        const body=JSON.stringify({p_code:g[0].code,p_player:g[0].player,p_session:sid,p_dev:DEV,p_events:g.map(payload)});
+        let ok=false;
+        try{ if(navigator.sendBeacon) ok=navigator.sendBeacon(url,new Blob([body],{type:'application/json'})); }catch(e){ ok=false; }
+        if(!ok){ try{ fetch(url,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},body}).catch(()=>{}); ok=true; }catch(e){} }
+        sent=sent||ok;
+      }
+      if(sent){ q=rest; save(); }
+    }catch(e){}
+  }
+  function device(){
+    try{
+      const ua=navigator.userAgent||'', w=window.innerWidth||0;
+      const os=/iPhone|iPad|iPod/.test(ua)?'ios':(/Android/.test(ua)?'android':(/Windows/.test(ua)?'windows':(/Mac/.test(ua)?'mac':(/Linux/.test(ua)?'linux':'otro'))));
+      const dev=/iPad|Tablet/.test(ua)||(w>=700&&w<1100&&/Android/.test(ua))?'tablet':((/Mobi|Android|iPhone/.test(ua)||w<700)?'movil':'escritorio');
+      const pwa=!!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||!!navigator.standalone;
+      return {device:dev, os, pwa, lang:(navigator.language||'').slice(0,5), tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||''), sw:Math.round(w/100)*100, reduced:!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)};
+    }catch(e){ return {}; }
+  }
+  function start(){
+    try{
+      const ql=new URLSearchParams(location.search).get('l');
+      const entrada=ql?'enlace':(localStorage.getItem('yml_cur')?'guardada':'directo');
+      track('session_start',Object.assign(device(),{entrada, version:VERSION}));
+      timer=setInterval(flush,10000);
+      document.addEventListener('visibilitychange',()=>{
+        try{
+          if(document.hidden){ track('visibility',{estado:'oculta'}); onHide(); track('session_end',{ms:Date.now()-t0,vistas:views}); beacon(); }
+          else { track('visibility',{estado:'visible'}); }
+        }catch(e){}
+      });
+      window.addEventListener('pagehide',()=>{ try{ onHide(); beacon(); }catch(e){} });
+      window.addEventListener('error',ev=>{ try{ track('error',{code:'js',fn:String(ev.message||'').slice(0,80),pantalla:lastView}); }catch(e){} });
+      setTimeout(flush,1500);   // reintento de lo que quedó en cola sin red
+    }catch(e){}
+  }
+  /* avisos de abandono que dependen del estado de la app (definidos más abajo) */
+  function onHide(){ try{ if(typeof tmOnHide==='function') tmOnHide(); }catch(e){} }
+  return {track, once, view, flush, start, get sid(){ return sid; }, get lastView(){ return lastView; }};
+})();
+const track=TM.track;
+/* código corto y sin datos personales a partir de un mensaje de error del servidor */
+function errCode(e){
+  const m=String((e&&e.message)||e||'').toLowerCase();
+  if(/pin/.test(m)) return 'pin';
+  if(/actividad has hecho/.test(m)) return 'sin_actividad';
+  if(/nivel no/.test(m)) return 'nivel';
+  if(/día en curso|dia en curso/.test(m)) return 'no_es_hoy';
+  if(/cerrada/.test(m)) return 'cerrada';
+  if(/ya hay una actividad/.test(m)) return 'duplicado';
+  if(/máximo de|maximo de/.test(m)) return 'max_dias';
+  if(/conjunta esta semana/.test(m)) return 'conjunta_usada';
+  if(/anulada/.test(m)) return 'anulada';
+  if(/ningún registro|ningun registro/.test(m)) return 'sin_registro';
+  if(/propia actividad/.test(m)) return 'propia';
+  if(/ya está resuelta|ya esta resuelta|congelad/.test(m)) return 'resuelta';
+  if(/no ha llegado a su cierre/.test(m)) return 'antes_cierre';
+  if(/anteriores sin resolver/.test(m)) return 'orden';
+  if(/no hay actividad ese día|no hay actividad ese dia/.test(m)) return 'sin_actividad_dia';
+  if(/código de liga no válido|codigo de liga no valido/.test(m)) return 'codigo';
+  if(/no eres el administrador|no autorizado/.test(m)) return 'no_admin';
+  if(/failed to fetch|network|load failed|timeout/.test(m)) return 'red';
+  if(/invalid login|credentials/.test(m)) return 'credenciales';
+  if(/already registered|already exists/.test(m)) return 'ya_registrado';
+  if(/password/.test(m)) return 'password';
+  if(/email/.test(m)) return 'email';
+  return 'otro';
+}
+/* salud técnica: mide todas las RPC sin tocar las funciones que las llaman */
+(()=>{
+  try{
+    const orig=sb.rpc.bind(sb);
+    sb.rpc=function(name,args){
+      const t=Date.now(); const p=orig(name,args);
+      if(name==='track_batch'||!p||typeof p.then!=='function') return p;
+      p.then(res=>{
+        try{ const ms=Date.now()-t; if(ms>2000) track('slow',{fn:name,ms});
+          if(res&&res.error){ const c=errCode(res.error); track(c==='red'?'net_fail':'error',c==='red'?{fn:name,ms}:{code:c,fn:name,pantalla:TM.lastView}); } }catch(e){}
+      },err=>{ try{ track('net_fail',{fn:name,ms:Date.now()-t}); }catch(e){} });
+      return p;
+    };
+  }catch(e){}
+})();
 /* v1.0: valores por defecto de las claves de config nuevas (setup7 las escribe
    en las ligas existentes; aquí el fallback por si faltan) */
 const QUEDADA_MIN_DEF=3, REPORT_PCT_DEF=0.70;
@@ -510,8 +658,8 @@ function buildNav(){
   });
 }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-function vPriv(){ document.getElementById('priv').classList.add('show'); }
-function vSup(){ document.getElementById('sup').classList.add('show'); }
+function vPriv(desde){ document.getElementById('priv').classList.add('show'); track('aviso_open',{desde:desde||'pie'}); }
+function vSup(){ document.getElementById('sup').classList.add('show'); track('soporte_open',{}); }
 /* aviso no bloqueante (v0.9: fuera los alert() del navegador) */
 let toastT=null;
 function toast(msg){
@@ -521,6 +669,7 @@ function toast(msg){
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2000);
 }
 function copyTxt(t,msg){
+  track('copy',{que:/Código/.test(msg||'')?'codigo':(/Texto/.test(msg||'')?'whatsapp':(/Correo/.test(msg||'')?'soporte':'otro'))});
   const done=()=>toast(msg||'Copiado');
   const legacy=()=>{
     const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
@@ -540,10 +689,11 @@ function bindEnter(id,fn){
 /* ============ HOME / AUTH ============ */
 function vHome(notice){
   $('#nav').classList.remove('on');
+  syncIdOverlay();   // v1.0.1: si se sale de la liga desde el overlay de identidad, el overlay se cierra
   const adminBox = USER
     ? `<p class="msg">Sesión: <b>${esc(USER.email)}</b></p>
        <div id="mls" class="row" style="margin-top:8px"><span class="msg">Cargando tus ligas…</span></div>
-       <div class="row"><button class="btn" onclick="vCreate()">${ic('plus')} Crear liga</button>
+       <div class="row"><button class="btn" onclick="track('cta_new_league',{desde:'home'});vCreate()">${ic('plus')} Crear liga</button>
        <button class="btn sec" onclick="logoutAdmin()">${ic('logout')} Salir</button></div>`
     : `<label>Correo</label><input id="aEmail" type="email" autocomplete="email">
        <label>Contraseña</label><input id="aPass" type="password" autocomplete="current-password">
@@ -559,27 +709,31 @@ function vHome(notice){
   <div class="card"><h2>${ic('key')} Inicia sesión o regístrate</h2>${adminBox}</div>`;
   bindEnter('jCode',openLeague); bindEnter('aEmail',loginAdmin); bindEnter('aPass',loginAdmin);
   if(USER) loadMyLeagues();
+  TM.view('home');
+  if(CREATE_OPEN){ track('create_abandon',{tenia_nombre:CREATE_OPEN.nombre,n_jugadores:CREATE_OPEN.n}); CREATE_OPEN=null; }
 }
 async function loadMyLeagues(){
   const {data,error}=await sb.rpc('my_leagues');
   if(error||!data){ $('#mls').innerHTML='<span class="err">No se pudieron cargar</span>'; return; }
+  track('my_leagues_view',{n:data.length});
   $('#mls').innerHTML=data.length
-    ? data.map(l=>`<button class="btn sec" onclick="goLeague('${l.code}')">${esc(l.name)} · ${l.code}</button>`).join('')
+    ? data.map(l=>`<button class="btn sec" onclick="OPEN_VIA='mis_ligas';goLeague('${l.code}')">${esc(l.name)} · ${l.code}</button>`).join('')
     : '<span class="msg">Aún no tienes ligas.</span>';
 }
 async function loginAdmin(){
   const {error}=await sb.auth.signInWithPassword({email:$('#aEmail').value,password:$('#aPass').value});
-  if(error){ $('#aErr').textContent=error.message; return; }
-  USER=(await sb.auth.getUser()).data.user; vHome();
+  if(error){ $('#aErr').textContent=error.message; track('auth_login',{ok:false,motivo_error:errCode(error)}); return; }
+  USER=(await sb.auth.getUser()).data.user; track('auth_login',{ok:true}); vHome();
 }
 async function signupAdmin(){
   const {error}=await sb.auth.signUp({email:$('#aEmail').value,password:$('#aPass').value});
-  if(error){ $('#aErr').textContent=error.message; return; }
+  if(error){ $('#aErr').textContent=error.message; track('auth_signup',{ok:false,motivo_error:errCode(error)}); return; }
   const {error:e2}=await sb.auth.signInWithPassword({email:$('#aEmail').value,password:$('#aPass').value});
-  if(e2){ $('#aErr').textContent=e2.message; return; }
-  USER=(await sb.auth.getUser()).data.user; vHome();
+  if(e2){ $('#aErr').textContent=e2.message; track('auth_signup',{ok:false,motivo_error:errCode(e2)}); return; }
+  USER=(await sb.auth.getUser()).data.user; track('auth_signup',{ok:true}); vHome();
 }
-async function logoutAdmin(){ await sb.auth.signOut(); USER=null; vHome(); }
+async function logoutAdmin(){ track('auth_logout',{}); await sb.auth.signOut(); USER=null; vHome(); }
+let OPEN_VIA=null, CREATE_OPEN=null;
 
 /* ============ CREAR LIGA ============ */
 function vCreate(){
@@ -604,11 +758,19 @@ function vCreate(){
     </div>
     <p class="msg" style="margin-top:4px">El +1 social solo cuenta si al menos ese número de personas distintas marcan la conjunta en la semana.</p>
     <label><input type="checkbox" id="cOculto" style="width:auto"> Rival oculto (solo se ve el duelo en curso)</label>
-    <div class="row"><button class="btn" onclick="createLeague()">Crear liga</button>
+    <label style="margin-top:14px;display:flex;gap:10px;align-items:flex-start;color:var(--text);font-weight:500;line-height:1.5"><input type="checkbox" id="cDecl" style="width:auto;margin-top:3px;flex:none" onchange="document.getElementById('cBtn').disabled=!this.checked"> <span id="cDeclTxt">${esc(DECLARACION_ADMIN)}</span></label>
+    <p class="msg" style="margin-top:6px">Consulta cómo tratamos los datos en el <a href="#" onclick="vPriv('creacion');return false">aviso de privacidad</a>.</p>
+    <div class="row"><button class="btn" id="cBtn" onclick="createLeague()" disabled>Crear liga</button>
     <button class="btn sec" onclick="vHome()">Volver</button></div>
     <div class="err" id="cErr"></div>
   </div>`;
+  TM.view('crear'); track('create_start',{});
+  CREATE_OPEN={nombre:false,n:0};
+  const upd=()=>{ if(CREATE_OPEN){ CREATE_OPEN.nombre=!!$('#cName').value.trim(); CREATE_OPEN.n=$('#cPlayers').value.split('\n').filter(x=>x.trim()).length; } };
+  $('#cName').addEventListener('input',upd); $('#cPlayers').addEventListener('input',upd);
 }
+/* v1.0.1: declaración del administrador (RGPD). El texto se guarda íntegro en leagues.log. */
+const DECLARACION_ADMIN='Confirmo que he informado a las personas que voy a inscribir y que cuento con su permiso para añadirlas a esta liga. Si alguna de ellas es menor de 14 años, confirmo que tengo la autorización de su padre, madre o tutor.';
 async function createLeague(){
   const lines=$('#cPlayers').value.split('\n').map(x=>x.trim()).filter(Boolean);
   const roster=lines.map(l=>{
@@ -621,6 +783,7 @@ async function createLeague(){
   if(new Set(players).size!==players.length){ $('#cErr').textContent='Hay nombres repetidos.'; return; }
   const qMin=Math.max(QUEDADA_MIN_DEF,Math.min(players.length,parseInt($('#cQMin').value)||QUEDADA_MIN_DEF));
   if(parseLevelsText($('#cLevels').value).length===0){ $('#cErr').textContent='La plantilla de actividades no tiene ninguna línea válida («Actividad: bronce / plata / oro»).'; return; }
+  if(!$('#cDecl')||!$('#cDecl').checked){ $('#cErr').textContent='Para crear la liga tienes que confirmar la declaración sobre los participantes.'; return; }
   const cfg={
     prize:$('#cPrize').value.trim(), start:$('#cStart').value,
     weeks:parseInt($('#cWeeks').value)||12, maxDays:parseInt($('#cMax').value),
@@ -633,6 +796,11 @@ async function createLeague(){
     const {data,error}=await sb.rpc('create_league',{p_name:$('#cName').value,p_email:USER?USER.email:null,
       p_config:cfg,p_calendar:roundRobin(players),p_players:roster});
     if(error) throw error;
+    CREATE_OPEN=null;
+    track('create_done',{n_jugadores:roster.length,config:Object.assign({},cfg,{prize:cfg.prize?'(texto)':''})});
+    /* prueba de la declaración en leagues.log (RPC nueva; create_league no se toca) */
+    try{ const {error:e2}=await sb.rpc('log_admin_declaration',{p_code:data.code,p_text:DECLARACION_ADMIN}); if(e2) throw e2; track('admin_declaracion',{aceptada:true}); }
+    catch(e2){ toast('No se pudo registrar la declaración; escribe a soporte'); }
     vAdminPick(data.code,$('#cName').value,cfg,roster);
   }catch(e){ $('#cErr').textContent=e.message||'Error al crear la liga'; }
 }
@@ -660,7 +828,7 @@ async function vAdminPick(code,name,cfg,roster){
 async function adminPickChoose(id){
   const pc=PENDING_CREATE; if(!pc) return;
   const ok=await setAdminPlayer(pc.code,id,'#apErr');
-  if(ok){ PENDING_CREATE=null; vCreated(pc.code,pc.name,pc.cfg,pc.roster); }
+  if(ok){ track('admin_player_set',{modo:id==='__none__'?'solo_organiza':'jugador',primera_vez:true}); PENDING_CREATE=null; vCreated(pc.code,pc.name,pc.cfg,pc.roster); }
 }
 /* guarda config.adminPlayer (id o '__none__'); devuelve true si fue bien */
 async function setAdminPlayer(code,id,errSel){
@@ -684,7 +852,8 @@ function whatsText(code,name,cfg,roster){
     (cfg.quedada?`\n👥 Actividad conjunta: +1 Move, solo si la marcan ${cfg.quedadaMin||QUEDADA_MIN_DEF}+ personas esa semana.\n`:'')+
     `✏️ Tu registro de hoy se puede corregir hasta el final del día (la hora original se conserva).\n`+
     `🚩 Reportes anónimos: si reporta el ${Math.round((cfg.reportPct||REPORT_PCT_DEF)*100)} % de los demás, la actividad no cuenta.\n`+
-    `\n🎯 Domingo: se resuelve la jornada. Más deporte = más opciones. Garantizado, nada.`;
+    `\n🎯 Domingo: se resuelve la jornada. Más deporte = más opciones. Garantizado, nada.\n`+
+    `\n🔒 Cómo tratamos tus datos: ${location.origin+location.pathname}#privacidad`;
 }
 function vCreated(code,name,cfg,roster){
   $('#main').innerHTML=`
@@ -699,21 +868,24 @@ function vCreated(code,name,cfg,roster){
 }
 
 /* ============ ABRIR LIGA ============ */
-async function openLeague(){ const c=$('#jCode').value.trim().toUpperCase(); if(c) goLeague(c); }
+async function openLeague(){ const c=$('#jCode').value.trim().toUpperCase(); if(c){ OPEN_VIA='codigo'; goLeague(c); } }
 async function goLeague(code){
   try{
     const {data,error}=await sb.rpc('get_league',{p_code:code});
     if(error) throw error;
-    if(!data){ if($('#jErr'))$('#jErr').textContent='Código no válido.'; return; }
+    if(!data){ if($('#jErr'))$('#jErr').textContent='Código no válido.'; track('league_open_fail',{motivo:'codigo'}); OPEN_VIA=null; return; }
     /* Las ligas creadas en beta llevan config.beta y NO se abren en la web
        pública: allí el tiempo es real y los contadores no cuadrarían. */
     if(!DEV&&data.league.config&&data.league.config.beta){
       L=null; CUR=null; localStorage.removeItem('yml_cur');
       vHome(`<b>${esc(data.league.name)}</b> es una liga del entorno de pruebas. Ábrela en <a href="https://beta.yourmoveleague.com/?l=${encodeURIComponent(code.trim().toUpperCase())}">beta.yourmoveleague.com</a>.`);
+      track('league_open_fail',{motivo:'liga_beta_en_produccion'}); OPEN_VIA=null;
       return;
     }
-    L=data; CUR=code.toUpperCase(); saveMem(); TAB='jornada'; render();
-  }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else toast(e.message||'Error de conexión'); }
+    L=data; CUR=code.toUpperCase(); saveMem(); TAB='jornada';
+    track('league_open',{via:OPEN_VIA||'guardada',ok:true}); OPEN_VIA=null;
+    render();
+  }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else toast(e.message||'Error de conexión'); track('league_open_fail',{motivo:errCode(e)}); OPEN_VIA=null; }
 }
 let lastFetch=0;
 async function refresh(){
@@ -724,10 +896,11 @@ async function refresh(){
 /* actualización silenciosa: al volver a la app o cambiar de pestaña (máx. 1 vez cada 8 s) */
 function softRefresh(){ if(L&&CUR&&Date.now()-lastFetch>8000) refresh(); }
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) softRefresh(); });
-function exitLeague(){ L=null; CUR=null; localStorage.removeItem('yml_cur'); vHome(); }
+function exitLeague(){ track('exit_league',{}); L=null; CUR=null; localStorage.removeItem('yml_cur'); vHome(); }
 /* Cerrar sesión (v0.9): olvida quién eres en esta liga en este dispositivo
    (y cierra la sesión de admin si la hay). Al volver, se vuelve a preguntar. */
 async function logoutLeague(){
+  track('logout_league',{});
   if(CUR&&MEM[CUR]){ delete MEM[CUR]; localStorage.setItem('yml_mem',JSON.stringify(MEM)); }
   if(USER){ try{ await sb.auth.signOut(); }catch(e){} USER=null; }
   L=null; CUR=null; localStorage.removeItem('yml_cur');
@@ -751,6 +924,8 @@ function render(){
     const t=NAV[[...b.parentNode.children].indexOf(b)][0];
     b.classList.toggle('on',t===TAB);
   });
+  if(TAB!=='moves') tmFormClose();   // telemetría: abandono del formulario al cambiar de pantalla
+  TM.view(TAB);   // telemetría: cambio de pantalla (una vez por pantalla)
   ({jornada:tJornada,moves:tMoves,liga:tLiga,admin:tAdmin}[TAB]||tJornada)();
   syncIdOverlay();   // overlay bloqueante mientras no haya identidad
 }
@@ -801,22 +976,26 @@ function duelRow(a,b,w,r){
 /* v0.9: al resolverse la jornada, hasta que la veas SOLO existe este panel.
    Cualquiera de sus 3 botones (play / mi enfrentamiento / resultados) marca
    la jornada como vista y da paso a la pantalla de jornada resuelta. */
+function minsSinceClose(j){ try{ return Math.round((nowT()-weekClose(j))/60000); }catch(e){ return null; } }
+function skipPanel(j){ track('watch_skip_panel',{week:j+1,min_desde_cierre:minsSinceClose(j)}); setWatched(j); render(); }
 function playPanel(j){
   const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
   const myPair=me?pairsFor(j).find(([a,b])=>a===me.name||b===me.name):null;
+  TM.once('panel'+j,'play_panel_view',{week:j+1,min_desde_cierre:minsSinceClose(j),tiene_duelo:!!myPair});
   return `<div class="card" style="text-align:center">
     <div class="cdlbl">Se ha resuelto la</div>
     <div class="bigjt">JORNADA ${j+1}</div>
     <button class="playbig" onclick="watchRound(${j},'all')" title="Ver la jornada">${ic('play',32)}</button>
     <div class="minirow">
       ${myPair?`<button onclick="watchRound(${j},'mine')">Mi enfrentamiento</button>`:''}
-      <button onclick="setWatched(${j});render()">Resultados</button>
+      <button onclick="skipPanel(${j})">Resultados</button>
     </div></div>`;
 }
 function resultBanner(j){
   const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
   const r=roundOf(j); if(!r||!me) return '';
   const d=(r.data.duels||[]).find(x=>x.a===me.name||x.b===me.name);
+  TM.once('round'+j,'round_view',{week:j+1,min_desde_cierre:minsSinceClose(j),resultado:(!d||d.nulo)?'nulo':(d.winner===me.name?'gana':'pierde')});
   if(!d||d.nulo) return `<div class="card" style="text-align:center"><p class="msg">Jornada ${j+1} resuelta.</p></div>`;
   const win=d.winner===me.name;
   if(win&&!(MEM[CUR].celebrated&&MEM[CUR].celebrated[j])){
@@ -851,12 +1030,15 @@ async function maybeResolve(force){
   if(roundOf(w)||nowT()<weekClose(w)) return;
   RESOLVING=true;
   if(force) RESOLVE_FAILED=false;
+  track('resolve_attempt',{week:w+1,forzado:!!force});
   try{
     const {error}=await sb.rpc('resolve_round',{p_code:CUR,p_number:w+1});
     if(error) throw error;
+    track('resolve_ok',{week:w+1,min_desde_cierre:minsSinceClose(w)});
     await refresh();
   }catch(e){
     RESOLVE_FAILED=true;
+    track('resolve_fail',{week:w+1,code:errCode(e)});
     const el=$('#rErr2'); if(el) el.textContent=e.message||'No se pudo resolver. Toca «Comprobar de nuevo».';
   }finally{ RESOLVING=false; }
 }
@@ -869,9 +1051,11 @@ function tJornada(){
     $('#main').innerHTML=`
     <div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>
     <div class="card"><p class="msg">Jornada 1 el ${cfg.start}. Ve calentando.</p></div>`+btnBar();
+    TM.once('pre_start','pre_start_view',{dias_para_empezar:Math.ceil((weekStart(0)-nowT())/86400000)});
     return;
   }
   if(w>=cfg.weeks||firstUnresolved()>=cfg.weeks){
+    TM.once('league_end','league_end_view',{});
     const jl=cfg.weeks-1, rl=roundOf(jl);
     if(rl&&!watched(jl)){ $('#main').innerHTML=playPanel(jl)+btnBar(); return; }
     $('#main').innerHTML=(rl&&nowT()<weekEnd(jl)?resultBanner(jl):'')+`<div class="card"><h2>${ic('trophy')} Liga terminada</h2><p class="msg">Campeón: <b>${esc(standings()[0].name)}</b>. ¡Gracias por jugar!</p>
@@ -913,6 +1097,7 @@ function tJornada(){
     if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sMine=d.winner===me.name?hi:lo; sRiv=d.winner===me.name?lo:hi; }
     let resHtml='';
     if(d) resHtml=`<p class="${d.nulo?'msg':(d.winner===me.name?'ok':'err')}" style="margin-top:8px;text-align:center">${d.nulo?'Duelo nulo.':(d.winner===me.name?'¡Victoria!':'Derrota — la próxima cae.')}</p>`;
+    TM.once('duel','duel_view',{week:w+1,dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),moves_propios:ma,moves_rival:mb,es_media:!rival});
     duelHtml=`<div class="duelbox">
       <div class="duelnames"><span style="color:var(--duelA)">${esc(me.name)}</span><span style="color:var(--duelB)">${esc(rivalName)}</span></div>
       <div class="duelmoves"><span>${medIcons(me.id,w,14)}<span class="pill">${ma} Moves</span></span><span><span class="pill">${mb} Moves</span>${rival?medIcons(rival.id,w,14):''}</span></div>
@@ -925,6 +1110,8 @@ function tJornada(){
   } else miniSpec=null;
   // los demás duelos + resultados de la jornada anterior
   const others=pairsFor(w).filter(([a,b])=>!pair||(a!==me.name&&b!==me.name));
+  if(cfg.quedada) TM.once('qstate','quedada_state_view',{week:w+1,count:quedadaCount(w),min:quedadaMin(),ok:quedadaOK(w)});
+  if(others.length) TM.once('otros','otros_duelos_view',{week:w+1,n:others.length});
   const socialNote=(cfg.quedada&&!quedadaOK(w))?`<p class="msg" style="margin-top:8px">${ic('users',12)} Conjunta de la semana: ${quedadaCount(w)} / ${quedadaMin()} — el Move social aún no cuenta.</p>`:'';
   const prevR=w>0?roundOf(w-1):null;
   /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
@@ -941,12 +1128,16 @@ function tJornada(){
   if(miniSpec) renderMini(miniSpec);
 }
 let miniSpec=null;
+let ANIM_MODE='vivo';
 function replay(w){
   const r=roundOf(w); if(!r) return;
+  track('anim_replay',{week:w+1,n:(MEM[CUR]&&MEM[CUR].replays&&MEM[CUR].replays[w])||1}); try{ MEM[CUR]=MEM[CUR]||{}; MEM[CUR].replays=MEM[CUR].replays||{}; MEM[CUR].replays[w]=(MEM[CUR].replays[w]||1)+1; saveMem(); }catch(e){}
+  ANIM_MODE='replay';
   playPong(w+1,r.data.duels,null);
 }
 async function watchRound(w,mode){
   const r=roundOf(w); if(!r){ return; }
+  track('watch_start',{week:w+1,modo:mode==='mine'?'mine':'all'}); ANIM_MODE='vivo';
   let show=r.data.duels;
   if(mode==='mine'){
     const s=ses(); const me=s?L.players.find(p=>p.id===s.playerId):null;
@@ -967,7 +1158,7 @@ function tMoves(){
     <div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>
     <div class="card"><p class="msg">La liga empieza el ${cfg.start}. Desde ese día podrás registrar aquí tu actividad.</p></div>`+btnBar(); return;
   }
-  if(w>=cfg.weeks){ $('#main').innerHTML=`<div class="card"><p class="msg">La liga ha terminado.</p></div>`+btnBar(); return; }
+  if(w>=cfg.weeks){ $('#main').innerHTML=`<div class="card"><p class="msg">La liga ha terminado.</p></div>`+btnBar(); TM.once('league_end','league_end_view',{}); return; }
   if(!s){
     $('#main').innerHTML=`<div class="card"><h2>${ic('activity')} Registrar actividad</h2>
       <p class="msg empty">${ownerIdentity()==='none'?'Estás como organizador; no participas en esta liga.':'Identifícate para registrar tu actividad.'}</p></div>`+btnBar(); return;
@@ -1022,6 +1213,7 @@ function tMoves(){
   } else if(todayAct&&EDITING){
     formHtml=form(true);
   } else if(todayAct){
+    tmFormClose();
     const anulada=isAnulada(todayAct);
     formHtml=`
     <p class="msg" style="margin-top:-4px">Registro de hoy · ${fmtHM(todayAct.created_at)}${editedTag(todayAct)}</p>
@@ -1034,12 +1226,14 @@ function tMoves(){
     ${qState}
     <div class="err" id="aErr"></div>`;
   } else if(maxed){
+    TM.once('maxed','maxed_view',{week:w+1});
     formHtml=(cfg.quedada&&!qUsed)
       ?`<p class="msg">Has llegado al máximo de <b>${cfg.maxDays} días de deporte</b> esta semana. Aún puedes apuntar tu <b>asistencia a la actividad conjunta</b> (+1 Move si la marcan ${qMin}+ personas; no cuenta como día).</p>
         <button class="btn full" onclick="registrarConjunta()">Registrar asistencia a la conjunta</button>${qState}<div class="err" id="aErr"></div>`
       :`<p class="msg empty">Máximo de ${cfg.maxDays} días de deporte alcanzado esta semana. A recuperar.</p>`;
   } else {
     formHtml=form(false);
+    tmFormOpen({dia_jornada:dayN,week:w+1,dias_previos:dias,maxed:false,legacy});
   }
   $('#main').innerHTML=`
   ${rest
@@ -1054,9 +1248,14 @@ function tMoves(){
   </div>`+btnBar();
 }
 function qOK_(count,min){ return count>=min; }
-function setType(t){ selType=selType===t?null:t; render(); }
-function setLevel(l){ selLevel=selLevel===l?0:l; render(); }
-function setQ(v){ selQ=!!v; render(); }
+/* telemetría del formulario de registro: apertura, cambios y abandono (sin tocar el flujo) */
+let TMF=null;
+function tmFormOpen(p){ try{ if(TMF) return; TMF={t0:Date.now(),tipo:0,nivel:0,touched:false}; track('log_form_open',p); }catch(e){} }
+function tmFormClose(){ try{ if(TMF&&TMF.touched) track('log_abandon',{ms:Date.now()-TMF.t0,tenia_tipo:!!selType,tenia_nivel:selLevel>0}); TMF=null; }catch(e){} }
+function tmOnHide(){ try{ if(TMF&&TMF.touched&&TAB==='moves') track('log_abandon',{ms:Date.now()-TMF.t0,tenia_tipo:!!selType,tenia_nivel:selLevel>0}); if(OV_OPEN) track('anim_close_early',{week:OV_OPEN.week,duelo_i:OV_OPEN.duelo,ms:Date.now()-OV_OPEN.t0}); }catch(e){} }
+function setType(t){ selType=selType===t?null:t; try{ if(TMF){ TMF.tipo++; TMF.touched=true; } track('set_type',{actividad:selType,n_cambios:TMF?TMF.tipo:1}); }catch(e){} render(); }
+function setLevel(l){ selLevel=selLevel===l?0:l; try{ if(TMF){ TMF.nivel++; TMF.touched=true; } track('set_level',{level:selLevel,n_cambios:TMF?TMF.nivel:1}); }catch(e){} render(); }
+function setQ(v){ selQ=!!v; try{ if(TMF) TMF.touched=true; track('set_quedada',{valor:selQ}); }catch(e){} render(); }
 function startEdit(){
   const s=ses(); const a=actsOfWeek(s.playerId,activeW()).find(x=>x.day===leagueDay()); if(!a) return;
   EDITING=true; DELARM=false;
@@ -1084,20 +1283,26 @@ async function registrar(){
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_level:f.level,p_activity:f.activity,p_quedada:f.quedada});
     if(error) throw error;
+    try{ const w=activeW(), t=nowT(); track('log_submit',{actividad:f.activity,level:f.level,quedada:f.quedada,solo_conjunta:f.activity==='[conjunta]',
+      dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),dia_semana:t.getDay(),hora_local:t.getHours(),week:w+1,
+      dias_previos:daysOfWeek(s.playerId,w),ms_en_formulario:TMF?Date.now()-TMF.t0:null,cambios_tipo:TMF?TMF.tipo:null,cambios_nivel:TMF?TMF.nivel:null}); TMF=null; }catch(e2){}
     selType=null; selLevel=0; selQ=false; toast('Actividad registrada');
     await refresh(); TAB='jornada'; render();
-  }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; }
+  }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; track('log_fail',{code:errCode(e)}); }
 }
 async function guardarEdicion(){
   const s=ses(); $('#aErr').textContent='';
   const f=readForm(); if(f.error){ $('#aErr').textContent=f.error; return; }
+  const prev=actsOfWeek(s.playerId,activeW()).find(x=>x.day===leagueDay())||null;
   try{
     const {error}=await sb.rpc('edit_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_activity:f.activity,p_level:f.level,p_quedada:f.quedada});
     if(error) throw error;
+    try{ const campos=[]; if(prev){ if(prev.activity!==f.activity) campos.push('actividad'); if(prev.level!==f.level) campos.push('nivel'); if(!!prev.quedada!==!!f.quedada) campos.push('conjunta'); }
+      track('log_edit',{campos,edits:(prev?prev.edits||0:0)+1,min_desde_registro:prev&&prev.created_at?Math.round((Date.now()-new Date(prev.created_at))/60000):null}); }catch(e2){}
     EDITING=false; selType=null; selLevel=0; selQ=false; toast('Registro actualizado');
     await refresh();   // Moves y duelo en vivo al día en el acto
-  }catch(e){ $('#aErr').textContent=e.message||'Error al guardar'; }
+  }catch(e){ $('#aErr').textContent=e.message||'Error al guardar'; track('log_fail',{code:errCode(e)}); }
 }
 /* eliminar el registro de hoy: sin confirm() del navegador — dos toques */
 async function borrarHoy(){
@@ -1107,8 +1312,9 @@ async function borrarHoy(){
   try{
     const {error}=await sb.rpc('delete_own_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_day:leagueDay()});
     if(error) throw error;
+    track('log_delete',{doble_toque:true});
     toast('Registro de hoy eliminado'); await refresh();
-  }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al eliminar'; else toast(e.message||'Error'); }
+  }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al eliminar'; else toast(e.message||'Error'); track('log_fail',{code:errCode(e)}); }
 }
 async function registrarConjunta(){
   const s=ses(); if($('#aErr'))$('#aErr').textContent='';
@@ -1116,8 +1322,9 @@ async function registrarConjunta(){
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_level:1,p_activity:'[conjunta]',p_quedada:false});
     if(error) throw error;
+    track('conjunta_only',{week:activeW()+1});
     toast('Asistencia registrada'); await refresh();
-  }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al registrar'; }
+  }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al registrar'; track('log_fail',{code:errCode(e)}); }
 }
 /* Funciones de desarrollador: inertes fuera de beta (DEV=false → no hacen nada)
    y desactivadas sobre ligas no marcadas como de pruebas (config.beta). */
@@ -1212,14 +1419,6 @@ async function devFill(w){
     await refresh();
   }catch(e){ $('#dErr').textContent=e.message||'Error'; }
 }
-async function delDay(day){
-  const s=ses();
-  try{
-    const {error}=await sb.rpc('delete_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_day:day});
-    if(error) throw error;
-    await refresh();
-  }catch(e){ toast(e.message||'Error'); }
-}
 /* ---- IDENTIDAD (v1.0: overlay bloqueante) ----
    Único punto de entrada de "quién eres" en toda la app. Mientras no haya
    identidad: capa por encima de todo, fondo inerte, sin ESC ni clic fuera ni
@@ -1243,6 +1442,7 @@ function syncIdOverlay(){
   const list=L.players.filter(p=>owner||p.id!==ap);   // los demás no ven al jugador del admin
   const selP=IDSEL?L.players.find(p=>p.id===IDSEL):null;
   const typed=$('#pPin')?$('#pPin').value:'', hadFocus=document.activeElement&&document.activeElement.id==='pPin';
+  if(!ov.classList.contains('show')) track('identify_open',{tiene_sesion_guardada:!!(MEM[CUR]&&MEM[CUR].playerId),n_jugadores:L.players.length});
   ov.innerHTML=`<div class="card">
     <h2>${ic('users')} ¿Quién eres?</h2>
     <p class="msg">${owner?'Eres el administrador. Elige tu jugador (entrarás sin PIN) o indica que solo organizas.':`Liga <b>${esc(L.league.name)}</b>. Elige tu nombre para entrar.`}</p>
@@ -1254,6 +1454,7 @@ function syncIdOverlay(){
       <input id="pPin" type="password" maxlength="8" autocomplete="off" inputmode="numeric">
       <button class="btn" onclick="idConfirm()">${ic('check')} Confirmar</button>`:''}
       <div class="err" id="pErr"></div></div>
+    <p class="msg" style="margin-top:12px">Al participar aceptas cómo tratamos tus datos — <a href="#" onclick="vPriv('identificacion');return false">privacidad</a>.</p>
     <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
       <button class="btn sec" onclick="exitLeague()">${ic('logout')} Salir de la liga</button>
     </div>
@@ -1287,14 +1488,14 @@ document.addEventListener('keydown',e=>{
 async function idPick(id){
   if(L.league.is_admin){   // el owner fija su jugador: sin PIN, y queda bloqueado para los demás
     const ok=await setAdminPlayer(CUR,id,'#pErr');
-    if(ok){ await refresh(); }
+    if(ok){ track('admin_player_set',{modo:'jugador',primera_vez:true}); await refresh(); }
     return;
   }
-  IDSEL=id; syncIdOverlay();
+  IDSEL=id; try{ const p=L.players.find(x=>x.id===id); track('identify_pick',{tiene_pin:!!(p&&p.has_pin)}); }catch(e){} syncIdOverlay();
 }
 async function idOwnerNone(){
   const ok=await setAdminPlayer(CUR,'__none__','#pErr');
-  if(ok){ await refresh(); }
+  if(ok){ track('owner_none',{}); track('admin_player_set',{modo:'solo_organiza',primera_vez:true}); await refresh(); }
 }
 /* v0.9: el PIN se comprueba (y se crea) en el SERVIDOR al identificarse. */
 async function idConfirm(){
@@ -1303,20 +1504,21 @@ async function idConfirm(){
   const p=L.players.find(x=>x.id===id);
   const err=t=>{ const e=$('#pErr'); if(e) e.textContent=t; };
   if(p&&p.has_pin){
-    if(!pin){ err('Este participante tiene PIN: introdúcelo para entrar.'); return; }
+    if(!pin){ err('Este participante tiene PIN: introdúcelo para entrar.'); track('identify_fail',{motivo:'sin_pin'}); return; }
     try{
       const {data,error}=await sb.rpc('verify_pin',{p_code:CUR,p_player:id,p_pin:pin});
       if(error) throw error;
-      if(!data||!data.ok){ err('PIN incorrecto.'); return; }
-    }catch(e){ err(e.message||'No se pudo comprobar el PIN.'); return; }
+      if(!data||!data.ok){ err('PIN incorrecto.'); track('identify_fail',{motivo:'pin'}); return; }
+    }catch(e){ err(e.message||'No se pudo comprobar el PIN.'); track('identify_fail',{motivo:errCode(e)}); return; }
   } else if(pin){
     try{
       const {error}=await sb.rpc('set_pin',{p_code:CUR,p_player:id,p_pin:pin});
       if(error) throw error;
       toast('PIN creado: te hará falta en cada nuevo dispositivo');
-    }catch(e){ err(e.message||'No se pudo crear el PIN.'); return; }
+    }catch(e){ err(e.message||'No se pudo crear el PIN.'); track('identify_fail',{motivo:/administrador/.test(String(e.message||''))?'bloqueado_admin':errCode(e)}); return; }
   }
   MEM[CUR]=Object.assign(MEM[CUR]||{},{playerId:id,pin:pin}); saveMem();
+  track('identify_ok',{creo_pin:!!(pin&&!(p&&p.has_pin))});
   IDSEL=null;
   await refresh();   // recoge has_pin actualizado; render() cierra el overlay y deja la pestaña que tocaba
 }
@@ -1327,6 +1529,7 @@ function tLiga(){
   const nP=L.players.length, umbral=reportThr();
   /* v0.9: si la liga aún no ha empezado, el contador también vive aquí */
   let h=calWeek()<0?`<div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>`:'';
+  try{ const st=standings(), me=s?L.players.find(p=>p.id===s.playerId):null; TM.once('ranking','ranking_view',{week:Math.max(w,0)+1,posicion_propia:me?st.findIndex(x=>x.name===me.name)+1:null,n_jugadores:nP}); TM.once('track','track_view',{filtrado:!!FILTERP}); }catch(e){}
   h+=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
     <p class="msg" style="margin-top:6px">Victoria 3 pts · derrota con 4+ días 1 pt · desempate por regularidad.</p></div>`;
   h+=`<div class="card"><h2>${ic('calendar')} Calendario</h2>`;
@@ -1391,10 +1594,12 @@ async function reportAct(id){
   try{
     const {data,error}=await sb.rpc('report_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id});
     if(error) throw error;
+    try{ const a=L.activities.find(x=>x.id===id); track('report_submit',{week:a?Math.floor((new Date(a.day+'T00:00:00')-new Date(L.league.config.start+'T00:00:00'))/(7*86400000))+1:null,
+      dias_desde_actividad:a?Math.round((nowT()-new Date(a.day+'T00:00:00'))/86400000):null,estado:data&&data.estado,reportes:data&&data.reportes,umbral:data&&data.umbral}); }catch(e2){}
     if(data&&data.estado==='anulada') toast('Umbral alcanzado: la actividad queda anulada');
     else toast(data&&data.estado==='retirado'?'Reporte retirado':'Reporte enviado (anónimo)');
     await refresh();
-  }catch(e){ toast(e.message||'Error'); }
+  }catch(e){ toast(e.message||'Error'); track('report_blocked',{motivo:errCode(e)}); }
 }
 
 /* ---- ADMIN ---- */
@@ -1408,6 +1613,11 @@ function tAdmin(){
   <div class="card"><h2>${ic('key')} Código de la liga</h2>
     <div class="big">${esc(L.league.code)}</div>
     <button class="btn sec" onclick="copyTxt('${esc(L.league.code)}','Código copiado')">${ic('copy')} Copiar código</button>
+  </div>
+  <div class="card"><h2>${ic('copy')} Texto para la descripción del grupo de WhatsApp</h2>
+    <p class="msg">Siempre con la configuración actual de la liga. Si cambias reglas o plantilla, vuelve a copiarlo.</p>
+    <div class="whats" id="wTxtAdmin">${esc(whatsText(L.league.code,L.league.name,cfg,L.players.map(p=>({name:p.name,cat:p.category||'pro'}))))}</div>
+    <button class="btn sec" onclick="copyTxt(document.getElementById('wTxtAdmin').textContent,'Texto copiado')">${ic('copy')} Copiar</button>
   </div>
   ${DEV&&!isBeta?`<div class="card" style="border-style:dashed"><h2>${ic('settings')} Liga real en el entorno beta</h2>
     <p class="msg">Esta liga no está marcada como liga de pruebas, así que las herramientas de simulación (tiempo, Moves aleatorios, entrada rápida) están desactivadas para no tocarla por error. Si ES una liga de pruebas, márcala: dejará de poder abrirse en la web pública.</p>
@@ -1479,6 +1689,7 @@ function tAdmin(){
 function previewLevels(){
   const el=$('#lvlPrev'), ta=$('#eLevels'); if(!el||!ta) return;
   const list=parseLevelsText(ta.value);
+  clearTimeout(previewLevels._t); previewLevels._t=setTimeout(()=>track('levels_preview',{n_lineas:ta.value.split('\n').filter(x=>x.trim()).length,n_validas:list.length}),1500);
   if(!list.length){ el.innerHTML=`<span class="err">Ninguna actividad reconocida: el registro caerá al modo «solo nivel» hasta que la plantilla tenga al menos una línea «Actividad: bronce / plata / oro».</span>`; return; }
   const incompletas=list.filter(x=>x.thr.some(t=>!t)).length;
   el.innerHTML=`<b>${list.length} actividad${list.length===1?'':'es'} reconocida${list.length===1?'':'s'}</b>${incompletas?` · ${incompletas} sin los tres tramos`:''}<br>`+
@@ -1487,7 +1698,7 @@ function previewLevels(){
 async function changeAdminPlayer(){
   const id=$('#eAdminP').value;
   const ok=await setAdminPlayer(CUR,id,'#apErr');
-  if(ok){ toast('Jugador del admin guardado'); await refresh(); }
+  if(ok){ track('admin_player_set',{modo:id==='__none__'?'solo_organiza':'jugador',primera_vez:false}); toast('Jugador del admin guardado'); await refresh(); }
 }
 async function quickWeek(){
   try{
@@ -1496,6 +1707,7 @@ async function quickWeek(){
       p_bronze:parseInt($('#qB').value)||0,p_silver:parseInt($('#qS').value)||0,
       p_gold:parseInt($('#qG').value)||0,p_quedadas:parseInt($('#qQ').value)||0});
     if(error) throw error;
+    track('quick_week',{b:parseInt($('#qB').value)||0,p:parseInt($('#qS').value)||0,o:parseInt($('#qG').value)||0,quedadas:parseInt($('#qQ').value)||0});
     await refresh();
   }catch(e){ $('#qErr').textContent=e.message; }
 }
@@ -1509,6 +1721,8 @@ async function saveConfig(){
   try{
     const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:patch,p_reason:$('#eReason').value.trim()});
     if(error) throw error;
+    try{ const cfg=L.league.config; const campos=Object.keys(patch).filter(k=>JSON.stringify(patch[k])!==JSON.stringify(cfg[k]));
+      track('config_change',{campos,levels_cambiado:campos.includes('levels'),tiene_motivo:!!$('#eReason').value.trim()}); }catch(e2){}
     await refresh(); TAB='liga'; render();
   }catch(e){ $('#eErr').textContent=e.message; }
 }
@@ -1517,8 +1731,10 @@ async function doAdjust(){
     const {error}=await sb.rpc('admin_adjust',{p_code:CUR,p_admin_code:null,p_player:$('#jPlayer').value,
       p_day:$('#jDay').value,p_adj:parseInt($('#jAdj').value)||0,p_reason:$('#jReason').value.trim()});
     if(error) throw error;
+    try{ const adj=parseInt($('#jAdj').value)||0, motivo=$('#jReason').value.trim(), d=new Date($('#jDay').value+'T00:00:00');
+      track('adjust_submit',{adj,signo:adj>0?'+':(adj<0?'-':'0'),motivo_chars:motivo.length,tiene_motivo:!!motivo,dias_atras:Math.round((nowT()-d)/86400000),week:Math.floor((d-new Date(L.league.config.start+'T00:00:00'))/(7*86400000))+1}); }catch(e2){}
     await refresh();
-  }catch(e){ $('#jErr').textContent=e.message; }
+  }catch(e){ $('#jErr').textContent=e.message; track('adjust_fail',{code:errCode(e)}); }
 }
 /* La resolución vive ahora en el servidor (resolve_round, setup5.sql):
    el sorteo se ejecuta allí una sola vez, con las mismas reglas que antes,
@@ -1803,6 +2019,7 @@ function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x
 const MINI_PREV={}; let miniRAF=0;
 function renderMini(spec){
   const cv=$('#miniCourt'); if(!cv) return;
+  TM.once('mini','mini_view',{week:spec.w+1});
   cancelAnimationFrame(miniRAF);
   const MM=movesMax(), key=s=>spec.w+':'+s.pid;
   const sides={A:spec.a,B:spec.b}, st={cyA:PONG.H/2,cyB:PONG.H/2,ball:null,wide:true}, anims={};
@@ -1848,13 +2065,17 @@ function renderMini(spec){
    solo se reproduce el trace a paso fijo con acumulador + interpolación (alpha).
    Palas del tamaño de los Moves congelados (d.ma/d.mb); su tamaño no cambia durante
    la reproducción. Con reduced-motion: resumen estático (palas, bolas, marcador). */
+let OV_OPEN=null;
 async function playPong(jNum,duels,_){
-  const ov=$('#ov'); let skip=false;
+  const ov=$('#ov'); let skip=false, huboSkip=false;
   const sleep=ms=>new Promise(r=>setTimeout(r,skip?30:ms));
   const w=jNum-1, MM=movesMax(), reduced=REDUCED();
   ov.classList.add('show');
+  const tAnim=Date.now(); OV_OPEN={week:jNum,duelo:0,t0:tAnim};
+  track('anim_open',{week:jNum,modo:ANIM_MODE,n_duelos:duels.length,reduced});
+  if(reduced) track('anim_reduced',{week:jNum});
   for(let i=0;i<duels.length;i++){
-    const d=duels[i];
+    const d=duels[i]; OV_OPEN.duelo=i+1;
     const pa=byName(d.a), pb=byName(d.b);
     const segsA=pa?fitSegs(segmentsFor(pa.id,w),d.ma):neutralSegs(d.ma), segsB=pb?fitSegs(segmentsFor(pb.id,w),d.mb):neutralSegs(d.mb);
     const hA=PONG.padH(d.ma,MM), hB=PONG.padH(d.mb,MM);
@@ -1866,7 +2087,7 @@ async function playPong(jNum,duels,_){
       <canvas class="court" id="court"></canvas>
       <div id="pscore">0 – 0</div><div id="pres"></div>
       <div class="row" style="justify-content:center"><button class="btn sec" id="skipBtn">Saltar todo</button></div>`;
-    $('#skipBtn').onclick=()=>{ skip=true; };
+    $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; };
     const cv=$('#court');
     const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,ball:null,trail:[]};
     drawCourt(cv,st);
@@ -1879,10 +2100,10 @@ async function playPong(jNum,duels,_){
       await sleep(3200); continue;
     }
     for(let bi=0;bi<d.draws.length;bi++){
-      const r=d.draws[bi];
+      const r=d.draws[bi]; OV_OPEN.bola=bi+1;
       const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi);
       if(DEV&&!res.sim.ok) throw new Error('PONG: '+res.sim.err);
-      if(DEV&&res.level>0) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`);
+      if(res.level>0){ track('pong_fallback',{week:jNum,duelo_i:i+1,bola_i:bi+1,nivel:res.level,intentos:res.attempts}); if(DEV) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`); }
       await playTrace(cv,st,res.sim,()=>skip);
       sc[r]++;
       const ps=$('#pscore'); ps.textContent=sc.A+' – '+sc.B; ps.classList.add('flash'); cv.classList.add('shake');
@@ -1893,6 +2114,7 @@ async function playPong(jNum,duels,_){
     await sleep(2400);
   }
   ov.classList.remove('show');
+  OV_OPEN=null; track('anim_end',{week:jNum,ms:Date.now()-tAnim,n_duelos:duels.length,hubo_skip:huboSkip});
 }
 /* ajusta los segmentos actuales al total congelado en la jornada (siempre coinciden en
    jornadas resueltas; por si acaso: recorta o rellena en gris) */
@@ -1937,12 +2159,14 @@ function btnBar(){
 
 /* ============ ARRANQUE ============ */
 buildNav();
+TM.start();
+if(location.hash==='#privacidad'){ vPriv('enlace'); history.replaceState(null,'',location.pathname+location.search); }
 (async ()=>{
   const {data}=await sb.auth.getUser();
   USER=data?data.user:null;
   const ql=new URLSearchParams(location.search).get('l');   // enlace con código: ...?l=K7KM2X
-  if(ql){ await goLeague(ql.trim()); }
-  else if(CUR){ await goLeague(CUR); }
+  if(ql){ OPEN_VIA='enlace'; await goLeague(ql.trim()); }
+  else if(CUR){ OPEN_VIA='guardada'; await goLeague(CUR); }
   else { vHome(); }
 })();
 </script>
