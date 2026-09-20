@@ -7,7 +7,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="author" content="Your Move Game Labs">
 <meta name="copyright" content="© 2026 Your Move Game Labs">
 <meta name="description" content="Your Move League — ligas de deporte entre amigos.">
@@ -19,7 +19,11 @@
   :root{
     --bg:#faf9f7; --card:#ffffff; --card2:#f3f1ec; --line:#e5e1da;
     --text:#1b2d4f; --dim:#7a8699;
-    --firma:#ff5a3c; --duelA:#ff5a3c; --duelB:#2b6cb0;
+    --firma:#ff5a3c;
+    /* v1.1: colores de jugador. Sobre la pista: coral y lima vivo; sobre fondo claro
+       (nombres), sus versiones oscuras para que el texto se lea. */
+    --courtA:#ff5a3c; --courtB:#9ef20d; --duelA:#c9432a; --duelB:#6d9c00;
+    --halo1:#19c3e6; --halo2:#9b5cff; --social:#2b6cb0;
     --win:#2f9e63; --lose:#d64545;
     --disp:'Archivo Black',sans-serif;
     --sh-sm:0 1px 2px rgba(27,45,79,.04),0 2px 6px rgba(27,45,79,.05);
@@ -37,17 +41,21 @@
   .lg{font-size:12px;letter-spacing:9px;color:var(--dim);margin-top:3px;font-weight:600;}
   nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(27,45,79,.06);}
   nav.on{display:flex;}
-  nav button{flex:1;position:relative;background:none;border:none;color:var(--dim);padding:9px 2px 8px;font-size:10.5px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .18s ease;-webkit-tap-highlight-color:transparent;}
-  nav button svg{width:21px;height:21px;transition:transform .18s ease;}
+  /* v1.1: menú inferior más grande (área táctil y tipografía) */
+  nav button{flex:1;position:relative;background:none;border:none;color:var(--dim);padding:12px 2px 11px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .18s ease;-webkit-tap-highlight-color:transparent;min-height:60px;}
+  nav button svg{width:25px;height:25px;transition:transform .18s ease;}
   nav button:active svg{transform:scale(.88);}
-  nav button::after{content:'';position:absolute;top:0;left:50%;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--firma);transform:translateX(-50%) scaleX(0);transition:transform .22s ease;}
+  nav button::after{content:'';position:absolute;top:0;left:50%;width:34px;height:3px;border-radius:0 0 3px 3px;background:var(--firma);transform:translateX(-50%) scaleX(0);transition:transform .22s ease;}
   nav button.on{color:var(--firma);}
   nav button.on::after{transform:translateX(-50%) scaleX(1);}
-  main{max-width:560px;margin:0 auto;padding:16px 16px 92px;}
+  main{max-width:560px;margin:0 auto;padding:16px 16px 104px;}
   @media(min-width:720px){
-    nav.on{position:sticky;top:0;bottom:auto;border-top:none;border-bottom:1px solid var(--line);box-shadow:0 4px 16px rgba(27,45,79,.05);}
-    nav button{flex-direction:row;font-size:13px;padding:12px;gap:7px;}
-    nav button::after{top:auto;bottom:0;border-radius:3px 3px 0 0;}
+    /* v1.1: menú superior centrado a 560 px (alineado con main); toda la pestaña es
+       clicable y el indicador ocupa el ancho completo de la pestaña activa */
+    nav.on{position:sticky;top:0;bottom:auto;border-top:none;border-bottom:1px solid var(--line);box-shadow:0 4px 16px rgba(27,45,79,.05);padding:0 max(0px,calc(50% - 280px));}
+    nav button{flex-direction:row;font-size:13px;padding:14px 12px;gap:7px;min-height:0;}
+    nav button::after{top:auto;bottom:0;left:0;width:100%;border-radius:3px 3px 0 0;transform:scaleX(0);}
+    nav button.on::after{transform:scaleX(1);}
     main{padding-bottom:30px;}
   }
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:var(--sh-sm);animation:rise .35s ease both;}
@@ -81,18 +89,45 @@
   .stickcard::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:260px;height:150px;background:radial-gradient(closest-side,rgba(255,90,60,.22),transparent);pointer-events:none;}
   .stickcard .cdlbl{color:rgba(255,255,255,.55);}
   @media(min-width:720px){ .stickcard{top:64px;} }
+  /* v1.1: contador con tres estados. Último día de la jornada: rojo oscuro, sin animación.
+     Última hora: rojo más intenso, cifras con latido y destello que recorre la tarjeta. */
+  .stickcard.lastday{background:linear-gradient(155deg,#5a1616,#3b0e0e 55%,#260808);border:1.5px solid #d63a3a;box-shadow:0 10px 30px rgba(120,20,20,.35);}
+  .stickcard.lastday::before{background:radial-gradient(closest-side,rgba(255,80,80,.22),transparent);}
+  .stickcard.lastday .cd{color:#ff5252;text-shadow:0 2px 18px rgba(255,60,60,.35);}
+  .stickcard.lastday .cdlbl{color:rgba(255,200,200,.7);}
+  .stickcard.lasthour{background:linear-gradient(155deg,#8a1414,#5c0c0c 55%,#3a0707);border-color:#ff4a4a;box-shadow:0 10px 34px rgba(180,20,20,.45);}
+  .stickcard.lasthour .cd{color:#ff6b6b;animation:beat 1s ease-in-out infinite;}
+  .stickcard.lasthour::after{content:'';position:absolute;top:0;bottom:0;left:-45%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);animation:sweep 2.6s linear infinite;pointer-events:none;}
+  @keyframes beat{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes sweep{to{left:110%;}}
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{color:var(--dim);font-weight:700;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:.1em;}
   td{padding:10px 6px;border-bottom:1px solid #f0ede7;transition:background .15s ease;}
   tr:hover td{background:#faf8f4;}
   tr:last-child td{border-bottom:none;}
   .num{text-align:center;font-variant-numeric:tabular-nums;}
-  .duelbox{background:linear-gradient(180deg,#f8f5f0,#f3f1ec);border:1px solid var(--line);border-radius:14px;padding:18px 16px 16px;}
-  .duelnames{display:flex;justify-content:space-between;font-family:var(--disp);font-size:19px;letter-spacing:.3px;gap:10px;}
+  /* v1.1: la caja del duelo deja el campo lo más grande posible dentro de la tarjeta */
+  .duelbox{padding:0;}
+  .duelnames{display:flex;justify-content:space-between;font-family:var(--disp);font-size:19px;letter-spacing:.3px;gap:10px;padding:0 4px;}
   .duelmoves{display:flex;justify-content:space-between;color:var(--dim);font-size:12.5px;font-weight:600;margin:5px 0 14px;}
   /* v1.0: mini-pista del duelo en vivo (pala ∝ Moves, sin porcentajes) */
-  .mini{display:block;width:100%;aspect-ratio:1000/455;border-radius:12px;box-shadow:0 8px 22px rgba(27,45,79,.25),inset 0 1px 0 rgba(255,255,255,.06);touch-action:manipulation;}
+  .mini{display:block;width:100%;aspect-ratio:1000/455;border-radius:10px;touch-action:manipulation;}
   .minihint{text-align:center;font-size:11.5px;color:var(--dim);margin-top:6px;min-height:15px;}
+  /* v1.1: MI JORNADA (visuales aprobados): nombres en una fila, barra de Moves de cada uno a su
+     lado (la del rival crece de derecha a izquierda). Misma escala que la pala vertical: ancho
+     completo = R; el contorno gris discontinuo marca hasta dónde llegará al alcanzar el siguiente
+     halo (efecto de carga de batería) y desaparece con el holográfico. El halo (borde + brillo)
+     lo anima barGlow() en el mismo bucle que la pista; con reduced-motion queda fijo. */
+  .names{display:flex;justify-content:space-between;font-weight:700;font-size:18px;margin-bottom:10px;gap:10px;}
+  .names span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bars{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;}
+  .bl{display:flex;align-items:center;gap:8px;}
+  .br{display:flex;align-items:center;gap:8px;flex-direction:row-reverse;}
+  .track{position:relative;height:18px;flex:1;}
+  .track .ghost{position:absolute;top:0;bottom:0;border:2px dashed rgba(140,146,158,.7);border-radius:6px;pointer-events:none;}
+  .track .fill{position:absolute;top:0;bottom:0;display:flex;gap:2px;padding:2px;border-radius:6px;box-sizing:border-box;}
+  .track .fill i{flex:1;display:block;border-radius:2px;background:currentColor;min-width:1px;}
+  .mv{font-size:15px;font-weight:700;min-width:16px;text-align:center;font-variant-numeric:tabular-nums;}
   .pill{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:1px 8px;background:var(--card2);border:1px solid var(--line);color:var(--dim);margin-left:5px;vertical-align:middle;}
   .chip{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;margin-left:2px;box-shadow:0 1px 2px rgba(27,45,79,.15);}
   .chip.v{background:var(--win);} .chip.d{background:var(--lose);} .chip.n{background:var(--dim);}
@@ -112,6 +147,20 @@
   .typebtn:hover{border-color:#cfc9be;background:#fff;}
   .typebtn:active{transform:scale(.97);}
   .typebtn.on{border-color:var(--firma);color:var(--firma);font-weight:700;background:#fff2ee;box-shadow:0 0 0 3px rgba(255,90,60,.10);}
+  .typebtn.on2{border-color:var(--firma);color:var(--firma);font-weight:700;background:#fff2ee;box-shadow:0 0 0 3px rgba(255,90,60,.10);}
+  .typebtn.on2::after{content:'2';font-size:9px;vertical-align:super;margin-left:3px;}
+  .typebtn:disabled{opacity:.4;cursor:not-allowed;}
+  /* v1.1: tarjeta «MOVE SOCIAL» (mismo icono que el Move social de la jornada); al pulsarla se
+     vuelve del azul característico, como las tarjetas de actividad */
+  .typebtn.soc{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;letter-spacing:.06em;font-size:12px;}
+  .typebtn.soc.on{border-color:var(--social);color:var(--social);background:#eaf2fb;box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+  .medbtn:disabled{opacity:.35;cursor:not-allowed;}
+  .medbtn:disabled:hover{border-color:var(--line);background:var(--card2);}
+  .medbtn:disabled svg{transform:none;}
+  .adjtypes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px;}
+  .adjtypes .typebtn{padding:9px 2px;font-size:11px;}
+  .adjtypes .typebtn.neg.on{border-color:#d64545;color:#d64545;background:#fdeceb;box-shadow:0 0 0 3px rgba(214,69,69,.10);}
+  .adjtypes .typebtn.esp.on{border-color:#e64a8f;color:#e64a8f;background:#fde9f2;box-shadow:0 0 0 3px rgba(230,74,143,.10);}
   .medgrid{display:flex;gap:8px;margin-top:4px;}
   .medbtn{flex:1;background:var(--card2);border:1.5px solid var(--line);border-radius:11px;padding:11px 4px;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;font-size:12px;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,transform .1s ease;-webkit-tap-highlight-color:transparent;}
   .medbtn:hover{border-color:#cfc9be;background:#fff;}
@@ -144,6 +193,22 @@
   .drow .dm{display:flex;gap:1px;flex-wrap:wrap;max-width:84px;justify-content:flex-end;}
   .drow .dm.a{justify-content:flex-start;}
   .drow .ds{font-family:var(--disp);font-size:15px;min-width:44px;text-align:center;font-variant-numeric:tabular-nums;}
+  /* v1.1: número de Moves junto a cada nombre; mi enfrentamiento resaltado */
+  .drow .dmv{font-size:11px;font-weight:800;color:var(--dim);font-variant-numeric:tabular-nums;flex:none;}
+  .drow.mine{background:linear-gradient(90deg,rgba(255,90,60,.13),rgba(255,90,60,.04));margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:9px;}
+  .drow.mine.b{background:linear-gradient(90deg,rgba(158,242,13,.04),rgba(158,242,13,.16));}
+  /* v1.1: clasificación con podio (oro, plata, bronce) y zona de descenso (3 últimos, si hay 7+) */
+  tr.p1 td{background:linear-gradient(90deg,#fff1c2,#fff8e2);} tr.p1:hover td{background:#fff1c2;}
+  tr.p2 td{background:linear-gradient(90deg,#e9ecf1,#f4f6f8);} tr.p2:hover td{background:#e9ecf1;}
+  tr.p3 td{background:linear-gradient(90deg,#f5e0cd,#faeee4);} tr.p3:hover td{background:#f5e0cd;}
+  tr.desc td{background:#fdeceb;} tr.desc:hover td{background:#fbe0de;}
+  /* v1.1: registros del administrador en el track (visualmente distintos, no reportables) */
+  .feeditem.adminrec{background:#f7f3ff;border-left:3px solid var(--halo2);border-radius:0 9px 9px 0;}
+  .feeditem.adminrec:hover{background:#f1eaff;}
+  .adjico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;vertical-align:middle;}
+  .adjico.neg{background:#d64545;} .adjico.esp{background:#e64a8f;} .adjico.adm{background:var(--halo2);}
+  .pill.adm{border-color:#d9c9ff;color:#6a3fc9;background:#f3ecff;}
+  .pill.nocont{color:var(--lose);}
   .wname{color:var(--win);border:1.5px solid var(--win);border-radius:9px;padding:0 6px;}
   .duelscore{text-align:center;font-family:var(--disp);font-size:27px;margin:2px 0 10px;font-variant-numeric:tabular-nums;}
   .ringbtn{background:none;border:none;cursor:pointer;padding:0;color:var(--dim);transition:transform .15s ease;-webkit-tap-highlight-color:transparent;}
@@ -258,7 +323,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const VERSION='web v1.0.1'+(DEV?'-dev':'');
+const VERSION='web v1.1'+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
    await en el camino del usuario; todo en try/catch; si falla el envío, la app sigue
@@ -367,8 +432,18 @@ function errCode(e){
   if(/actividad has hecho/.test(m)) return 'sin_actividad';
   if(/nivel no/.test(m)) return 'nivel';
   if(/día en curso|dia en curso/.test(m)) return 'no_es_hoy';
+  if(/conjunta de esta jornada ya fue/.test(m)) return 'conjunta_cerrada';
+  if(/esa jornada ya está cerrada|esa jornada ya esta cerrada/.test(m)) return 'jornada_cerrada';
   if(/cerrada/.test(m)) return 'cerrada';
-  if(/ya hay una actividad/.test(m)) return 'duplicado';
+  /* v1.1: el error técnico de duplicado (doble envío) también cuenta como duplicado */
+  if(/ya hay una actividad|duplicate key|activities_player_id_day_key|unique constraint|unique_violation/.test(m)) return 'duplicado';
+  if(/sin umbral|no tiene umbral/.test(m)) return 'nivel_sin_umbral';
+  if(/de qué actividad se trata|de que actividad se trata/.test(m)) return 'otro_sin_texto';
+  if(/dos actividades/.test(m)) return 'dos_actividades';
+  if(/lo creó el administrador|lo creo el administrador|registros del administrador/.test(m)) return 'registro_admin';
+  if(/motivo del ajuste/.test(m)) return 'sin_motivo';
+  if(/ya ha empezado/.test(m)) return 'liga_empezada';
+  if(/jwt|expired|session/.test(m)) return 'sesion';
   if(/máximo de|maximo de/.test(m)) return 'max_dias';
   if(/conjunta esta semana/.test(m)) return 'conjunta_usada';
   if(/anulada/.test(m)) return 'anulada';
@@ -402,9 +477,25 @@ function errCode(e){
     };
   }catch(e){}
 })();
+/* v1.1 · BLOQUEO DE DOBLE ENVÍO (punto 1). Mecanismo común para TODOS los botones que
+   llaman al servidor: run(btn, fn, ...args) deshabilita el botón al enviar y lo rehabilita al
+   recibir respuesta o error; además, la misma función no se lanza dos veces a la vez
+   (INFLIGHT), lo que cubre Enter + toque y botones que render() vuelve a pintar. */
+const INFLIGHT=new Set();
+async function run(btn,fn,...args){
+  if(INFLIGHT.has(fn)) return;
+  INFLIGHT.add(fn);
+  if(btn&&btn.disabled!==undefined) btn.disabled=true;
+  try{ return await fn(...args); }
+  finally{ INFLIGHT.delete(fn); if(btn&&btn.isConnected) btn.disabled=false; }
+}
 /* v1.0: valores por defecto de las claves de config nuevas (setup7 las escribe
-   en las ligas existentes; aquí el fallback por si faltan) */
-const QUEDADA_MIN_DEF=3, REPORT_PCT_DEF=0.70;
+   en las ligas existentes; aquí el fallback por si faltan).
+   v1.1: REPORT_PCT_DEF sigue en 0,70 como reserva para ligas antiguas sin reportPct;
+   las ligas nuevas lo eligen al crearse, con REPORT_PCT_NEW (40 %) por defecto. */
+const QUEDADA_MIN_DEF=3, REPORT_PCT_DEF=0.70, REPORT_PCT_NEW=0.40;
+const LEVEL_EMPTY=['','—','-','–','.'];   // celda de la plantilla sin umbral (punto 15)
+const OTRO='Otro';                         // actividad de texto libre, implícita en todas las ligas (D7)
 /* Tiempo de juego: en DEV la liga puede llevar un desplazamiento de días + minutos
    (config.devOffset / devOffsetMin, compartido por todos). En producción, tiempo real siempre. */
 function nowT(){
@@ -452,7 +543,7 @@ function medalSVG(l,s){
 const NAV=[['jornada','Jornada','zap'],['moves','Moves','activity'],['liga','Liga','trophy'],['admin','Admin','settings']];
 
 /* ============ ESTADO ============ */
-let L=null, TAB='jornada', USER=null, selType=null, selLevel=0, selQ=false, EDITING=false, DELARM=false;
+let L=null, TAB='jornada', USER=null, selType=null, selType2=null, selOther='', selLevel=0, selQ=false, EDITING=false, DELARM=false;
 let MEM=JSON.parse(localStorage.getItem('yml_mem')||'{}');
 let CUR=localStorage.getItem('yml_cur')||null;
 const $=s=>document.querySelector(s);
@@ -476,10 +567,16 @@ function ses(){
     if(o==='none') return null;
     if(o) return o;
   }
-  return MEM[CUR]||null;
+  /* v1.1: MEM[CUR] también guarda watched/owner; solo hay identidad si hay playerId */
+  const m=MEM[CUR]; return m&&m.playerId?m:null;
 }
+/* v1.1 (punto 4): en el dispositivo queda marcado que este usuario es el dueño de la liga.
+   Si la sesión de Supabase caduca, is_admin pasa a false: en vez del overlay de identidad
+   (que ocultaría su propio jugador) se le pide volver a iniciar sesión. */
+function ownerFlag(){ return !!(CUR&&MEM[CUR]&&MEM[CUR].owner); }
+function sessionExpired(){ return !!L&&!L.league.is_admin&&ownerFlag(); }
 /* ¿hace falta el overlay de identidad? (todo el mundo salvo el owner que ya eligió) */
-function needsIdentity(){ return !!L&&!ses()&&ownerIdentity()!=='none'; }
+function needsIdentity(){ return !!L&&!ses()&&ownerIdentity()!=='none'&&!sessionExpired(); }
 
 /* ============ JUEGO ============ */
 function roundRobin(names){
@@ -501,51 +598,101 @@ function leagueDay(){
   try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(nowT()); }
   catch(e){ return isoDay(nowT()); }
 }
-function weekStart(w){ const s=new Date(L.league.config.start+'T00:00:00'); s.setDate(s.getDate()+7*w); return s; }
-function weekEnd(w){ return new Date(weekStart(w).getTime()+7*24*3600*1000); }
+/* v1.1 · CALENDARIO UNIFICADO (punto 6). Única fuente en la web (el servidor tiene la
+   suya: _week_monday/_week_of/_week_start/_week_end/_week_close en setup10):
+   - la jornada 1 va del día de inicio al domingo siguiente a las 22:00 (puede durar < 7 días);
+   - a partir de ahí, semanas completas de lunes a domingo, cierre el domingo 22:00;
+   - la pertenencia de cada actividad a una jornada sale del mismo cálculo (weekOfDay).
+   w es el índice 0-based de la jornada (jornada = w+1). */
+function weekMonday(){ const s=new Date(L.league.config.start+'T00:00:00'); s.setDate(s.getDate()-((s.getDay()+6)%7)); return s; }
+function weekStart(w){ if(w<=0) return new Date(L.league.config.start+'T00:00:00'); const m=weekMonday(); m.setDate(m.getDate()+7*w); return m; }
+function weekEnd(w){ const m=weekMonday(); m.setDate(m.getDate()+7*(w+1)); return m; }   // lunes siguiente 00:00 (fin del descanso)
 /* cierre de jornada: domingo 22:00 (entre el cierre y el lunes 00:00, descanso) */
-function weekClose(w){ const d=weekStart(w); d.setDate(d.getDate()+6); d.setHours(22,0,0,0); return d; }
-function calWeek(){ const s=new Date(L.league.config.start+'T00:00:00'); return Math.floor((nowT()-s)/(7*24*3600*1000)); }
-function watched(j){ const m=MEM[CUR]; return m&&m.watched&&m.watched[j]; }
+function weekClose(w){ const d=weekMonday(); d.setDate(d.getDate()+7*w+6); d.setHours(22,0,0,0); return d; }
+function weekOfDay(iso){ const d=new Date(iso+'T00:00:00'); return Math.floor(Math.round((d-weekMonday())/86400000)/7); }
+function calWeek(){ if(nowT()<weekStart(0)) return -1; return weekOfDay(isoDay(nowT())); }
+function weekDays(w){ const a=isoDay(weekStart(w)), b=isoDay(new Date(weekClose(w).getTime())); return [a,b]; }   // [primer día, último día] ISO
+function watched(j){ const m=MEM[CUR]; return !!(m&&m.watched&&m.watched[j]); }
 function setWatched(j){ MEM[CUR]=MEM[CUR]||{}; MEM[CUR].watched=MEM[CUR].watched||{}; MEM[CUR].watched[j]=true; saveMem(); }
+/* v1.1 (D6): un dispositivo sin historial da por vistas todas las jornadas resueltas menos
+   la última, que sí hay que ver. Se decide una sola vez, al cargar la liga. */
+function initWatched(){
+  MEM[CUR]=MEM[CUR]||{};
+  if(MEM[CUR].watched) return;
+  const w={}; const rs=(L.rounds||[]).map(r=>r.number-1).sort((a,b)=>a-b);
+  rs.slice(0,-1).forEach(j=>w[j]=true);
+  MEM[CUR].watched=w; saveMem();
+}
+/* v1.1 (puntos 21 y 24): «jornada visible para mí» = resuelta y ya vista en este dispositivo.
+   Todas las vistas (Jornada, Liga, clasificación, calendario) consultan esta única función. */
+function roundVisible(j){ return !!roundOf(j)&&watched(j); }
+/* primera jornada resuelta que aún no he visto (encadena: para ver la j hay que haber visto la j-1) */
+function firstUnwatched(){ for(let j=0;j<L.league.config.weeks;j++){ if(!roundOf(j)) return -1; if(!watched(j)) return j; } return -1; }
 function firstUnresolved(){ for(let j=0;j<L.league.config.weeks;j++){ if(!(L.rounds||[]).find(x=>x.number===j+1)) return j; } return L.league.config.weeks; }
 /* jornada activa: la primera sin resolver, sin adelantar al calendario real */
 function activeW(){ const cw=calWeek(); if(cw<0) return -1; return Math.min(firstUnresolved(), Math.min(cw, L.league.config.weeks-1)); }
 function roundOf(j){ return (L.rounds||[]).find(x=>x.number===j+1); }
 function actsOfWeek(pid,w){
-  const a=isoDay(weekStart(w)), b=isoDay(new Date(weekStart(w).getTime()+6*24*3600*1000));
+  const [a,b]=weekDays(w);
   return L.activities.filter(x=>x.player_id===pid&&x.day>=a&&x.day<=b).sort((x,y)=>x.day<y.day?-1:1);
 }
+function adjOfWeek(pid,w){ const [a,b]=weekDays(w); return (L.adjustments||[]).filter(x=>x.player_id===pid&&x.day>=a&&x.day<=b); }   // v1.1: ajustes negativo/especial
 function isQOnly(a){ return a.activity==='[conjunta]'; }   // asistencia a la quedada sin entreno: +1 Move, no cuenta como día
 function isAnulada(a){ return a.verdict==='anulada'; }     // v1.0: anulada por reportes — 0 Moves, no cuenta día (solo sobrevive el ajuste del admin)
 function isSocial(a){ return !!a.quedada||isQOnly(a); }     // participó en la conjunta (entrenando o solo asistiendo)
-/* v1.0 · CÁLCULO DE MOVES — réplica exacta de resolve_round (setup7). Cualquier
+function isAdminRec(a){ return a.source==='admin'; }        // v1.1: registro creado por el admin (bronce/plata/oro): cuenta como día, no se reporta
+/* v1.1 · CÁLCULO DE MOVES — réplica exacta de resolve_round (setup10). Cualquier
    cambio aquí se hace A LA VEZ en el servidor (test de paridad en el banco de pruebas).
    Reglas:
    - actividad anulada: ni Moves de nivel, ni social, ni día; su `adj` (corrección
-     del admin) sí cuenta, para que admin_adjust pueda enmendar una anulación.
-   - social (+1): solo si esa semana la conjunta la han marcado >= quedadaMin
-     jugadores distintos (no anulados). Por debajo, la asistencia sin entreno vale 0.
-   - el resto igual que v0.9: orden cronológico, recorte a maxDays, bonus por días. */
+     antigua del admin) sí cuenta.
+   - social (+1): solo si la marca cae en EL DÍA DE LA CONJUNTA de la semana: el primer
+     día en que la marcan >= quedadaMin jugadores distintos (marcas válidas). Las de
+     cualquier otro día no suman nada (D1, D2). Sin día de conjunta, nadie suma.
+   - registros del admin (source 'admin', nivel 1..3): como una actividad más (cuentan día).
+   - ajustes negativo/especial (adjustments): se suman al total, sin recorte a maxDays.
+   - el resto igual que v0.9: orden cronológico, recorte a maxDays, bonus por días, suelo 0. */
 function quedadaMin(){ const v=parseInt(L.league.config.quedadaMin); return v>=QUEDADA_MIN_DEF?v:QUEDADA_MIN_DEF; }
 function reportPct(){ const v=parseFloat(L.league.config.reportPct); return v>=0.3&&v<=1?v:REPORT_PCT_DEF; }
-function quedadaCount(w){
-  const a=isoDay(weekStart(w)), b=isoDay(new Date(weekStart(w).getTime()+6*24*3600*1000));
-  return new Set(L.activities.filter(x=>x.day>=a&&x.day<=b&&!isAnulada(x)&&isSocial(x)).map(x=>x.player_id)).size;
+/* marcas sociales válidas por día de la semana: {iso: Set(player_id)} */
+function quedadaByDay(w){
+  const [a,b]=weekDays(w), m={};
+  L.activities.forEach(x=>{ if(x.day>=a&&x.day<=b&&!isAnulada(x)&&isSocial(x)){ (m[x.day]=m[x.day]||new Set()).add(x.player_id); } });
+  return m;
 }
-function quedadaOK(w){ return quedadaCount(w)>=quedadaMin(); }
+/* día de la conjunta (ISO) o null: primer día con >= quedadaMin marcas válidas */
+function quedadaDay(w){ const m=quedadaByDay(w), min=quedadaMin(); return Object.keys(m).sort().find(d=>m[d].size>=min)||null; }
+function quedadaCount(w){ const d=quedadaDay(w); return d?quedadaByDay(w)[d].size:0; }   // marcas del día de la conjunta
+function quedadaOK(w){ return quedadaDay(w)!==null; }
 function movesOfWeek(pid,w){
-  const cfg=L.league.config, raw=actsOfWeek(pid,w), social=quedadaOK(w);
+  const cfg=L.league.config, raw=actsOfWeek(pid,w), qd=quedadaDay(w);
   const all=raw.filter(a=>!isAnulada(a));
-  const qonly=social?all.filter(isQOnly).length:0;
+  const qonly=all.filter(a=>isQOnly(a)&&a.day===qd).length;
   const acts=all.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
-  let m=acts.reduce((s,x)=>s+x.level+((x.quedada&&social)?1:0)+(x.adj||0),0)+qonly;
+  let m=acts.reduce((s,x)=>s+x.level+((x.quedada&&x.day===qd)?1:0)+(x.adj||0),0)+qonly;
   m+=raw.filter(isAnulada).reduce((s,x)=>s+(x.adj||0),0);
+  m+=adjOfWeek(pid,w).reduce((s,x)=>s+(x.value||0),0);
   if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) m+=1;
   return Math.max(0,m);
 }
 function daysOfWeek(pid,w){ return Math.min(actsOfWeek(pid,w).filter(a=>!isQOnly(a)&&!isAnulada(a)).length, L.league.config.maxDays||7); }
-function quedadaUsed(pid,w){ return actsOfWeek(pid,w).some(isSocial); }   // máx. 1/semana (también si quedó anulada)
+/* v1.1: la conjunta queda cerrada para toda la liga cuando el día de la conjunta ya pasó */
+function quedadaClosed(w){ const d=quedadaDay(w); return !!d&&d<leagueDay(); }
+/* «una conjunta QUE CUENTE por semana»: si mi marca cayó en el día de la conjunta, ya está usada */
+function quedadaUsed(pid,w){ const d=quedadaDay(w); return !!d&&actsOfWeek(pid,w).some(a=>isSocial(a)&&!isAnulada(a)&&a.day===d); }
+/* v1.1 (punto 9): La Media = media aritmética de los Moves de todos los jugadores EXCEPTO el
+   rival, incluidos los que tienen 0, redondeada hacia arriba (réplica de _media_moves). */
+function mediaMoves(w,rivalName){
+  const v=L.players.filter(p=>p.name!==rivalName).map(p=>movesOfWeek(p.id,w));
+  return v.length?Math.ceil(v.reduce((s,x)=>s+x,0)/v.length):0;
+}
+/* v1.1 (punto 25): referencia de la liga R = un oro + tres platas + el resto de días en bronce
+   + conjunta + bonus. Liga de referencia (6 días, conjunta y bonus): R = 13. */
+function refMoves(){ const cfg=L.league.config; return 3+3*2+((cfg.maxDays||7)-4)+(cfg.quedada?1:0)+(cfg.bonusDay>0?1:0); }
+/* v1.1 (punto 27, D13): umbrales de los halos con ceil; con R = 13 → 4, 6 y 8 */
+function haloThr(){ const R=refMoves(); return [Math.ceil(R*0.30),Math.ceil(R*0.45),Math.ceil(R*0.60)]; }
+function haloLevel(m){ const t=haloThr(); return m>=t[2]?3:(m>=t[1]?2:(m>=t[0]?1:0)); }
+const HALO_NAMES=['','En racha','Imparable','Leyenda'];
 /* v1.0: umbral de reportes = ceil(reportPct × (jugadores − 1)); el autor no se reporta.
    Se redondea antes del ceil para que 0,70×10 no dé 7,000000001 → 8. */
 function reportThr(){ const den=Math.max(1,L.players.length-1); return Math.max(1,Math.ceil(+(reportPct()*den).toFixed(6))); }
@@ -570,20 +717,41 @@ function parseLevelsText(txt){
       return {name, hint, thr};
     }).filter(x=>x.name);
 }
-function parseTypes(){ return parseLevelsText(L.league.config.levels||PLANTILLA_DEF); }
+/* v1.1 (D7): «Otro» (texto libre obligatorio) va implícito en todas las ligas, sin tocar
+   config.levels de las existentes. Admite los tres niveles (no tiene umbrales). */
+function parseTypes(){
+  const t=parseLevelsText(L.league.config.levels||PLANTILLA_DEF);
+  if(t.length&&!t.some(x=>normName(x.name)==='otro')) t.push({name:OTRO,hint:'',thr:['','',''],otro:true});
+  else t.forEach(x=>{ if(normName(x.name)==='otro') x.otro=true; });
+  return t;
+}
+function isOtro(name){ return normName(name)==='otro'; }
+/* v1.1 (punto 15): un nivel sin umbral en la plantilla (celda vacía, —, - o .) no está disponible.
+   «Otro» siempre; una actividad que no está en la plantilla no se puede comprobar y se admite. */
+function levelAllowed(t,l){ if(!t||t.otro) return true; const c=String(t.thr[l-1]||'').trim(); return !LEVEL_EMPTY.includes(c); }
+/* D8: con dos actividades el bronce queda bloqueado; plata siempre; oro si al menos una lo tiene */
+function levelAvailable(t1,t2,l){ if(t2){ if(l===1) return false; if(l===2) return true; return levelAllowed(t1,3)||levelAllowed(t2,3); } return levelAllowed(t1,l); }
 const LEVEL_NAMES=['Bronce','Plata','Oro'];
-/* etiqueta pública de una actividad: «Oro · Natación» (registros viejos sin actividad: «sin especificar») */
+/* etiqueta pública de una actividad: «Oro · Natación» (registros viejos sin actividad: «sin especificar»);
+   v1.1: dos actividades «Oro · Bici + Correr», Otro con su texto, registros del admin */
+function actName(a){
+  const n=x=>isOtro(x)&&a.other_text?OTRO+' ('+a.other_text+')':x;
+  return (a.activity&&a.activity.trim()?n(a.activity):'sin especificar')+(a.activity2?' + '+n(a.activity2):'');
+}
 function actLabel(a){
   if(isQOnly(a)) return 'Conjunta · solo asistencia';
-  return LEVEL_NAMES[a.level-1]+' · '+(a.activity&&a.activity.trim()?a.activity:'sin especificar');
+  if(isAdminRec(a)) return LEVEL_NAMES[a.level-1]+' · ajuste del admin';
+  return LEVEL_NAMES[a.level-1]+' · '+actName(a);
 }
 function editedTag(a){
   if(!a.edits) return '';
   return ` <span class="edited">· editado ${a.edits>1?'×'+a.edits+' · ':''}${fmtHM(a.updated_at)}</span>`;
 }
+/* jornadas resueltas que puedo ver (punto 21): solo esas entran en clasificación, forma y calendario */
+function visibleRounds(){ return (L.rounds||[]).filter(r=>roundVisible(r.number-1)); }
 function formChips(name,n){
   const res=[];
-  (L.rounds||[]).forEach(r=>{
+  visibleRounds().forEach(r=>{
     (r.data.duels||[]).forEach(d=>{
       if(d.a!==name&&d.b!==name) return;
       res.push(d.nulo?'n':(d.winner===name?'v':'d'));
@@ -591,29 +759,42 @@ function formChips(name,n){
   });
   return res.slice(-(n||5)).map(x=>`<span class="chip ${x}">${x==='v'?'V':(x==='d'?'D':'–')}</span>`).join('');
 }
+/* v1.1 (D3): la clasificación NO recalcula el pasado. Moves y Días de las jornadas ya
+   resueltas salen de la instantánea congelada (rounds.data.moves/days); solo la semana en
+   curso se calcula en vivo. (D5) El punto por derrota usa el bonusDay guardado en la
+   instantánea de cada jornada; con bonusDay = 0 no hay punto por derrota. Las jornadas
+   resueltas que aún no he visto no cuentan (punto 21). */
 function standings(){
-  const st={};
+  const st={}, cfg=L.league.config;
   L.players.forEach(p=>st[p.name]={name:p.name,pj:0,v:0,pts:0,dias:0,moves:0});
-  L.players.forEach(p=>{
-    for(let w=0;w<L.league.config.weeks;w++){ st[p.name].dias+=daysOfWeek(p.id,w); st[p.name].moves+=movesOfWeek(p.id,w); }
-  });
-  (L.rounds||[]).forEach(r=>{
+  const vis=visibleRounds();
+  vis.forEach(r=>{
+    L.players.forEach(p=>{
+      st[p.name].dias+=+(r.data.days&&r.data.days[p.name])||0;
+      st[p.name].moves+=+(r.data.moves&&r.data.moves[p.name])||0;
+    });
+    const bd=(r.data.config&&r.data.config.bonusDay!==undefined)?+r.data.config.bonusDay:(+cfg.bonusDay||0);
     (r.data.duels||[]).forEach(d=>{
       [d.a,d.b].forEach(x=>{ if(st[x]) st[x].pj++; });
       if(d.nulo) return;
       if(st[d.winner]){ st[d.winner].v++; st[d.winner].pts+=3; }
       const los=d.winner===d.a?d.b:d.a;
       const ld=d.winner===d.a?d.days_b:d.days_a;
-      if(st[los]&&ld>=4) st[los].pts+=1;
+      if(st[los]&&bd>0&&ld>=bd) st[los].pts+=1;
     });
   });
+  const w=activeW();
+  if(w>=0&&w<cfg.weeks&&!roundOf(w)) L.players.forEach(p=>{ st[p.name].dias+=daysOfWeek(p.id,w); st[p.name].moves+=movesOfWeek(p.id,w); });
   return Object.values(st).sort((a,b)=>b.pts-a.pts||b.dias-a.dias||b.moves-a.moves||a.name.localeCompare(b.name));
 }
 let FILTERP=null;
 function filterP(name){ FILTERP=FILTERP===name?null:name; render(); }
+/* v1.1 (punto 45): podio oro/plata/bronce y descenso (3 últimos) solo con 7+ jugadores */
 function clasifHTML(){
+  const st=standings(), n=st.length, zones=n>=7;
   return `<table><tr><th>#</th><th>Nombre</th><th class="num">Pts</th><th class="num">Días</th><th class="num">Moves</th><th>Forma</th></tr>${
-    standings().map((s,i)=>`<tr style="cursor:pointer${FILTERP===s.name?';background:var(--card2)':''}" onclick="filterP('${esc(s.name)}')"><td>${i+1}</td><td>${esc(s.name)}${catBadge(byName(s.name))}</td><td class="num"><b>${s.pts}</b></td><td class="num">${s.dias}</td><td class="num">${s.moves}</td><td>${formChips(s.name,5)}</td></tr>`).join('')}
+    st.map((s,i)=>{ const cls=i<3?'p'+(i+1):(zones&&i>=n-3?'desc':'');
+      return `<tr class="${cls}" style="cursor:pointer${FILTERP===s.name?';outline:2px solid var(--firma);outline-offset:-2px':''}" onclick="filterP('${esc(s.name)}')"><td>${i+1}</td><td>${esc(s.name)}${catBadge(byName(s.name))}</td><td class="num"><b>${s.pts}</b></td><td class="num">${s.dias}</td><td class="num">${s.moves}</td><td>${formChips(s.name,5)}</td></tr>`; }).join('')}
   </table>`;
 }
 
@@ -624,13 +805,28 @@ function fmtCd(ms){
   if(d>=1) return `${d}d ${h}h ${String(m).padStart(2,'0')}m`;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
 }
+/* v1.1 (puntos 40-41): estado del contador de la jornada en curso.
+   'lastday' = hoy es el último día de la jornada (domingo, o el único día si la J1 es corta);
+   'lasthour' = falta menos de una hora para el cierre. El contador de Moves usa los mismos
+   estados y solo cambia ese último día (no los intermedios), en paralelo con el de Jornada. */
+function cdState(w){
+  if(w<0||calWeek()<0) return '';
+  const left=weekClose(w)-nowT();
+  if(left<=0) return '';
+  if(left<=3600000) return 'lasthour';
+  return leagueDay()===isoDay(weekClose(w))?'lastday':'';
+}
+function applyCdState(){
+  const w=activeW(); const st=cdState(w);
+  document.querySelectorAll('.stickcard[data-cd]').forEach(el=>{ el.classList.toggle('lastday',st==='lastday'); el.classList.toggle('lasthour',st==='lasthour'); });
+}
 setInterval(()=>{
   if(!L) return;
   const cj=document.getElementById('cdJ');
   if(cj){
     const target=calWeek()<0?weekStart(0):weekClose(activeW());
     const t=fmtCd(target-nowT());
-    if(t) cj.textContent=t;
+    if(t){ cj.textContent=t; applyCdState(); }
     else { render(); return; }   // llegó a 0 → repintar (y se dispara la resolución)
   }
   const cr=document.getElementById('cdR');   // descanso entre jornadas
@@ -644,9 +840,11 @@ setInterval(()=>{
     const n=nowT(), mid=new Date(n); mid.setHours(24,0,0,0);
     const target=Math.min(mid.getTime(), weekClose(activeW()).getTime());
     const t=fmtCd(target-n);
-    if(t) cd.textContent=t;
+    if(t){ cd.textContent=t; applyCdState(); }
     else { render(); return; }
   }
+  /* v1.1 (punto 5): la resolución desde la app es el respaldo del pg_cron y se reintenta sola */
+  if(RESOLVE_NEXT&&Date.now()>=RESOLVE_NEXT){ RESOLVE_NEXT=0; maybeResolve(true); }
 },1000);
 
 /* ============ NAV / MODALES ============ */
@@ -697,17 +895,17 @@ function vHome(notice){
        <button class="btn sec" onclick="logoutAdmin()">${ic('logout')} Salir</button></div>`
     : `<label>Correo</label><input id="aEmail" type="email" autocomplete="email">
        <label>Contraseña</label><input id="aPass" type="password" autocomplete="current-password">
-       <div class="row"><button class="btn" onclick="loginAdmin()">Iniciar sesión</button>
-       <button class="btn sec" onclick="signupAdmin()">Registrarme</button></div>
+       <div class="row"><button class="btn" onclick="run(this,loginAdmin)">Iniciar sesión</button>
+       <button class="btn sec" onclick="run(this,signupAdmin)">Registrarme</button></div>
        <div class="err" id="aErr"></div>`;
   $('#main').innerHTML=`
   ${notice?`<div class="card" style="border-color:#eed3cf"><p class="msg">${notice}</p></div>`:''}
   <div class="card"><h2>${ic('users')} Entrar en mi liga</h2>
     <label>Código de la liga</label><input id="jCode" maxlength="10" style="text-transform:uppercase" placeholder="p. ej. K7KM2X">
-    <button class="btn" onclick="openLeague()">Entrar</button><div class="err" id="jErr"></div>
+    <button class="btn" onclick="run(this,openLeague)">Entrar</button><div class="err" id="jErr"></div>
   </div>
   <div class="card"><h2>${ic('key')} Inicia sesión o regístrate</h2>${adminBox}</div>`;
-  bindEnter('jCode',openLeague); bindEnter('aEmail',loginAdmin); bindEnter('aPass',loginAdmin);
+  bindEnter('jCode',()=>run(null,openLeague)); bindEnter('aEmail',()=>run(null,loginAdmin)); bindEnter('aPass',()=>run(null,loginAdmin));
   if(USER) loadMyLeagues();
   TM.view('home');
   if(CREATE_OPEN){ track('create_abandon',{tenia_nombre:CREATE_OPEN.nombre,n_jugadores:CREATE_OPEN.n}); CREATE_OPEN=null; }
@@ -733,6 +931,28 @@ async function signupAdmin(){
   USER=(await sb.auth.getUser()).data.user; track('auth_signup',{ok:true}); vHome();
 }
 async function logoutAdmin(){ track('auth_logout',{}); await sb.auth.signOut(); USER=null; vHome(); }
+/* v1.1 (punto 4): volver a iniciar sesión desde dentro de la liga (sesión de admin caducada) */
+async function reloginAdmin(){
+  const err=$('#xErr'); if(err) err.textContent='';
+  const {error}=await sb.auth.signInWithPassword({email:$('#xEmail').value,password:$('#xPass').value});
+  if(error){ if(err) err.textContent=error.message; track('auth_login',{ok:false,motivo_error:errCode(error),desde:'caducada'}); return; }
+  USER=(await sb.auth.getUser()).data.user; track('auth_login',{ok:true,desde:'caducada'});
+  await refresh();
+}
+/* «No soy el administrador» en este dispositivo: se olvida la marca y se pregunta quién eres */
+function dropOwnerFlag(){ if(CUR&&MEM[CUR]){ delete MEM[CUR].owner; saveMem(); } render(); }
+/* v1.1 (punto 4): reaccionar a la caducidad y a la renovación del token sin esperar a que el
+   usuario toque nada. Solo se repinta si cambia lo que el servidor diría de is_admin. */
+let AUTH_UID=null;
+sb.auth.onAuthStateChange((ev,session)=>{
+  try{
+    const uid=session&&session.user?session.user.id:null;
+    USER=session?session.user:USER;
+    if(ev==='SIGNED_OUT') USER=null;
+    const changed=uid!==AUTH_UID; AUTH_UID=uid;
+    if(L&&CUR&&changed&&(ev==='TOKEN_REFRESHED'||ev==='SIGNED_IN'||ev==='SIGNED_OUT')) refresh();
+  }catch(e){}
+});
 let OPEN_VIA=null, CREATE_OPEN=null;
 
 /* ============ CREAR LIGA ============ */
@@ -756,21 +976,27 @@ function vCreate(){
       <label style="flex:2;margin:0"><input type="checkbox" id="cQuedada" checked style="width:auto" onchange="document.getElementById('cQMin').disabled=!this.checked"> Actividad conjunta semanal (+1 Move)</label>
       <div style="flex:1;min-width:130px"><label style="margin-top:0">Mínimo de personas</label><input type="number" id="cQMin" value="${QUEDADA_MIN_DEF}" min="${QUEDADA_MIN_DEF}" max="99"></div>
     </div>
-    <p class="msg" style="margin-top:4px">El +1 social solo cuenta si al menos ese número de personas distintas marcan la conjunta en la semana.</p>
+    <p class="msg" style="margin-top:4px">El +1 social cuenta el primer día de la semana en que al menos ese número de personas distintas marcan la conjunta; solo suman las marcas de ese día.</p>
+    <label>Umbral de reportes para anular una actividad</label>
+    <select id="cRepPct">${[30,35,40,45,50,55,60,65,70,75,80,85,90,95,100].map(x=>`<option value="${(x/100).toFixed(2)}" ${x===Math.round(REPORT_PCT_NEW*100)?'selected':''}>${x} % de los demás jugadores</option>`).join('')}</select>
     <label><input type="checkbox" id="cOculto" style="width:auto"> Rival oculto (solo se ve el duelo en curso)</label>
     <label style="margin-top:14px;display:flex;gap:10px;align-items:flex-start;color:var(--text);font-weight:500;line-height:1.5"><input type="checkbox" id="cDecl" style="width:auto;margin-top:3px;flex:none" onchange="document.getElementById('cBtn').disabled=!this.checked"> <span id="cDeclTxt">${esc(DECLARACION_ADMIN)}</span></label>
     <p class="msg" style="margin-top:6px">Consulta cómo tratamos los datos en el <a href="#" onclick="vPriv('creacion');return false">aviso de privacidad</a>.</p>
-    <div class="row"><button class="btn" id="cBtn" onclick="createLeague()" disabled>Crear liga</button>
+    <div class="row"><button class="btn" id="cBtn" onclick="run(this,createLeague)" disabled>Crear liga</button>
     <button class="btn sec" onclick="vHome()">Volver</button></div>
     <div class="err" id="cErr"></div>
   </div>`;
   TM.view('crear'); track('create_start',{});
+  CREATE_KEY=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));   // v1.1: clave de idempotencia por formulario
   CREATE_OPEN={nombre:false,n:0};
   const upd=()=>{ if(CREATE_OPEN){ CREATE_OPEN.nombre=!!$('#cName').value.trim(); CREATE_OPEN.n=$('#cPlayers').value.split('\n').filter(x=>x.trim()).length; } };
   $('#cName').addEventListener('input',upd); $('#cPlayers').addEventListener('input',upd);
 }
 /* v1.0.1: declaración del administrador (RGPD). El texto se guarda íntegro en leagues.log. */
 const DECLARACION_ADMIN='Confirmo que he informado a las personas que voy a inscribir y que cuento con su permiso para añadirlas a esta liga. Si alguna de ellas es menor de 14 años, confirmo que tengo la autorización de su padre, madre o tutor.';
+/* v1.1 (punto 18): nombres comparados sin mayúsculas, tildes ni espacios sobrantes (réplica de _norm_name) */
+function normName(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().replace(/\s+/g,' ').toLowerCase(); }
+let CREATE_KEY=null;
 async function createLeague(){
   const lines=$('#cPlayers').value.split('\n').map(x=>x.trim()).filter(Boolean);
   const roster=lines.map(l=>{
@@ -780,7 +1006,8 @@ async function createLeague(){
     return {name,cat};
   });
   const players=roster.map(r=>r.name);
-  if(new Set(players).size!==players.length){ $('#cErr').textContent='Hay nombres repetidos.'; return; }
+  if(new Set(players.map(normName)).size!==players.length){ $('#cErr').textContent='Hay nombres repetidos (se comparan sin mayúsculas, tildes ni espacios sobrantes).'; return; }
+  if(players.some(n=>normName(n)==='la media')){ $('#cErr').textContent='El nombre «La Media» está reservado; usa otro para ese participante.'; return; }
   const qMin=Math.max(QUEDADA_MIN_DEF,Math.min(players.length,parseInt($('#cQMin').value)||QUEDADA_MIN_DEF));
   if(parseLevelsText($('#cLevels').value).length===0){ $('#cErr').textContent='La plantilla de actividades no tiene ninguna línea válida («Actividad: bronce / plata / oro»).'; return; }
   if(!$('#cDecl')||!$('#cDecl').checked){ $('#cErr').textContent='Para crear la liga tienes que confirmar la declaración sobre los participantes.'; return; }
@@ -788,13 +1015,14 @@ async function createLeague(){
     prize:$('#cPrize').value.trim(), start:$('#cStart').value,
     weeks:parseInt($('#cWeeks').value)||12, maxDays:parseInt($('#cMax').value),
     bonusDay:parseInt($('#cBonus').value), quedada:$('#cQuedada').checked,
-    quedadaMin:qMin, reportPct:REPORT_PCT_DEF,   // v1.0
+    quedadaMin:qMin, reportPct:parseFloat($('#cRepPct').value)||REPORT_PCT_NEW,   // v1.1: elegido al crear (40 % por defecto)
     oculto:$('#cOculto').checked, levels:$('#cLevels').value, version:VERSION,
     beta:DEV   // v0.9: las ligas creadas en beta quedan marcadas y no se abren en producción
   };
   try{
+    /* v1.1: p_key = clave de idempotencia; dos envíos del mismo formulario devuelven la misma liga */
     const {data,error}=await sb.rpc('create_league',{p_name:$('#cName').value,p_email:USER?USER.email:null,
-      p_config:cfg,p_calendar:roundRobin(players),p_players:roster});
+      p_config:cfg,p_calendar:roundRobin(players),p_players:roster,p_key:CREATE_KEY});
     if(error) throw error;
     CREATE_OPEN=null;
     track('create_done',{n_jugadores:roster.length,config:Object.assign({},cfg,{prize:cfg.prize?'(texto)':''})});
@@ -820,8 +1048,8 @@ async function vAdminPick(code,name,cfg,roster){
   <div class="card"><h2>${ic('users')} ¿Qué jugador eres tú?</h2>
     <p class="msg">Tu jugador queda fijado a tu cuenta: entrarás sin PIN y nadie más podrá elegirlo. Se puede cambiar después en Admin (queda en el registro público).</p>
     <div class="row" style="margin-top:8px">${players.map(p=>
-      `<button class="btn sec" onclick="adminPickChoose('${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
-    <button class="btn sec" style="margin-top:14px" onclick="adminPickChoose('__none__')">${ic('settings')} No juego, solo organizo</button>
+      `<button class="btn sec" onclick="run(this,adminPickChoose,'${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
+    <button class="btn sec" style="margin-top:14px" onclick="run(this,adminPickChoose,'__none__')">${ic('settings')} No juego, solo organizo</button>
     <div class="err" id="apErr"></div>
   </div>`;
 }
@@ -849,7 +1077,7 @@ function whatsText(code,name,cfg,roster){
     `📌 Ábrelo en tu navegador (mejor que el de WhatsApp) y añádelo a la pantalla de inicio: entrarás directo, sin códigos.\n`+
     `\n📸 Foto instantánea al grupo + registra tu día en la web (guarda la hora, que case con tu foto).\n`+
     `\n📏 NIVELES (🥉1 Move · 🥈2 · 🥇3):\n${cfg.levels}\n`+
-    (cfg.quedada?`\n👥 Actividad conjunta: +1 Move, solo si la marcan ${cfg.quedadaMin||QUEDADA_MIN_DEF}+ personas esa semana.\n`:'')+
+    (cfg.quedada?`\n👥 Actividad conjunta: +1 Move el primer día de la semana en que la marquen ${cfg.quedadaMin||QUEDADA_MIN_DEF}+ personas; solo cuentan las marcas de ese día.\n`:'')+
     `✏️ Tu registro de hoy se puede corregir hasta el final del día (la hora original se conserva).\n`+
     `🚩 Reportes anónimos: si reporta el ${Math.round((cfg.reportPct||REPORT_PCT_DEF)*100)} % de los demás, la actividad no cuenta.\n`+
     `\n🎯 Domingo: se resuelve la jornada. Más deporte = más opciones. Garantizado, nada.\n`+
@@ -883,6 +1111,7 @@ async function goLeague(code){
       return;
     }
     L=data; CUR=code.toUpperCase(); saveMem(); TAB='jornada';
+    initWatched();   // v1.1 (D6)
     track('league_open',{via:OPEN_VIA||'guardada',ok:true}); OPEN_VIA=null;
     render();
   }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else toast(e.message||'Error de conexión'); track('league_open_fail',{motivo:errCode(e)}); OPEN_VIA=null; }
@@ -910,11 +1139,14 @@ async function logoutLeague(){
 /* ============ RENDER ============ */
 function render(){
   if(!L){ syncIdOverlay(); vHome(); return; }
+  /* v1.1 (punto 4): si el servidor nos reconoce como dueño, queda marcado en el dispositivo */
+  if(L.league.is_admin){ MEM[CUR]=MEM[CUR]||{}; if(!MEM[CUR].owner){ MEM[CUR].owner=true; saveMem(); } }
   /* v1.0: si el localStorage recuerda un jugador que ya no existe (o que ahora es
-     el del admin y no somos el owner), se olvida y se vuelve a preguntar */
+     el del admin y no somos el owner), se olvida y se vuelve a preguntar.
+     v1.1: con la marca de dueño y la sesión caducada NO se borra nada: se pide iniciar sesión. */
   const m=MEM[CUR];
-  if(m&&m.playerId&&(!L.players.some(p=>p.id===m.playerId)||(!L.league.is_admin&&m.playerId===L.league.config.adminPlayer))){
-    delete MEM[CUR]; saveMem();
+  if(m&&m.playerId&&!sessionExpired()&&(!L.players.some(p=>p.id===m.playerId)||(!L.league.is_admin&&m.playerId===L.league.config.adminPlayer))){
+    delete MEM[CUR].playerId; delete MEM[CUR].pin; saveMem();
   }
   $('#nav').classList.add('on');
   $('#tabAdmin').style.display=L.league.is_admin?'flex':'none';
@@ -953,31 +1185,35 @@ function medIcons(pid,w,size){
   if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) h+=xtraSVG('bonus',size||12);
   return h;
 }
-function medianMoves(w){
-  const v=L.players.map(p=>movesOfWeek(p.id,w)).sort((a,b)=>a-b), n=v.length;
-  return n?(n%2?v[(n-1)/2]:Math.round((v[n/2-1]+v[n/2])/2)):0;
+/* Moves de un nombre del calendario en la jornada w: jugador real (en vivo) o La Media (punto 10).
+   Si la jornada está resuelta y es visible, se leen de la instantánea (ma/mb del duelo). */
+function movesOfName(name,rival,w,d){
+  if(d){ return name===d.a?d.ma:d.mb; }
+  if(name==='La Media') return mediaMoves(w,rival);
+  const p=byName(name); return p?movesOfWeek(p.id,w):0;
 }
-/* fila de enfrentamiento unificada (Jornada y Liga): marcador del duelo en el
-   centro (0-0 si no se ha disputado) y las medallas de cada uno a los lados */
-function duelRow(a,b,w,r){
+/* fila de enfrentamiento unificada (Jornada y Liga): marcador del duelo en el centro
+   («/» hasta que la jornada se resuelve y la he visto), Moves junto a cada nombre y las
+   medallas a los lados. r = jornada resuelta y VISIBLE (si no, se pinta como en curso). */
+function duelRow(a,b,w,r,mine){
   const pa=byName(a), pb=byName(b);
   const d=r?(r.data.duels||[]).find(x=>x.a===a&&x.b===b):null;
   let sa=0,sb=0;
   if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sa=d.winner===a?hi:lo; sb=d.winner===b?hi:lo; }
   const wa=d&&!d.nulo&&d.winner===a, wb=d&&!d.nulo&&d.winner===b;
-  return `<div class="drow">
-    <span class="dn"><span class="${wa?'wname':''}">${esc(a)}</span></span>
+  const ma=movesOfName(a,b,w,d), mb=movesOfName(b,a,w,d);
+  return `<div class="drow${mine?' mine'+(mine==='b'?' b':''):''}">
+    <span class="dn"><span class="${wa?'wname':''}">${esc(a)}</span></span><span class="dmv">${ma}</span>
     <span class="dm a">${pa?medIcons(pa.id,w):''}</span>
-    <span class="ds">${d?(d.nulo?'—':sa+'–'+sb):'0–0'}</span>
+    <span class="ds">${d?(d.nulo?'—':sa+'–'+sb):'/'}</span>
     <span class="dm">${pb?medIcons(pb.id,w):''}</span>
-    <span class="dn b"><span class="${wb?'wname':''}">${esc(b)}</span></span>
+    <span class="dmv">${mb}</span><span class="dn b"><span class="${wb?'wname':''}">${esc(b)}</span></span>
   </div>`;
 }
 /* v0.9: al resolverse la jornada, hasta que la veas SOLO existe este panel.
-   Cualquiera de sus 3 botones (play / mi enfrentamiento / resultados) marca
-   la jornada como vista y da paso a la pantalla de jornada resuelta. */
+   v1.1 (puntos 22-23): un único botón. Tu duelo se reproduce primero y no se puede saltar;
+   los demás admiten salto individual. Ya no existe el botón «Resultados». */
 function minsSinceClose(j){ try{ return Math.round((nowT()-weekClose(j))/60000); }catch(e){ return null; } }
-function skipPanel(j){ track('watch_skip_panel',{week:j+1,min_desde_cierre:minsSinceClose(j)}); setWatched(j); render(); }
 function playPanel(j){
   const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
   const myPair=me?pairsFor(j).find(([a,b])=>a===me.name||b===me.name):null;
@@ -985,11 +1221,8 @@ function playPanel(j){
   return `<div class="card" style="text-align:center">
     <div class="cdlbl">Se ha resuelto la</div>
     <div class="bigjt">JORNADA ${j+1}</div>
-    <button class="playbig" onclick="watchRound(${j},'all')" title="Ver la jornada">${ic('play',32)}</button>
-    <div class="minirow">
-      ${myPair?`<button onclick="watchRound(${j},'mine')">Mi enfrentamiento</button>`:''}
-      <button onclick="skipPanel(${j})">Resultados</button>
-    </div></div>`;
+    <button class="playbig" onclick="run(this,watchRound,${j})" title="Ver la jornada">${ic('play',32)}</button>
+  </div>`;
 }
 function resultBanner(j){
   const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
@@ -1021,26 +1254,61 @@ function confetti(){
 /* La jornada se resuelve SOLA al llegar al cierre: el primero que abre la app
    dispara la resolución en el servidor (resolve_round). Da igual admin o jugador:
    el resultado ya está congelado en la base de datos; aquí solo se reproduce. */
-let RESOLVING=false, RESOLVE_FAILED=false;
+/* v1.1 (punto 5): la resolución la hace el servidor (pg_cron cada 5 min); esto es el respaldo.
+   Si falla, se reintenta sola (RESOLVE_NEXT, con espera creciente) en vez de quedarse bloqueada. */
+let RESOLVING=false, RESOLVE_NEXT=0, RESOLVE_TRIES=0;
 async function maybeResolve(force){
   if(RESOLVING||!L||!CUR) return;
-  if(RESOLVE_FAILED&&!force) return;
+  if(RESOLVE_NEXT&&!force) return;   // hay un reintento programado
   const cfg=L.league.config, w=activeW();
   if(calWeek()<0||w<0||w>=cfg.weeks) return;
   if(roundOf(w)||nowT()<weekClose(w)) return;
   RESOLVING=true;
-  if(force) RESOLVE_FAILED=false;
   track('resolve_attempt',{week:w+1,forzado:!!force});
   try{
     const {error}=await sb.rpc('resolve_round',{p_code:CUR,p_number:w+1});
     if(error) throw error;
+    RESOLVE_TRIES=0; RESOLVE_NEXT=0;
     track('resolve_ok',{week:w+1,min_desde_cierre:minsSinceClose(w)});
     await refresh();
   }catch(e){
-    RESOLVE_FAILED=true;
+    RESOLVE_TRIES++;
+    RESOLVE_NEXT=Date.now()+Math.min(120000,15000*RESOLVE_TRIES);   // 15 s, 30 s, … máx. 2 min
     track('resolve_fail',{week:w+1,code:errCode(e)});
-    const el=$('#rErr2'); if(el) el.textContent=e.message||'No se pudo resolver. Toca «Comprobar de nuevo».';
+    const el=$('#rErr2'); if(el) el.textContent=e.message||'No se pudo resolver. Se volverá a intentar.';
   }finally{ RESOLVING=false; }
+}
+/* v1.1 (punto 29): barra horizontal de Moves bajo cada nombre. Misma escala que la pala vertical
+   (ancho completo = R; por encima de R los segmentos se estrechan). El halo alcanzado rodea la
+   barra; un contorno gris discontinuo marca hasta dónde llegará al alcanzar el siguiente halo
+   (efecto de carga de batería) y desaparece con el halo holográfico. El número sigue subiendo
+   aunque la barra ya no crezca. */
+/* barra de Moves de un lado (A = yo, izquierda, crece hacia la derecha; B = rival, derecha, crece
+   hacia la izquierda). El brillo del halo lo pone barGlow() cada frame. */
+function movesBar(m,side){
+  const R=refMoves(), lvl=haloLevel(m), t=haloThr(), n=Math.max(0,m);
+  const next=lvl<3?Math.min(1,t[lvl]/R)*100:null, pct=Math.min(1,n/R)*100;
+  const col=side==='A'?'var(--courtA)':'var(--courtB)', colTxt=side==='A'?'var(--duelA)':'var(--duelB)';
+  const anchor=side==='A'?'left':'right';
+  return `<div class="${side==='A'?'bl':'br'}">
+    <div class="track" data-halo="${lvl}" data-side="${side}">
+      ${next!==null?`<div class="ghost" style="${anchor}:0;width:${next.toFixed(1)}%"></div>`:''}
+      <div class="fill" style="${anchor}:0;width:${pct.toFixed(1)}%;color:${col}">${Array.from({length:n},()=>'<i></i>').join('')}</div>
+    </div>
+    <span class="mv" style="color:${colTxt}">${m}</span>
+  </div>`;
+}
+/* brillo del halo de una barra (misma cadencia que el halo de la pala): cian latido suave,
+   violeta pulso marcado, holográfico con el tono girando */
+function barGlow(track,tSec,still){
+  const lvl=+track.dataset.halo||0, f=track.querySelector('.fill'); if(!f) return;
+  if(!lvl){ f.style.border=''; f.style.boxShadow=''; return; }
+  const p=still?0.5:0.5+0.5*Math.sin(tSec*(lvl===2?6:3));
+  if(lvl===1){ f.style.border='2px solid #19c3e6'; f.style.boxShadow='0 0 '+(7+4*p).toFixed(1)+'px #19c3e6, 0 0 3px #19c3e6'; }
+  else if(lvl===2){ f.style.border='2px solid #9b5cff'; f.style.boxShadow='0 0 '+(5+14*p).toFixed(1)+'px #9b5cff, 0 0 4px #9b5cff'; }
+  else { const r=still?0:tSec*110;
+    f.style.border='2px solid hsl('+(r%360)+',100%,66%)';
+    f.style.boxShadow='0 0 6px hsl('+((r+80)%360)+',100%,70%), 0 0 14px hsl('+((r+180)%360)+',100%,66%), 0 0 22px hsl('+((r+280)%360)+',100%,62%)'; }
 }
 function tJornada(){
   const s=ses(), cfg=L.league.config, cw=calWeek(), w=activeW();
@@ -1054,16 +1322,17 @@ function tJornada(){
     TM.once('pre_start','pre_start_view',{dias_para_empezar:Math.ceil((weekStart(0)-nowT())/86400000)});
     return;
   }
+  /* v1.1 (puntos 21, 24, D6): la primera jornada resuelta que aún no he visto bloquea todo lo
+     demás con el panel de estreno; ver una desbloquea la siguiente */
+  const ju=firstUnwatched();
+  if(ju>=0){ $('#main').innerHTML=playPanel(ju)+btnBar(); return; }
   if(w>=cfg.weeks||firstUnresolved()>=cfg.weeks){
     TM.once('league_end','league_end_view',{});
     const jl=cfg.weeks-1, rl=roundOf(jl);
-    if(rl&&!watched(jl)){ $('#main').innerHTML=playPanel(jl)+btnBar(); return; }
     $('#main').innerHTML=(rl&&nowT()<weekEnd(jl)?resultBanner(jl):'')+`<div class="card"><h2>${ic('trophy')} Liga terminada</h2><p class="msg">Campeón: <b>${esc(standings()[0].name)}</b>. ¡Gracias por jugar!</p>
     ${DEV?'<p class="msg">Modo dev: esta liga está completa — crea otra de prueba o amplía las jornadas desde Admin → Configuración.</p>':''}</div>`+btnBar(); return;
   }
   const r=roundOf(w), t=nowT();
-  /* jornada resuelta y aún no vista: SOLO el panel de estreno */
-  if(r&&!watched(w)){ $('#main').innerHTML=playPanel(w)+btnBar(); return; }
   const pair=me?pairsFor(w).find(([a,b])=>a===me.name||b===me.name):null;
   // tarjeta de estado: cuenta atrás en juego / descanso verde / resolviendo
   let cdHtml='', stick='';
@@ -1077,50 +1346,51 @@ function tJornada(){
     }
   } else if(t>=weekClose(w)){
     cdHtml=`<p class="msg">La jornada ${w+1} ha llegado a su cierre. Resolviendo…</p>
-    <button class="btn sec" onclick="maybeResolve(true)">${ic('refresh')} Comprobar de nuevo</button>
+    <button class="btn sec" onclick="run(this,maybeResolve,true)">${ic('refresh')} Comprobar de nuevo</button>
     <div class="err" id="rErr2"></div>`;
   } else {
-    stick=' stickcard';
-    cdHtml=`<div class="cdlbl">Cierre de la jornada ${w+1} · domingo 22:00</div><div class="cd" id="cdJ">…</div>`;
+    stick=' stickcard '+cdState(w);
+    cdHtml=`<div class="cdlbl">Jornada ${w+1} · domingo 22:00</div><div class="cd" id="cdJ">…</div>`;
   }
   // mi duelo
   let duelHtml=me?'<p class="msg">Esta semana descansas.</p>':'<p class="msg">Estás como organizador; no participas en esta liga.</p>';
   if(pair){
     const rivalName=pair[0]===me.name?pair[1]:pair[0];
     const rival=byName(rivalName);
-    const ma=movesOfWeek(me.id,w);
-    const mb=rival?movesOfWeek(rival.id,w):medianMoves(w);
+    const d=r?(r.data.duels||[]).find(x=>x.a===pair[0]&&x.b===pair[1]):null;
+    /* Moves: en vivo hasta resolver; congelados (instantánea) una vez resuelta */
+    const ma=d?(d.a===me.name?d.ma:d.mb):movesOfWeek(me.id,w);
+    const mb=d?(d.a===me.name?d.mb:d.ma):(rival?movesOfWeek(rival.id,w):mediaMoves(w,me.name));
     /* v1.0: fuera los porcentajes (se leían como certeza). serieProb() se conserva
        para el script de auditoría del sorteo. */
-    const d=r?(r.data.duels||[]).find(x=>x.a===pair[0]&&x.b===pair[1]):null;
     let sMine=0,sRiv=0;
     if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sMine=d.winner===me.name?hi:lo; sRiv=d.winner===me.name?lo:hi; }
     let resHtml='';
     if(d) resHtml=`<p class="${d.nulo?'msg':(d.winner===me.name?'ok':'err')}" style="margin-top:8px;text-align:center">${d.nulo?'Duelo nulo.':(d.winner===me.name?'¡Victoria!':'Derrota — la próxima cae.')}</p>`;
     TM.once('duel','duel_view',{week:w+1,dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),moves_propios:ma,moves_rival:mb,es_media:!rival});
     duelHtml=`<div class="duelbox">
-      <div class="duelnames"><span style="color:var(--duelA)">${esc(me.name)}</span><span style="color:var(--duelB)">${esc(rivalName)}</span></div>
-      <div class="duelmoves"><span>${medIcons(me.id,w,14)}<span class="pill">${ma} Moves</span></span><span><span class="pill">${mb} Moves</span>${rival?medIcons(rival.id,w,14):''}</span></div>
-      <div class="duelscore">${d?(d.nulo?'—':sMine+' – '+sRiv):'0 – 0'}</div>
-      <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(me.name)} ${ma} Moves, ${esc(rivalName)} ${mb} Moves"></canvas>
-      <div class="minihint" id="miniHint">La pala crece con tus Moves. Más pala, más opciones; garantizado, nada.</div>
+      <div class="names"><span style="color:var(--duelA)">${esc(me.name)}</span><span style="color:var(--duelB)">${esc(rivalName)}</span></div>
+      <div class="bars">${movesBar(ma,'A')}${movesBar(mb,'B')}</div>
+      <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(me.name)} ${ma} Moves, ${esc(rivalName)} ${mb} Moves${d?(d.nulo?', duelo nulo':', resultado '+sMine+' a '+sRiv):''}"></canvas>
+      <div class="minihint" id="miniHint"></div>
       ${resHtml}
     </div>`;
-    miniSpec={w, a:{pid:me.id,moves:ma,segs:segmentsFor(me.id,w)}, b:{pid:rival?rival.id:'__media__',moves:mb,segs:rival?segmentsFor(rival.id,w):neutralSegs(mb)}};
+    /* v1.1 (punto 31, D9): marcador dentro del campo solo al resolverse; se mantiene durante el descanso */
+    const score=d?{a:d.nulo?null:sMine,b:d.nulo?null:sRiv}:null;
+    miniSpec={w, score, a:{pid:me.id,moves:ma,segs:d?fitSegs(segmentsFor(me.id,w),ma):segmentsFor(me.id,w)}, b:{pid:rival?rival.id:'__media__',moves:mb,segs:rival?(d?fitSegs(segmentsFor(rival.id,w),mb):segmentsFor(rival.id,w)):neutralSegs(mb)}};
   } else miniSpec=null;
-  // los demás duelos + resultados de la jornada anterior
-  const others=pairsFor(w).filter(([a,b])=>!pair||(a!==me.name&&b!==me.name));
+  // v1.1 (punto 34): JORNADA X con todos los enfrentamientos, el mío resaltado
+  const all=pairsFor(w);
   if(cfg.quedada) TM.once('qstate','quedada_state_view',{week:w+1,count:quedadaCount(w),min:quedadaMin(),ok:quedadaOK(w)});
-  if(others.length) TM.once('otros','otros_duelos_view',{week:w+1,n:others.length});
-  const socialNote=(cfg.quedada&&!quedadaOK(w))?`<p class="msg" style="margin-top:8px">${ic('users',12)} Conjunta de la semana: ${quedadaCount(w)} / ${quedadaMin()} — el Move social aún no cuenta.</p>`:'';
-  const prevR=w>0?roundOf(w-1):null;
+  if(all.length) TM.once('otros','otros_duelos_view',{week:w+1,n:all.length});
+  const prevR=w>0&&roundVisible(w-1)?roundOf(w-1):null;
   /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
   const banner=(r&&t<weekEnd(w))?resultBanner(w):'';
   $('#main').innerHTML=`
   ${banner}
-  <div class="card${stick}">${cdHtml}</div>
-  <div class="card"><h2>${ic('zap')} ${me?'Mi duelo':'Duelos'} · jornada ${w+1}</h2>${duelHtml}${socialNote}</div>
-  ${others.length?`<div class="card"><h2>${ic('users')} ${me?'Los demás duelos':'Duelos de la jornada'}</h2>${others.map(([a,b])=>duelRow(a,b,w,r)).join('')}</div>`:''}
+  <div class="card${stick}" ${stick.includes('stickcard')?'data-cd="1"':''}>${cdHtml}</div>
+  <div class="card"><h2>${ic('zap')} ${me?'Mi jornada':'Duelos'}</h2>${duelHtml}</div>
+  ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)))).join('')}</div>`:''}
   ${prevR?`<div class="card"><h2>${ic('play')} Jornada anterior · J${w}</h2>
     ${pairsFor(w-1).map(([a,b])=>duelRow(a,b,w-1,prevR)).join('')}
     <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetir la animación</button></div>`:''}
@@ -1133,17 +1403,16 @@ function replay(w){
   const r=roundOf(w); if(!r) return;
   track('anim_replay',{week:w+1,n:(MEM[CUR]&&MEM[CUR].replays&&MEM[CUR].replays[w])||1}); try{ MEM[CUR]=MEM[CUR]||{}; MEM[CUR].replays=MEM[CUR].replays||{}; MEM[CUR].replays[w]=(MEM[CUR].replays[w]||1)+1; saveMem(); }catch(e){}
   ANIM_MODE='replay';
-  playPong(w+1,r.data.duels,null);
+  playPong(w+1,r.data.duels,{skippable:true});
 }
-async function watchRound(w,mode){
+/* v1.1 (punto 22): al ver la jornada, mi duelo va primero y no se puede saltar; los demás sí */
+async function watchRound(w){
   const r=roundOf(w); if(!r){ return; }
-  track('watch_start',{week:w+1,modo:mode==='mine'?'mine':'all'}); ANIM_MODE='vivo';
-  let show=r.data.duels;
-  if(mode==='mine'){
-    const s=ses(); const me=s?L.players.find(p=>p.id===s.playerId):null;
-    if(me) show=show.filter(d=>d.a===me.name||d.b===me.name);
-  }
-  await playPong(w+1,show,null);
+  track('watch_start',{week:w+1,modo:'all'}); ANIM_MODE='vivo';
+  const s=ses(); const me=s?L.players.find(p=>p.id===s.playerId):null;
+  let show=r.data.duels.slice();
+  if(me){ const i=show.findIndex(d=>d.a===me.name||d.b===me.name); if(i>0){ const [d]=show.splice(i,1); show.unshift(d); } }
+  await playPong(w+1,show,{noSkipFirst:!!(me&&show.length&&(show[0].a===me.name||show[0].b===me.name))});
   setWatched(w); render();
 }
 
@@ -1167,43 +1436,53 @@ function tMoves(){
   const t=nowT();
   const rest=t>=weekClose(w);   // domingo 22:00 → lunes 00:00: jornada cerrada
   const myActs=actsOfWeek(s.playerId,w);
+  const myAdj=adjOfWeek(s.playerId,w);
   const today=leagueDay();
   const dayN=Math.min(7,Math.floor((t-weekStart(w))/86400000)+1);
   const types=parseTypes();
   const legacy=types.length===0;          // plantilla sin ninguna actividad válida → flujo antiguo (solo nivel)
   const sel=selType?types.find(x=>x.name===selType):null;
+  const sel2=selType2?types.find(x=>x.name===selType2):null;
   const qUsed=quedadaUsed(s.playerId,w);
+  const qClosed=quedadaClosed(w);        // v1.1: el día de la conjunta ya pasó → cerrada para toda la liga
   const dias=daysOfWeek(s.playerId,w);
   const maxed=dias>=(cfg.maxDays||7);
   const todayAct=myActs.find(a=>a.day===today)||null;
-  const qCount=quedadaCount(w), qMin=quedadaMin(), qOK=qOK_(qCount,qMin);
-  const qState=cfg.quedada?(qOK
-    ?`<div class="qstate ok">${ic('check',12)} Conjunta confirmada (${qCount} personas) · +1 Move</div>`
-    :`<div class="qstate">${ic('users',12)} Conjunta de la semana: ${qCount} / ${qMin} — aún no cuenta</div>`):'';
+  const qDay=quedadaDay(w), qMin=quedadaMin();
+  /* v1.1: estado de la conjunta en una línea, sin texto explicativo (punto 32) */
+  const qToday=(quedadaByDay(w)[today]||new Set()).size;
+  const qState=cfg.quedada?(qDay
+    ?`<div class="qstate ok">${ic('check',12)} Conjunta: ${dayName(qDay)} ${qDay.slice(8)}/${qDay.slice(5,7)} · ${quedadaCount(w)} personas</div>`
+    :`<div class="qstate">${ic('users',12)} Conjunta hoy: ${qToday} / ${qMin}</div>`):'';
   let formHtml='';
   const form=(edit)=>{
     const editingQ=edit&&(todayAct.quedada||isQOnly(todayAct));
-    const qBox=cfg.quedada?((qUsed&&!editingQ)
-      ?`<p class="msg" style="margin-top:10px">${ic('check',12)} Actividad conjunta ya usada esta semana (máx. 1).</p>`
-      :`<label style="margin-top:10px"><input type="checkbox" id="aQuedada" style="width:auto" ${selQ?'checked':''} onchange="setQ(this.checked)"> Fue la <b>actividad conjunta</b> de la semana (+1 Move si la marcan ${qMin}+ personas). Si solo asististe sin entrenar, márcalo sin elegir actividad ni nivel.</label>`):'';
-    const qChecked=selQ&&cfg.quedada&&(!qUsed||editingQ);
-    const canSave=legacy?(selLevel>0||qChecked):((selType&&selLevel>0)||(qChecked&&!selLevel&&!selType));
+    /* v1.1 (punto 48): tarjeta MOVE SOCIAL. Se ofrece si la liga tiene conjunta, no está cerrada
+       (el día ya pasó) y mi marca no cayó ya en el día de la conjunta */
+    const qAvail=cfg.quedada&&(!qClosed||editingQ)&&(!qUsed||editingQ);
+    const qChecked=selQ&&qAvail;
+    const otroSel=(sel&&sel.otro)||(sel2&&sel2.otro);
+    const otroOk=!otroSel||selOther.trim().length>0;
+    const lvlOk=selLevel>0&&(legacy||levelAvailable(sel,sel2,selLevel));
+    const canSave=legacy?((selLevel>0||qChecked)):(((selType&&lvlOk)||(qChecked&&!selLevel&&!selType))&&otroOk);
     return `
-    ${edit?`<p class="msg" style="margin-top:-4px">Editando tu registro de <b>hoy</b> (${fmtHM(todayAct.created_at)}). La hora original se conserva; los reportes que tuviera, también.</p>`
-          :`<p class="msg" style="margin-top:-4px">Hoy · <b>DÍA ${dayN} · JORNADA ${w+1}</b>. El registro guarda fecha y hora, para que casen con tu foto del grupo.</p>`}
+    ${edit?`<p class="msg" style="margin-top:-4px">Editando tu registro de <b>hoy</b> (${fmtHM(todayAct.created_at)}). La hora original se conserva; los reportes que tuviera, también.</p>`:''}
     ${legacy
       ?`<p class="msg">La plantilla de actividades de esta liga no tiene ninguna línea válida: elige solo el nivel y avisa a tu admin.</p>`
-      :`<label>1 · ¿Qué actividad?</label>
-        <div class="typegrid">${types.map(x=>`<button class="typebtn ${selType===x.name?'on':''}" onclick="setType('${esc(x.name)}')">${esc(x.name)}</button>`).join('')}</div>
-        ${sel?`<div class="thr">${[0,1,2].map(i=>`<span>${medalSVG(i+1,14)} ${esc(sel.thr[i]||'—')}</span>`).join('')}</div>`:''}`}
-    <label>${legacy?'Nivel':'2 · ¿Qué nivel?'}</label>
+      :`<label>Actividad</label>
+        <div class="typegrid">${types.map(x=>`<button class="typebtn ${selType===x.name?'on':(selType2===x.name?'on2':'')}" onclick="setType('${esc(x.name)}')">${esc(x.name)}</button>`).join('')}
+        ${cfg.quedada?`<button class="typebtn soc ${qChecked?'on':''}" ${qAvail?'':'disabled'} onclick="setQ(${qChecked?'false':'true'})">${xtraSVG('social',20)} MOVE SOCIAL</button>`:''}</div>
+        ${otroSel?`<input id="aOtro" style="margin-top:8px" maxlength="60" placeholder="¿Qué actividad? (obligatorio)" value="${esc(selOther)}" oninput="selOther=this.value;syncSave()">`:''}
+        ${sel&&!sel.otro?`<div class="thr">${[0,1,2].map(i=>`<span>${medalSVG(i+1,14)} ${esc(sel.thr[i]||'—')}</span>`).join('')}</div>`:''}
+        ${sel2&&!sel2.otro?`<div class="thr">${[0,1,2].map(i=>`<span>${medalSVG(i+1,14)} ${esc(sel2.thr[i]||'—')}</span>`).join('')}</div>`:''}`}
+    <label>Nivel</label>
     <div class="medgrid">
-      ${[1,2,3].map(l=>`<button class="medbtn ${selLevel===l?'on':''}" onclick="setLevel(${l})">${medalSVG(l,24)}${['Bronce · 1 Move','Plata · 2 Moves','Oro · 3 Moves'][l-1]}${sel&&sel.thr[l-1]?`<div class="msg" style="font-size:11px;margin-top:2px">${esc(sel.thr[l-1])}</div>`:''}</button>`).join('')}
+      ${[1,2,3].map(l=>{ const ok=legacy||!sel||levelAvailable(sel,sel2,l);
+        return `<button class="medbtn ${selLevel===l?'on':''}" ${ok?'':'disabled'} onclick="setLevel(${l})">${medalSVG(l,24)}${['Bronce · 1 Move','Plata · 2 Moves','Oro · 3 Moves'][l-1]}${sel&&sel.thr[l-1]?`<div class="msg" style="font-size:11px;margin-top:2px">${esc(sel.thr[l-1])}</div>`:''}</button>`; }).join('')}
     </div>
-    ${qBox}
     ${qState}
     <div class="row" style="margin-top:4px">
-      <button class="btn ${edit?'':'full'}" ${canSave?'':'disabled'} onclick="${edit?'guardarEdicion()':'registrar()'}">${edit?ic('check')+' Guardar cambios':'Registrar actividad'}</button>
+      <button class="btn ${edit?'':'full'}" id="saveBtn" ${canSave?'':'disabled'} onclick="run(this,${edit?'guardarEdicion':'registrar'})">${edit?ic('check')+' Guardar cambios':'Registrar actividad'}</button>
       ${edit?`<button class="btn sec" onclick="cancelEdit()">Cancelar</button>`:''}
     </div>
     <div class="err" id="aErr"></div>`;
@@ -1214,79 +1493,102 @@ function tMoves(){
     formHtml=form(true);
   } else if(todayAct){
     tmFormClose();
-    const anulada=isAnulada(todayAct);
+    const anulada=isAnulada(todayAct), adminRec=isAdminRec(todayAct);
     formHtml=`
     <p class="msg" style="margin-top:-4px">Registro de hoy · ${fmtHM(todayAct.created_at)}${editedTag(todayAct)}</p>
-    <div class="row" style="margin-top:8px;font-size:15px;font-weight:700">${isQOnly(todayAct)?xtraSVG('social',22):medalSVG(todayAct.level,22)} ${esc(actLabel(todayAct))}${todayAct.quedada?' <span class="pill">conjunta</span>':''}</div>
+    <div class="row" style="margin-top:8px;font-size:15px;font-weight:700">${isQOnly(todayAct)?xtraSVG('social',22):medalSVG(todayAct.level,22)} ${esc(actLabel(todayAct))}${todayAct.quedada?' <span class="pill">conjunta</span>':''}${adminRec?' <span class="pill adm">admin</span>':''}</div>
     ${anulada
       ?`<p class="err" style="margin-top:8px">Esta actividad ha sido anulada por la liga (${todayAct.reports||0} reportes): no cuenta y ya no se puede editar. Habla con el admin.</p>`
+      :(adminRec?`<p class="msg" style="margin-top:8px">Registro creado por el administrador${todayAct.admin_reason?': '+esc(todayAct.admin_reason):''}. Solo él puede cambiarlo.</p>`
       :`<div class="row"><button class="btn sec" onclick="startEdit()">${ic('refresh')} Editar</button>
-         <button class="btn sec" style="color:var(--lose)" onclick="borrarHoy()">${ic('x')} ${DELARM?'¿Seguro? Toca otra vez para eliminar':'Eliminar registro de hoy'}</button></div>
-       <p class="msg" style="margin-top:8px">Puedes corregirlo hasta el final del día de hoy. Si cambias algo, los reportes que tuviera se mantienen.</p>`}
+         <button class="btn sec" style="color:var(--lose)" onclick="run(this,borrarHoy)">${ic('x')} ${DELARM?'¿Seguro? Toca otra vez para eliminar':'Eliminar registro de hoy'}</button></div>
+       <p class="msg" style="margin-top:8px">Puedes corregirlo hasta el final del día de hoy. Si cambias algo, los reportes que tuviera se mantienen.</p>`)}
     ${qState}
     <div class="err" id="aErr"></div>`;
   } else if(maxed){
     TM.once('maxed','maxed_view',{week:w+1});
-    formHtml=(cfg.quedada&&!qUsed)
-      ?`<p class="msg">Has llegado al máximo de <b>${cfg.maxDays} días de deporte</b> esta semana. Aún puedes apuntar tu <b>asistencia a la actividad conjunta</b> (+1 Move si la marcan ${qMin}+ personas; no cuenta como día).</p>
-        <button class="btn full" onclick="registrarConjunta()">Registrar asistencia a la conjunta</button>${qState}<div class="err" id="aErr"></div>`
+    formHtml=(cfg.quedada&&!qUsed&&!qClosed)
+      ?`<p class="msg">Has llegado al máximo de <b>${cfg.maxDays} días de deporte</b> esta semana. Aún puedes apuntar tu <b>asistencia a la actividad conjunta</b> (no cuenta como día).</p>
+        <button class="btn full" onclick="run(this,registrarConjunta)">${xtraSVG('social',18)} Registrar asistencia a la conjunta</button>${qState}<div class="err" id="aErr"></div>`
       :`<p class="msg empty">Máximo de ${cfg.maxDays} días de deporte alcanzado esta semana. A recuperar.</p>`;
   } else {
     formHtml=form(false);
     tmFormOpen({dia_jornada:dayN,week:w+1,dias_previos:dias,maxed:false,legacy});
   }
+  const cdSt=cdState(w);
   $('#main').innerHTML=`
   ${rest
     ?`<div class="card restcard" style="padding:14px 20px 16px"><div class="cdlbl">Descanso · nueva jornada en</div><div class="cd" id="cdR" style="font-size:36px">…</div></div>`
-    :`<div class="card stickcard" style="padding:14px 20px 16px"><div class="cdlbl">Cierre del día</div><div class="cd" id="cdD" style="font-size:36px">…</div></div>`}
-  <div class="card"><h2>${ic('activity')} ${todayAct&&!EDITING?'Actividad de hoy':'Registrar actividad'} — ${esc(me?me.name:'')}</h2>${formHtml}</div>
+    :`<div class="card stickcard ${cdSt}" data-cd="1" style="padding:14px 20px 16px"><div class="cdlbl">Cierre del día</div><div class="cd" id="cdD" style="font-size:36px">…</div></div>`}
+  <div class="card"><h2>${ic('activity')} ${todayAct&&!EDITING?'Actividad de hoy':'Consigue tus Moves'} — ${esc(me?me.name:'')}</h2>${formHtml}</div>
   <div class="card"><h2>${ic('calendar')} Mi semana · ${dias}/${cfg.maxDays||7} días</h2>
-    ${myActs.length?`<table><tr><th>Día</th><th>Hora</th><th>Actividad</th></tr>${
-      myActs.map(a=>`<tr${isAnulada(a)?' style="color:var(--dim);text-decoration:line-through"':''}><td>${a.day.slice(5)}</td><td class="num">${fmtHM(a.created_at)}</td><td style="font-size:12.5px">${isQOnly(a)?xtraSVG('social',16):medalSVG(a.level,16)} ${esc(actLabel(a))}${a.quedada?' <span class="pill">conjunta</span>':''}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}${editedTag(a)}${isAnulada(a)?' <span class="pill" style="color:var(--lose)">no cuenta</span>':''}</td></tr>`).join('')}</table>
+    ${(myActs.length||myAdj.length)?`<table><tr><th>Día</th><th>Hora</th><th>Actividad</th></tr>${
+      myActs.map(a=>`<tr${isAnulada(a)?' style="color:var(--dim);text-decoration:line-through"':''}><td>${a.day.slice(5)}</td><td class="num">${fmtHM(a.created_at)}</td><td style="font-size:12.5px">${isQOnly(a)?xtraSVG('social',16):medalSVG(a.level,16)} ${esc(actLabel(a))}${a.quedada?` <span class="pill${(qDay&&a.day===qDay)?'':' nocont'}">conjunta${(qDay&&a.day===qDay)?'':' · no contó'}</span>`:''}${isQOnly(a)&&!(qDay&&a.day===qDay)?' <span class="pill nocont">no contó</span>':''}${isAdminRec(a)?' <span class="pill adm">admin</span>':''}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}${editedTag(a)}${isAnulada(a)?' <span class="pill" style="color:var(--lose)">no cuenta</span>':''}</td></tr>`).join('')}${
+      myAdj.map(j=>`<tr><td>${j.day.slice(5)}</td><td class="num">${fmtHM(j.created_at)}</td><td style="font-size:12.5px"><span class="adjico ${j.kind==='negativo'?'neg':'esp'}">${j.kind==='negativo'?'−':'★'}</span> Ajuste ${j.kind} del admin · <b>${j.value>0?'+':''}${j.value}</b> · <i>${esc(j.reason)}</i></td></tr>`).join('')}</table>
       <p class="msg" style="margin-top:6px">${ic('lock',12)} Solo el registro de hoy se puede editar. Errores de otros días: contacta con tu admin.</p>`
       :'<p class="msg empty">Aún nada esta semana. Your move.</p>'}
   </div>`+btnBar();
 }
-function qOK_(count,min){ return count>=min; }
 /* telemetría del formulario de registro: apertura, cambios y abandono (sin tocar el flujo) */
 let TMF=null;
 function tmFormOpen(p){ try{ if(TMF) return; TMF={t0:Date.now(),tipo:0,nivel:0,touched:false}; track('log_form_open',p); }catch(e){} }
 function tmFormClose(){ try{ if(TMF&&TMF.touched) track('log_abandon',{ms:Date.now()-TMF.t0,tenia_tipo:!!selType,tenia_nivel:selLevel>0}); TMF=null; }catch(e){} }
 function tmOnHide(){ try{ if(TMF&&TMF.touched&&TAB==='moves') track('log_abandon',{ms:Date.now()-TMF.t0,tenia_tipo:!!selType,tenia_nivel:selLevel>0}); if(OV_OPEN) track('anim_close_early',{week:OV_OPEN.week,duelo_i:OV_OPEN.duelo,ms:Date.now()-OV_OPEN.t0}); }catch(e){} }
-function setType(t){ selType=selType===t?null:t; try{ if(TMF){ TMF.tipo++; TMF.touched=true; } track('set_type',{actividad:selType,n_cambios:TMF?TMF.tipo:1}); }catch(e){} render(); }
+/* v1.1 (punto 16): se pueden elegir dos actividades. Primer toque = actividad 1, segundo = actividad 2;
+   tocar una seleccionada la quita. Con dos, el bronce se bloquea (D8) y se desmarca si estaba. */
+function setType(t){
+  if(selType===t){ selType=selType2; selType2=null; }
+  else if(selType2===t){ selType2=null; }
+  else if(!selType){ selType=t; }
+  else if(!selType2){ selType2=t; }
+  else { selType2=t; }
+  if(selType2&&selLevel===1) selLevel=0;
+  if(selType&&selLevel){ const ts=parseTypes(); const s1=ts.find(x=>x.name===selType), s2=selType2?ts.find(x=>x.name===selType2):null; if(!levelAvailable(s1,s2,selLevel)) selLevel=0; }
+  try{ if(TMF){ TMF.tipo++; TMF.touched=true; } track('set_type',{actividad:selType,actividad2:selType2,n_cambios:TMF?TMF.tipo:1}); }catch(e){} render();
+}
 function setLevel(l){ selLevel=selLevel===l?0:l; try{ if(TMF){ TMF.nivel++; TMF.touched=true; } track('set_level',{level:selLevel,n_cambios:TMF?TMF.nivel:1}); }catch(e){} render(); }
 function setQ(v){ selQ=!!v; try{ if(TMF) TMF.touched=true; track('set_quedada',{valor:selQ}); }catch(e){} render(); }
 function startEdit(){
   const s=ses(); const a=actsOfWeek(s.playerId,activeW()).find(x=>x.day===leagueDay()); if(!a) return;
   EDITING=true; DELARM=false;
-  selType=isQOnly(a)?null:(a.activity&&parseTypes().some(x=>x.name===a.activity)?a.activity:null);
+  const ts=parseTypes();
+  selType=isQOnly(a)?null:(a.activity&&ts.some(x=>x.name===a.activity)?a.activity:null);
+  selType2=isQOnly(a)?null:(a.activity2&&ts.some(x=>x.name===a.activity2)?a.activity2:null);
+  selOther=a.other_text||'';
   selLevel=isQOnly(a)?0:a.level;
   selQ=!!a.quedada||isQOnly(a);
   render();
 }
-function cancelEdit(){ EDITING=false; selType=null; selLevel=0; selQ=false; render(); }
-/* lee el formulario: devuelve {level, activity, quedada} o un error */
+function resetForm(){ selType=null; selType2=null; selOther=''; selLevel=0; selQ=false; }
+/* el texto de «Otro» se escribe sin repintar (para no perder el foco): solo se sincroniza el botón */
+function syncSave(){ const b=document.getElementById('saveBtn'); if(b&&!INFLIGHT.size) b.disabled=!!readForm().error; }
+function cancelEdit(){ EDITING=false; resetForm(); render(); }
+/* lee el formulario: devuelve {level, activity, activity2, other, quedada} o un error */
 function readForm(){
-  const legacy=parseTypes().length===0;
-  const qChecked=selQ&&!!$('#aQuedada');
+  const ts=parseTypes(), legacy=ts.length===0;
+  const qChecked=selQ&&!!document.querySelector('.typebtn.soc.on');
   if(!selLevel){
-    if(qChecked&&!selType) return {level:1,activity:'[conjunta]',quedada:false};   // solo asistencia: +1 Move (si la conjunta llega al mínimo), no cuenta como día
-    return {error:legacy?'Elige el nivel (bronce, plata u oro) o marca la actividad conjunta.':'Elige la actividad y el nivel, o marca solo la conjunta si asististe sin entrenar.'};
+    if(qChecked&&!selType) return {level:1,activity:'[conjunta]',activity2:null,other:null,quedada:false};   // solo asistencia: +1 Move (si es el día de la conjunta), no cuenta como día
+    return {error:legacy?'Elige el nivel (bronce, plata u oro) o marca el Move social.':'Elige la actividad y el nivel, o marca solo el Move social si asististe sin entrenar.'};
   }
   if(!legacy&&!selType) return {error:'Indica qué actividad has hecho.'};
-  return {level:selLevel,activity:legacy?'sin especificar':selType,quedada:qChecked};
+  const s1=ts.find(x=>x.name===selType), s2=selType2?ts.find(x=>x.name===selType2):null;
+  if(!legacy&&!levelAvailable(s1,s2,selLevel)) return {error:selType2&&selLevel===1?'Con dos actividades el bronce no está disponible.':'Ese nivel no tiene umbral definido para esta actividad.'};
+  const otro=(s1&&s1.otro)||(s2&&s2.otro);
+  if(otro&&!selOther.trim()) return {error:'Indica de qué actividad se trata.'};
+  return {level:selLevel,activity:legacy?'sin especificar':selType,activity2:selType2||null,other:otro?selOther.trim():null,quedada:qChecked};
 }
 async function registrar(){
   const s=ses(); $('#aErr').textContent='';
   const f=readForm(); if(f.error){ $('#aErr').textContent=f.error; return; }
   try{
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
-      p_day:leagueDay(),p_level:f.level,p_activity:f.activity,p_quedada:f.quedada});
+      p_day:leagueDay(),p_level:f.level,p_activity:f.activity,p_quedada:f.quedada,p_activity2:f.activity2,p_other:f.other});
     if(error) throw error;
-    try{ const w=activeW(), t=nowT(); track('log_submit',{actividad:f.activity,level:f.level,quedada:f.quedada,solo_conjunta:f.activity==='[conjunta]',
+    try{ const w=activeW(), t=nowT(); track('log_submit',{actividad:f.activity,actividad2:f.activity2,otro:!!f.other,level:f.level,quedada:f.quedada,solo_conjunta:f.activity==='[conjunta]',
       dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),dia_semana:t.getDay(),hora_local:t.getHours(),week:w+1,
       dias_previos:daysOfWeek(s.playerId,w),ms_en_formulario:TMF?Date.now()-TMF.t0:null,cambios_tipo:TMF?TMF.tipo:null,cambios_nivel:TMF?TMF.nivel:null}); TMF=null; }catch(e2){}
-    selType=null; selLevel=0; selQ=false; toast('Actividad registrada');
+    resetForm(); toast('Actividad registrada');
     await refresh(); TAB='jornada'; render();
   }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; track('log_fail',{code:errCode(e)}); }
 }
@@ -1296,11 +1598,11 @@ async function guardarEdicion(){
   const prev=actsOfWeek(s.playerId,activeW()).find(x=>x.day===leagueDay())||null;
   try{
     const {error}=await sb.rpc('edit_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
-      p_day:leagueDay(),p_activity:f.activity,p_level:f.level,p_quedada:f.quedada});
+      p_day:leagueDay(),p_activity:f.activity,p_level:f.level,p_quedada:f.quedada,p_activity2:f.activity2,p_other:f.other});
     if(error) throw error;
-    try{ const campos=[]; if(prev){ if(prev.activity!==f.activity) campos.push('actividad'); if(prev.level!==f.level) campos.push('nivel'); if(!!prev.quedada!==!!f.quedada) campos.push('conjunta'); }
+    try{ const campos=[]; if(prev){ if(prev.activity!==f.activity||(prev.activity2||null)!==f.activity2) campos.push('actividad'); if(prev.level!==f.level) campos.push('nivel'); if(!!prev.quedada!==!!f.quedada) campos.push('conjunta'); }
       track('log_edit',{campos,edits:(prev?prev.edits||0:0)+1,min_desde_registro:prev&&prev.created_at?Math.round((Date.now()-new Date(prev.created_at))/60000):null}); }catch(e2){}
-    EDITING=false; selType=null; selLevel=0; selQ=false; toast('Registro actualizado');
+    EDITING=false; resetForm(); toast('Registro actualizado');
     await refresh();   // Moves y duelo en vivo al día en el acto
   }catch(e){ $('#aErr').textContent=e.message||'Error al guardar'; track('log_fail',{code:errCode(e)}); }
 }
@@ -1428,8 +1730,8 @@ async function devFill(w){
 let IDSEL=null;
 function syncIdOverlay(){
   const ov=$('#idov'), main=$('#main'), nav=$('#nav');
-  const need=needsIdentity();
-  if(!need){
+  const need=needsIdentity(), expired=sessionExpired();
+  if(!need&&!expired){
     if(ov.classList.contains('show')){ ov.classList.remove('show'); ov.innerHTML=''; IDSEL=null; }
     document.body.classList.remove('locked');
     main.removeAttribute('inert'); nav.removeAttribute('inert');
@@ -1437,6 +1739,26 @@ function syncIdOverlay(){
   }
   document.body.classList.add('locked');
   main.setAttribute('inert',''); nav.setAttribute('inert','');
+  /* v1.1 (punto 4): dueño con la sesión caducada → acceso directo al inicio de sesión */
+  if(expired){
+    if(ov.dataset.mode==='expired'&&ov.classList.contains('show')) return;   // no repintar (se perdería lo escrito)
+    ov.dataset.mode='expired';
+    ov.innerHTML=`<div class="card">
+      <h2>${ic('key')} Tu sesión ha caducado</h2>
+      <p class="msg">Tu sesión ha caducado, vuelve a iniciar sesión para seguir como administrador de <b>${esc(L.league.name)}</b>.</p>
+      <label>Correo</label><input id="xEmail" type="email" autocomplete="email" value="${esc(USER&&USER.email?USER.email:'')}">
+      <label>Contraseña</label><input id="xPass" type="password" autocomplete="current-password">
+      <button class="btn" onclick="run(this,reloginAdmin)">Iniciar sesión</button>
+      <div class="err" id="xErr"></div>
+      <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <button class="btn sec" onclick="dropOwnerFlag()">No soy el administrador</button>
+        <button class="btn sec" onclick="exitLeague()">${ic('logout')} Salir de la liga</button>
+      </div></div>`;
+    ov.classList.add('show'); bindEnter('xEmail',()=>run(null,reloginAdmin)); bindEnter('xPass',()=>run(null,reloginAdmin));
+    const f=$('#xPass'); if(f&&!ov.contains(document.activeElement)) f.focus();
+    return;
+  }
+  ov.dataset.mode='identity';
   const owner=!!L.league.is_admin;
   const ap=L.league.config.adminPlayer;
   const list=L.players.filter(p=>owner||p.id!==ap);   // los demás no ven al jugador del admin
@@ -1447,12 +1769,12 @@ function syncIdOverlay(){
     <h2>${ic('users')} ¿Quién eres?</h2>
     <p class="msg">${owner?'Eres el administrador. Elige tu jugador (entrarás sin PIN) o indica que solo organizas.':`Liga <b>${esc(L.league.name)}</b>. Elige tu nombre para entrar.`}</p>
     <div class="row" style="margin-top:8px">${list.map(p=>
-      `<button class="btn sec pickbtn ${IDSEL===p.id?'on':''}" onclick="idPick('${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
-    ${owner?`<button class="btn sec" style="margin-top:12px" onclick="idOwnerNone()">${ic('settings')} No juego, solo organizo</button>`:''}
+      `<button class="btn sec pickbtn ${IDSEL===p.id?'on':''}" onclick="run(this,idPick,'${p.id}')">${esc(p.name)}${catBadge(p)}</button>`).join('')}</div>
+    ${owner?`<button class="btn sec" style="margin-top:12px" onclick="run(this,idOwnerNone)">${ic('settings')} No juego, solo organizo</button>`:''}
     <div id="pinBox">${selP&&!owner?`
       <label>${selP.has_pin?'Tu PIN (obligatorio: este participante está protegido)':'Crea un PIN (opcional, evita que otros entren por ti)'}</label>
       <input id="pPin" type="password" maxlength="8" autocomplete="off" inputmode="numeric">
-      <button class="btn" onclick="idConfirm()">${ic('check')} Confirmar</button>`:''}
+      <button class="btn" onclick="run(this,idConfirm)">${ic('check')} Confirmar</button>`:''}
       <div class="err" id="pErr"></div></div>
     <p class="msg" style="margin-top:12px">Al participar aceptas cómo tratamos tus datos — <a href="#" onclick="vPriv('identificacion');return false">privacidad</a>.</p>
     <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
@@ -1460,7 +1782,7 @@ function syncIdOverlay(){
     </div>
   </div>`;
   ov.classList.add('show');
-  bindEnter('pPin',idConfirm);
+  bindEnter('pPin',()=>run(null,idConfirm));
   const pin=$('#pPin');
   if(pin){ pin.value=typed; if(hadFocus||!ov.contains(document.activeElement)) pin.focus(); }
   else { const f=ov.querySelector('button'); if(f&&!ov.contains(document.activeElement)) f.focus(); }
@@ -1531,10 +1853,10 @@ function tLiga(){
   let h=calWeek()<0?`<div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>`:'';
   try{ const st=standings(), me=s?L.players.find(p=>p.id===s.playerId):null; TM.once('ranking','ranking_view',{week:Math.max(w,0)+1,posicion_propia:me?st.findIndex(x=>x.name===me.name)+1:null,n_jugadores:nP}); TM.once('track','track_view',{filtrado:!!FILTERP}); }catch(e){}
   h+=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
-    <p class="msg" style="margin-top:6px">Victoria 3 pts · derrota con 4+ días 1 pt · desempate por regularidad.</p></div>`;
+    <p class="msg" style="margin-top:6px">Victoria 3 pts${cfg.bonusDay>0?` · derrota con ${cfg.bonusDay}+ días 1 pt`:''} · desempate por regularidad.</p></div>`;
   h+=`<div class="card"><h2>${ic('calendar')} Calendario</h2>`;
   for(let j=0;j<cfg.weeks;j++){
-    const r=roundOf(j);
+    const r=roundVisible(j)?roundOf(j):null;   // v1.1 (punto 21): resultados solo cuando he visto la jornada
     const hidden=cfg.oculto&&!r&&j!==Math.max(w,0);
     h+=`<p style="margin:8px 0 4px;font-weight:700;font-size:12px;color:var(--dim)">JORNADA ${j+1} ${r?'· resuelta':(j===w?'· en curso':'')} ${hidden?'· oculta':''}</p>`;
     if(hidden) continue;
@@ -1542,29 +1864,43 @@ function tLiga(){
   }
   h+=`</div>`;
   const fp=FILTERP?byName(FILTERP):null;
-  const feed=[...L.activities].filter(a=>!fp||a.player_id===fp.id).sort((a,b)=>a.day<b.day?1:(a.day>b.day?-1:((a.created_at||'')<(b.created_at||'')?1:-1))).slice(0,25);
+  /* v1.1 (punto 13): el track mezcla actividades y ajustes negativo/especial del admin */
+  const feed=[...L.activities.filter(a=>!fp||a.player_id===fp.id).map(a=>({t:'act',a})),
+              ...(L.adjustments||[]).filter(j=>!fp||j.player_id===fp.id).map(a=>({t:'adj',a}))]
+    .sort((x,y)=>x.a.day<y.a.day?1:(x.a.day>y.a.day?-1:((x.a.created_at||'')<(y.a.created_at||'')?1:-1))).slice(0,25);
   /* v1.0: tablón = actividad · nivel · hora; reporte anónimo con anillo reportes/umbral;
-     al umbral la actividad queda ANULADA (✕, tachada, «no cuenta»). Sin votación. */
+     al umbral la actividad queda ANULADA (✕, tachada, «no cuenta»). Sin votación.
+     v1.1: los registros del admin son visualmente distintos y no llevan botón de reporte. */
   h+=`<div class="card"><h2>${ic('activity')} Track ${fp?'de '+esc(FILTERP):'de la liga'}</h2>
   ${fp?`<button class="btn sec" style="margin:0 0 8px" onclick="filterP('${esc(FILTERP)}')">${ic('x',13)} Ver todos</button>`:'<p class="msg" style="margin-bottom:6px">Toca un nombre en la clasificación para ver solo su track.</p>'}
-  ${feed.length?feed.map(a=>{
+  ${feed.length?feed.map(({t,a})=>{
     const p=L.players.find(x=>x.id===a.player_id);
+    if(t==='adj'){
+      return `<div class="feeditem adminrec">
+        <span class="adjico ${a.kind==='negativo'?'neg':'esp'}" title="Ajuste ${a.kind}">${a.kind==='negativo'?'−':'★'}</span>
+        <span class="fi"><b>${esc(p?p.name:'?')}</b> · ${a.day.slice(5)} <span class="pill adm">admin</span><br><span class="msg">Ajuste ${a.kind} · <b>${a.value>0?'+':''}${a.value} Moves</b> · ${fmtHM(a.created_at)}<br><i>${esc(a.reason)}</i></span></span>
+      </div>`;
+    }
     const mine=s&&a.player_id===s.playerId;
-    const wk=Math.floor((new Date(a.day+'T00:00:00')-new Date(cfg.start+'T00:00:00'))/(7*24*3600*1000));
+    const wk=weekOfDay(a.day);
     const wkResolved=!!roundOf(wk);
-    const rep=a.reports||0, anulada=isAnulada(a);
+    const rep=a.reports||0, anulada=isAnulada(a), adminRec=isAdminRec(a);
+    const qd=quedadaDay(wk), socialOk=qd&&a.day===qd;
     let extra='', side='';
     if(anulada){
       extra=`<br><span class="nocuenta">✕ No cuenta — anulada por la liga (${rep} reportes)</span>`;
       side=`<span class="xmark" title="Anulada por la liga">✕</span>`;
+    } else if(adminRec){
+      side='';
     } else if(!mine&&s&&!wkResolved){
       side=ringFlag(a.id,rep,umbral);
     } else if(rep>0){
       side=`<span class="msg" style="font-size:11px" title="Reportes">${rep}/${umbral}</span>`;
     }
-    return `<div class="feeditem ${anulada?'anulada':''}">
-      <span>${isQOnly(a)?xtraSVG('social',18):medalSVG(a.level,18)}</span>
-      <span class="fi"><b>${esc(p?p.name:'?')}</b> · ${a.day.slice(5)}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}<br><span class="msg">${esc(actLabel(a))} · ${fmtHM(a.created_at)}${a.quedada?' <span class="pill">conjunta</span>':''}${editedTag(a)}</span>${extra}</span>
+    const socialPill=a.quedada?` <span class="pill${socialOk?'':' nocont'}">conjunta${socialOk?'':' · no contó'}</span>`:(isQOnly(a)&&!socialOk?' <span class="pill nocont">no contó</span>':'');
+    return `<div class="feeditem ${anulada?'anulada':''}${adminRec?' adminrec':''}">
+      <span>${adminRec?`<span class="adjico adm" title="Ajuste del admin">${a.level}</span>`:(isQOnly(a)?xtraSVG('social',18):medalSVG(a.level,18))}</span>
+      <span class="fi"><b>${esc(p?p.name:'?')}</b> · ${a.day.slice(5)}${adminRec?' <span class="pill adm">admin</span>':''}${a.adj?` <span class="pill">${a.adj>0?'+':''}${a.adj}</span>`:''}<br><span class="msg">${esc(actLabel(a))} · ${fmtHM(a.created_at)}${socialPill}${editedTag(a)}${adminRec&&a.admin_reason?`<br><i>${esc(a.admin_reason)}</i>`:''}</span>${extra}</span>
       ${side}
     </div>`;
   }).join(''):'<p class="msg empty">Nada aún. Your move.</p>'}
@@ -1572,8 +1908,8 @@ function tLiga(){
   h+=`<details><summary>Normas de la liga</summary><div class="card">
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
-    <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad conjunta +1 Move (cuenta si la marcan ${quedadaMin()}+ personas en la semana)`:'sin actividad conjunta'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
-    <p class="msg" style="margin-top:6px">El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
+    <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad conjunta +1 Move el primer día de la semana en que la marcan ${quedadaMin()}+ personas (solo cuentan las marcas de ese día)`:'sin actividad conjunta'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
+    <p class="msg" style="margin-top:6px">La Media (rival de la jornada libre) vale la media de Moves de los demás jugadores, redondeada hacia arriba. El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
   const log=(L.league.log||[]).slice().reverse();
   h+=`<details><summary>Registro del administrador</summary><div class="card">${log.length?log.map(x=>
     `<div class="logi">${(x.at||'').slice(0,16).replace('T',' ')} — ${esc(x.action)}${x.reason?` · <i>${esc(x.reason)}</i>`:''}</div>`).join(''):'<p class="msg">Sin cambios.</p>'}</div></details>`;
@@ -1581,7 +1917,7 @@ function tLiga(){
 }
 function ringFlag(id,rep,thr){
   const prog=Math.min(1,rep/thr), C=(2*Math.PI*11).toFixed(1);
-  return `<button class="ringbtn ${rep>0?'rep':''}" title="Reportar (anónimo) · ${rep}/${thr}" onclick="reportAct('${id}')">
+  return `<button class="ringbtn ${rep>0?'rep':''}" title="Reportar (anónimo) · ${rep}/${thr}" onclick="run(this,reportAct,'${id}')">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <circle cx="14" cy="14" r="11" stroke="var(--line)" stroke-width="2"/>
       ${prog>0?`<circle cx="14" cy="14" r="11" stroke="var(--lose)" stroke-width="2" stroke-linecap="round" stroke-dasharray="${(prog*2*Math.PI*11).toFixed(1)} ${C}" transform="rotate(-90 14 14)"/>`:''}
@@ -1594,7 +1930,7 @@ async function reportAct(id){
   try{
     const {data,error}=await sb.rpc('report_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_activity:id});
     if(error) throw error;
-    try{ const a=L.activities.find(x=>x.id===id); track('report_submit',{week:a?Math.floor((new Date(a.day+'T00:00:00')-new Date(L.league.config.start+'T00:00:00'))/(7*86400000))+1:null,
+    try{ const a=L.activities.find(x=>x.id===id); track('report_submit',{week:a?weekOfDay(a.day)+1:null,
       dias_desde_actividad:a?Math.round((nowT()-new Date(a.day+'T00:00:00'))/86400000):null,estado:data&&data.estado,reportes:data&&data.reportes,umbral:data&&data.umbral}); }catch(e2){}
     if(data&&data.estado==='anulada') toast('Umbral alcanzado: la actividad queda anulada');
     else toast(data&&data.estado==='retirado'?'Reporte retirado':'Reporte enviado (anónimo)');
@@ -1646,11 +1982,11 @@ function tAdmin(){
       <div style="flex:1"><label>Oros</label><input type="number" id="qG" value="0" min="0" max="7"></div>
       <div style="flex:1"><label>Conjuntas</label><input type="number" id="qQ" value="0" min="0" max="7"></div>
     </div>
-    <button class="btn sec" onclick="quickWeek()">Aplicar semana</button><div class="err" id="qErr"></div>
+    <button class="btn sec" onclick="run(this,quickWeek)">Aplicar semana</button><div class="err" id="qErr"></div>
   </div>`:''}
   <div class="card"><h2>${ic('settings')} Configuración (todo cambio queda registrado)</h2>
     <label>Premio / motivación</label><input id="ePrize" value="${esc(cfg.prize||'')}">
-    <label>Fecha de inicio</label><input type="date" id="eStart" value="${cfg.start}">
+    <label>Fecha de inicio${calWeek()>=0?' (la liga ya ha empezado: no se puede cambiar)':''}</label><input type="date" id="eStart" value="${cfg.start}" ${calWeek()>=0?'disabled':''}>
     <div class="row">
       <div style="flex:1"><label>Jornadas</label><input type="number" id="eWeeks" value="${cfg.weeks}" min="1" max="40"></div>
       <div style="flex:1"><label>Máx. días/sem</label><select id="eMax">${[5,6,7].map(x=>`<option ${x===cfg.maxDays?'selected':''}>${x}</option>`).join('')}</select></div>
@@ -1667,24 +2003,35 @@ function tAdmin(){
     <label>Actividades y niveles — «Actividad: bronce / plata / oro», una por línea</label><textarea id="eLevels" style="min-height:130px" oninput="previewLevels()">${esc(cfg.levels||PLANTILLA_DEF)}</textarea>
     <div id="lvlPrev" class="prevlist"></div>
     <label>Motivo del cambio (visible para toda la liga)</label><input id="eReason" placeholder="p. ej. ajustamos el umbral de correr">
-    <button class="btn" onclick="saveConfig()">Guardar cambios</button><div class="err" id="eErr"></div>
+    <button class="btn" onclick="run(this,saveConfig)">Guardar cambios</button><div class="err" id="eErr"></div>
   </div>
   <div class="card"><h2>${ic('users')} Mi jugador en la liga</h2>
     <p class="msg">${cfg.adminPlayer==='__none__'?'Ahora mismo solo organizas (no participas).':(L.players.some(p=>p.id===cfg.adminPlayer)?`Ahora mismo juegas como <b>${esc((L.players.find(p=>p.id===cfg.adminPlayer)||{}).name)}</b>.`:'Aún no has elegido tu jugador.')} Entras sin PIN y ese jugador queda bloqueado para los demás. Cambiarlo queda en el registro público.</p>
     <select id="eAdminP"><option value="__none__" ${cfg.adminPlayer==='__none__'?'selected':''}>No juego, solo organizo</option>${L.players.map(p=>`<option value="${p.id}" ${cfg.adminPlayer===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
-    <button class="btn sec" onclick="changeAdminPlayer()">Guardar mi jugador</button><div class="err" id="apErr"></div>
+    <button class="btn sec" onclick="run(this,changeAdminPlayer)">Guardar mi jugador</button><div class="err" id="apErr"></div>
   </div>
   <div class="card"><h2>${ic('flag')} Ajuste de Moves (con motivo público)</h2>
     <label>Participante</label><select id="jPlayer">${L.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
-    <div class="row">
-      <div style="flex:1"><label>Día</label><input type="date" id="jDay" value="${isoDay(new Date())}"></div>
-      <div style="flex:1"><label>Ajuste</label><input type="number" id="jAdj" value="1" min="-9" max="9"></div>
+    <label>Tipo</label>
+    <div class="adjtypes">
+      ${[['bronce',medalSVG(1,20)],['plata',medalSVG(2,20)],['oro',medalSVG(3,20)],['negativo','<span class="adjico neg">−</span>'],['especial','<span class="adjico esp">★</span>']].map(([k,i])=>
+        `<button class="typebtn ${k==='negativo'?'neg':(k==='especial'?'esp':'')} ${ADJ_TYPE===k?'on':''}" onclick="setAdjType('${k}')">${i}<br>${k}</button>`).join('')}
     </div>
-    <label>Motivo</label><input id="jReason" placeholder="p. ej. ganó los bolos de la quedada">
-    <button class="btn sec" onclick="doAdjust()">Aplicar ajuste</button><div class="err" id="jErr"></div>
+    <p class="msg" style="margin-top:6px">${ADJ_TYPE==='negativo'||ADJ_TYPE==='especial'
+      ?(ADJ_TYPE==='negativo'?'Valor de −1 a −20, cualquier día de la jornada en curso, con o sin actividad.':'Valor de −20 a 20 (distinto de 0), cualquier día de la jornada en curso, con o sin actividad.')
+      :'Solo en días sin actividad registrada: crea el registro y cuenta como día de deporte.'}</p>
+    <div class="row">
+      <div style="flex:1"><label>Día</label><input type="date" id="jDay" value="${leagueDay()}" min="${w>=0?isoDay(weekStart(w)):cfg.start}" max="${leagueDay()}"></div>
+      ${ADJ_TYPE==='negativo'||ADJ_TYPE==='especial'?`<div style="flex:1"><label>Moves</label><input type="number" id="jAdj" value="${ADJ_TYPE==='negativo'?'-1':'1'}" min="${ADJ_TYPE==='negativo'?'-20':'-20'}" max="${ADJ_TYPE==='negativo'?'-1':'20'}"></div>`:''}
+    </div>
+    <label>Motivo (obligatorio, visible para toda la liga)</label><input id="jReason" placeholder="p. ej. ganó los bolos de la quedada">
+    <button class="btn sec" onclick="run(this,doAdjust)">Aplicar ajuste</button><div class="err" id="jErr"></div>
   </div>`+btnBar();
   previewLevels();
 }
+/* v1.1 (punto 12): tipo de ajuste seleccionado en el formulario del admin */
+let ADJ_TYPE='bronce';
+function setAdjType(k){ ADJ_TYPE=k; const reason=$('#jReason')?$('#jReason').value:'', day=$('#jDay')?$('#jDay').value:'', pl=$('#jPlayer')?$('#jPlayer').value:''; render(); if($('#jReason')) $('#jReason').value=reason; if($('#jDay')&&day) $('#jDay').value=day; if($('#jPlayer')&&pl) $('#jPlayer').value=pl; }
 /* v1.0: validación en vivo de la plantilla de actividades (vista previa + recuento) */
 function previewLevels(){
   const el=$('#lvlPrev'), ta=$('#eLevels'); if(!el||!ta) return;
@@ -1727,12 +2074,19 @@ async function saveConfig(){
   }catch(e){ $('#eErr').textContent=e.message; }
 }
 async function doAdjust(){
+  $('#jErr').textContent='';
+  const type=ADJ_TYPE, motivo=$('#jReason').value.trim();
+  const adj=type==='negativo'||type==='especial'?(parseInt($('#jAdj').value)||0):({bronce:1,plata:2,oro:3}[type]);
+  if(!motivo){ $('#jErr').textContent='El motivo del ajuste es obligatorio.'; return; }
+  if(type==='negativo'&&!(adj<0&&adj>=-20)){ $('#jErr').textContent='El ajuste negativo debe estar entre −20 y −1.'; return; }
+  if(type==='especial'&&(adj===0||adj<-20||adj>20)){ $('#jErr').textContent='El ajuste especial debe estar entre −20 y 20, distinto de 0.'; return; }
   try{
     const {error}=await sb.rpc('admin_adjust',{p_code:CUR,p_admin_code:null,p_player:$('#jPlayer').value,
-      p_day:$('#jDay').value,p_adj:parseInt($('#jAdj').value)||0,p_reason:$('#jReason').value.trim()});
+      p_day:$('#jDay').value,p_adj:adj,p_reason:motivo,p_type:type});
     if(error) throw error;
-    try{ const adj=parseInt($('#jAdj').value)||0, motivo=$('#jReason').value.trim(), d=new Date($('#jDay').value+'T00:00:00');
-      track('adjust_submit',{adj,signo:adj>0?'+':(adj<0?'-':'0'),motivo_chars:motivo.length,tiene_motivo:!!motivo,dias_atras:Math.round((nowT()-d)/86400000),week:Math.floor((d-new Date(L.league.config.start+'T00:00:00'))/(7*86400000))+1}); }catch(e2){}
+    try{ const d=new Date($('#jDay').value+'T00:00:00');
+      track('adjust_submit',{adj,tipo:type,signo:adj>0?'+':(adj<0?'-':'0'),motivo_chars:motivo.length,tiene_motivo:!!motivo,dias_atras:Math.round((nowT()-d)/86400000),week:weekOfDay($('#jDay').value)+1}); }catch(e2){}
+    toast('Ajuste aplicado');
     await refresh();
   }catch(e){ $('#jErr').textContent=e.message; track('adjust_fail',{code:errCode(e)}); }
 }
@@ -1740,26 +2094,39 @@ async function doAdjust(){
    el sorteo se ejecuta allí una sola vez, con las mismas reglas que antes,
    y queda congelado. Aquí solo se reproduce la animación con los draws guardados. */
 
-/* ============ PONG v2 · MOTOR (v1.0) ============
+/* ============ PONG v2 · MOTOR (v1.0 · ajustado en v1.1) ============
    Dos capas separadas y sin DOM:
    1) SIMULADOR (PONG.simulate): físicas deterministas a paso fijo. No sabe quién debe ganar.
    2) DIRECTOR  (PONG.direct):  rejection sampling de semillas hasta encontrar un peloteo
       real que termine con el ganador que ya dictó el servidor (d.draws). Si no lo hay,
       relaja criterios en orden fijo; el resultado nunca cambia.
    La bola SOLO se mueve integrando velocidad; nunca se interpola hacia un destino.
-   Pista virtual 1000×455; el canvas escala al final. */
+   Pista virtual 1000×455; el canvas escala al final.
+   v1.1: pala a escala exacta (50 % del campo = R Moves de la liga, sin altura mínima de
+   dibujo; ver padH/collH y D12), velocidad del perdedor nunca por debajo del 70 % (punto 36),
+   golpe al canto aleatorio en ambos lados (punto 37), peloteos de 3,5 a 7 s y hasta 11 golpes
+   (punto 38). */
 const PONG=(()=>{
   const W=1000, H=455, R=18, PW=18, XA=45, XB=955, DT=1/120;
   const V0=950, VMAX=1700, VGAIN=1.06, MAX_ANGLE=52*Math.PI/180, MIN_VX=0.56;
   const PAD_VMAX=620, PAD_ACC=5000;
-  const H_MIN=0.09*H, H_MAX=0.38*H;
+  const H_MAX=0.50*H;            // v1.1: altura máxima de la pala = 50 % del campo (punto 25)
+  const LOSER_MIN_SPEED=0.70;    // v1.1: la pala perdedora nunca baja del 70 % (punto 36)
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
   /* PRNG mulberry32 sembrado con texto: (código de liga, jornada, duelo, bola, intento) */
   function hashStr(s){ let h=1779033703^s.length; for(let i=0;i<s.length;i++){ h=Math.imul(h^s.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return (h>>>0); }
   function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
   const rng=seedTxt=>mulberry32(hashStr(String(seedTxt)));
-  /* altura de la pala en función de los Moves PROPIOS (nunca de la cuota) */
-  function padH(m,movesMax){ return H_MIN+(H_MAX-H_MIN)*clamp(m,0,movesMax)/Math.max(1,movesMax); }
+  /* v1.1 · DIBUJO vs COLISIÓN (punto 25, D12):
+     - padH(m,ref): altura DIBUJADA = 50 % del campo × min(m, ref)/ref. Sin altura mínima: con
+       1 Move la pala es diminuta; con 0 Moves se dibuja solo el contorno vacío de un Move.
+     - collH(m,ref): altura de COLISIÓN. Con 0 Moves es 0: la bola atraviesa la pala. A partir
+       de 1 Move nunca baja del diámetro de la bola (2·R), para que el peloteo siga siendo jugable
+       aunque la pala dibujada sea más pequeña que la bola. Esa diferencia se mide en la tasa de
+       pong_fallback (telemetría). */
+  function padH(m,ref){ return H_MAX*clamp(m,0,Math.max(1,ref))/Math.max(1,ref); }
+  function collH(m,ref){ return m<=0?0:Math.max(padH(m,ref),2*R); }
+  function oneMove(ref){ return H_MAX/Math.max(1,ref); }   // altura de un Move (contorno vacío con 0 Moves)
   /* punto de impacto previsto: desplegar rebotes en pared (plegado con periodo 2·(H−2r)) */
   function predictY(ball,planeX){
     const t=(planeX-ball.x)/ball.vx; if(!(t>0)) return ball.y;
@@ -1768,32 +2135,37 @@ const PONG=(()=>{
     return R+u;
   }
   /* --- SIMULADOR ---
-     params: {hA,hB, serveDir:'A'|'B', serveAng (rad, con signo), pads:{A:{delay,speed,err[]},B:{...}},
-              fail:{side, k (índice de cruce en el que falla), delay, speed}}
+     params: {hA,hB (dibujo), cA,cB (colisión; por defecto = hA,hB), serveDir:'A'|'B', serveAng (rad, con signo),
+              pads:{A:{delay,speed,err[]},B:{...}}, edges:[{sign,edge}|null por cruce],
+              fail:{side, k (índice de cruce en el que falla), delay, speed, edge}}
      Devuelve {trace:[{t,bx,by,ay,by2}], events:[{t,type,side,...}], hits, walls, missSide, margin, duration, ok, err} */
   function simulate(p){
-    const pad={A:{cy:H/2,vy:0,h:p.hA,x:XA,plane:XA+R,dir:1},B:{cy:H/2,vy:0,h:p.hB,x:XB,plane:XB-R,dir:-1}};
+    const cA=p.cA!==undefined?p.cA:p.hA, cB=p.cB!==undefined?p.cB:p.hB;
+    const pad={A:{cy:H/2,vy:0,h:p.hA,c:cA,hc:Math.max(p.hA,cA),x:XA,plane:XA+R,dir:1},B:{cy:H/2,vy:0,h:p.hB,c:cB,hc:Math.max(p.hB,cB),x:XB,plane:XB-R,dir:-1}};
     const ball={x:W/2,y:H/2,vx:0,vy:0};
     const dir=p.serveDir==='A'?-1:1;   // hacia A = vx negativo
     ball.vx=dir*V0*Math.cos(p.serveAng); ball.vy=V0*Math.sin(p.serveAng);
     const trace=[], events=[];
     let t=0, crossing=0, toward=p.serveDir, hits=0, walls=0, wallsThisCross=0, lastHitT=0;
     let missSide=null, margin=null, out=false, tOut=0, err=null;
-    const bodyCross=[];   // aserción: nunca atravesar el cuerpo de una pala
+    const bodyCross=[];   // aserción: nunca atravesar el cuerpo de una pala (con colisión)
     const ctl={A:{target:H/2,since:0},B:{target:H/2,since:0}};
     const aimFor=(side)=>{ // objetivo de la pala a la que va la bola
       // el perdedor "se cansa" desde el cruce k (retardo y velocidad del fallo); a partir del
-      // cruce 10 todo el mundo se cansa: garantiza que ningún peloteo sea infinito
+      // cruce 12 todo el mundo se cansa: garantiza que ningún peloteo sea infinito
       const s=pad[side], isFail=p.fail&&p.fail.side===side&&crossing>=p.fail.k;
       const pred=predictY(ball,s.plane);
-      const lim=Math.max(0,s.h/2-R*0.6);
+      const lim=Math.max(0,s.c/2-R*0.6);
       let e=isFail?0:clamp((p.pads[side].err[crossing]||0),-lim,lim);
+      // v1.1 (punto 37): golpe al canto NO predictivo: cualquier cruce, cualquier lado, al azar
+      const ed=p.edges&&p.edges[crossing];
+      if(ed&&!isFail) e=ed.sign*(s.c/2+R*ed.edge);
       // golpe decisivo del ganador (cruce k−1): golpea con el canto para mandar la bola a la
       // mitad contraria de donde está el perdedor (el ángulo sale de la geometría del rebote)
       if(p.fail&&side!==p.fail.side&&crossing===p.fail.k-1){
-        const other=pad[p.fail.side]; e=(other.cy>H/2?1:-1)*(s.h/2+R*(p.fail.edge||0.5));
+        const other=pad[p.fail.side]; e=(other.cy>H/2?1:-1)*(s.c/2+R*(p.fail.edge||0.5));
       }
-      const fat=Math.max(0,crossing-9);
+      const fat=Math.max(0,crossing-11);
       let delay=isFail?p.fail.delay:p.pads[side].delay, speed=isFail?p.fail.speed:p.pads[side].speed;
       if(fat>0){ speed*=Math.pow(0.5,fat); delay+=0.15*fat; }
       return {y:clamp(pred+e,R,H-R), delay, speed};
@@ -1810,8 +2182,8 @@ const PONG=(()=>{
           want=clamp(d*9,-vm,vm);                   // frenada proporcional cerca del objetivo
         }
         const dv=clamp(want-s.vy,-PAD_ACC*DT,PAD_ACC*DT); s.vy+=dv;
-        s.cy=clamp(s.cy+s.vy*DT,s.h/2,H-s.h/2);
-        if(s.cy<=s.h/2||s.cy>=H-s.h/2) s.vy=0;
+        s.cy=clamp(s.cy+s.vy*DT,s.hc/2,H-s.hc/2);
+        if(s.cy<=s.hc/2||s.cy>=H-s.hc/2) s.vy=0;
       }
       // bola: subpaso con colisión barrida (CCD) contra el plano de la pala
       let rem=DT, guard=0;
@@ -1825,23 +2197,24 @@ const PONG=(()=>{
         if(tc!==null&&tc>=0&&tc<=rem){
           const yc=ball.y+ball.vy*tc;
           const off=yc-s.cy;
-          if(Math.abs(off)<=s.h/2+R){
+          if(s.c>0&&Math.abs(off)<=s.c/2+R){
             // GOLPE: ángulo según el punto de impacto; módulo renormalizado; |vx| ≥ 0.56·v
             const v=Math.min(VMAX,Math.hypot(ball.vx,ball.vy)*VGAIN);
-            const rel=clamp(off/(s.h/2+R),-1,1);
+            const rel=clamp(off/(s.c/2+R),-1,1);
             let th=rel*MAX_ANGLE;
             const maxTh=Math.acos(MIN_VX); if(Math.abs(th)>maxTh) th=Math.sign(th)*maxTh;
             ball.x=s.plane; ball.y=yc;
             ball.vx=s.dir*v*Math.cos(th); ball.vy=v*Math.sin(th);
-            hits++; events.push({t:t+tc,type:'hit',side:toward,y:yc,rel});
+            hits++; events.push({t:t+tc,type:'hit',side:toward,y:yc,rel,edge:Math.abs(rel)>0.8});
             lastHitT=t+tc; rem-=tc;
             crossing++; toward=toward==='A'?'B':'A'; wallsThisCross=0;
             aim[toward]=aimFor(toward); ctl[toward].since=t+tc; aim[toward==='A'?'B':'A']=null;
             continue;
           } else {
-            // FALLO: la bola pasa la pala; margen desde el canto (con el radio)
-            if(Math.abs(off)<s.h/2) bodyCross.push(t);   // imposible por construcción; aserción
-            if(missSide===null){ missSide=toward; margin=Math.abs(off)-(s.h/2+R); events.push({t:t+tc,type:'miss',side:toward,y:yc,margin}); }
+            // FALLO: la bola pasa la pala; margen desde el canto (con el radio). Con c = 0
+            // (0 Moves, D12) la bola atraviesa la pala vacía: margen = distancia al centro.
+            if(s.c>0&&Math.abs(off)<s.c/2) bodyCross.push(t);   // imposible por construcción; aserción
+            if(missSide===null){ missSide=toward; margin=s.c>0?Math.abs(off)-(s.c/2+R):Math.abs(off); events.push({t:t+tc,type:'miss',side:toward,y:yc,margin,through:s.c===0}); }
           }
         }
         // paredes: espejar el sobrepaso
@@ -1859,17 +2232,18 @@ const PONG=(()=>{
     }
     if(!out) err=err||'peloteo infinito';
     if(bodyCross.length) err='la bola atraviesa una pala';
-    return {trace,events,hits,walls,missSide,margin,duration:tOut,ok:!err,err,hA:p.hA,hB:p.hB,serveDir:p.serveDir};
+    return {trace,events,hits,walls,missSide,margin,duration:tOut,ok:!err,err,hA:p.hA,hB:p.hB,cA,cB,serveDir:p.serveDir};
   }
   /* --- DIRECTOR --- */
-  const LEVELS=[ // relajación en orden fijo
-    {margin:0.09,maxHits:7,prefHits:5,wall:true,underdog:true},
-    {margin:0.12,maxHits:7,wall:true,underdog:true},
-    {margin:0.12,maxHits:9,wall:true,underdog:true},
-    {margin:0.12,maxHits:9,wall:false,underdog:true},
-    {margin:0.12,maxHits:9,wall:false,underdog:false},
+  const LEVELS=[ // relajación en orden fijo (v1.1: hasta 11 golpes; ventana de duración por bola)
+    {margin:0.09,maxHits:9,prefHits:7,wall:true,underdog:true,dur:0},
+    {margin:0.12,maxHits:11,wall:true,underdog:true,dur:0},
+    {margin:0.12,maxHits:11,wall:true,underdog:true,dur:1},
+    {margin:0.12,maxHits:11,wall:false,underdog:true,dur:1},
+    {margin:0.12,maxHits:11,wall:false,underdog:false,dur:2},
   ];
-  function validate(sim,winner,hLoser,hWinner,lvl){
+  const DUR_ALL=[3.5,7.0];   // v1.1 (punto 38): peloteos de 3,5 a 7 s
+  function validate(sim,winner,hLoser,hWinner,lvl,dur){
     if(!sim.ok) return sim.err;
     const loser=winner==='A'?'B':'A';
     if(sim.missSide!==loser) return 'gana el lado equivocado';
@@ -1878,7 +2252,8 @@ const PONG=(()=>{
     if(sim.margin<0.02*H||sim.margin>lvl.margin*H) return 'margen '+sim.margin.toFixed(1);
     const miss=sim.events.find(e=>e.type==='miss'), first=sim.events.find(e=>e.type==='hit');
     if(!miss) return 'sin fallo';
-    if(sim.duration<2.0||sim.duration>4.5) return 'duración '+sim.duration.toFixed(2);
+    const win=lvl.dur===0?(dur||DUR_ALL):(lvl.dur===1?[Math.max(DUR_ALL[0],(dur||DUR_ALL)[0]-0.8),Math.min(DUR_ALL[1],(dur||DUR_ALL)[1]+0.8)]:DUR_ALL);
+    if(sim.duration<win[0]||sim.duration>win[1]) return 'duración '+sim.duration.toFixed(2);
     if(miss.t<0.4) return 'fallo demasiado pronto';
     // la pala perdedora nunca se aleja de la bola en el cruce final
     const lastHit=sim.events.filter(e=>e.type==='hit').pop();
@@ -1895,32 +2270,43 @@ const PONG=(()=>{
     }
     return null;
   }
-  /* parámetros de una semilla: saque, palas y en qué cruce (hacia el perdedor) falla */
-  function genParams(r,serveDir,loser,hA,hB,lvl){
+  /* parámetros de una semilla: saque, palas, cantos aleatorios y en qué cruce (hacia el perdedor) falla */
+  function genParams(r,serveDir,loser,hA,hB,cA,cB,lvl){
     const cands=[]; for(let k=3;k<=(lvl.prefHits||lvl.maxHits);k++){ const tw=(k%2===0)?serveDir:(serveDir==='A'?'B':'A'); if(tw===loser) cands.push(k); }
     const k=cands[Math.floor(r()*cands.length)];
     const ang=(8+r()*20)*Math.PI/180*(r()<.5?-1:1);
-    const mk=()=>({delay:0.03+r()*0.15,speed:0.85+r()*0.15,err:Array.from({length:12},()=>(r()*2-1)*40)});
-    return {hA,hB,serveDir,serveAng:ang,pads:{A:mk(),B:mk()},fail:{side:loser,k,delay:0.05+r()*0.35,speed:0.55+r()*0.45,edge:0.2+r()*0.65}};
+    const mk=()=>({delay:0.03+r()*0.15,speed:0.85+r()*0.15,err:Array.from({length:14},()=>(r()*2-1)*40)});
+    // v1.1 (punto 37): en cada cruce, con probabilidad ~45 %, quien recibe golpea con el canto
+    const edges=Array.from({length:14},()=>r()<0.45?{sign:r()<.5?-1:1,edge:0.2+r()*0.65}:null);
+    return {hA,hB,cA,cB,serveDir,serveAng:ang,pads:{A:mk(),B:mk()},edges,
+      fail:{side:loser,k,delay:0.08+r()*0.45,speed:LOSER_MIN_SPEED+r()*(1-LOSER_MIN_SPEED),edge:0.2+r()*0.65}};
   }
   const ATTEMPTS=100;   // semillas por nivel de relajación (una simulación ≈ 0,15 ms)
-  /* direct(): busca el peloteo para una bola. Devuelve {sim, level, attempts} */
-  function direct(seedBase,winner,hA,hB,ballIdx){
+  /* direct(): busca el peloteo para una bola. Devuelve {sim, level, attempts}.
+     opts.dur = [mín, máx] segundos del peloteo (según el duelo se decida a 2 o 3 bolas).
+     v1.1 (D12): si el perdedor tiene 0 Moves (colisión 0), la bola atraviesa su pala vacía:
+     saque del ganador y punto directo; no cuenta como fallback. */
+  function direct(seedBase,winner,hA,hB,ballIdx,opts){
     const loser=winner==='A'?'B':'A';
+    const o=opts||{}; const cA=o.cA!==undefined?o.cA:hA, cB=o.cB!==undefined?o.cB:hB;
     const hL=loser==='A'?hA:hB, hW=winner==='A'?hA:hB;
+    if((loser==='A'?cA:cB)<=0){
+      const p={hA,hB,cA,cB,serveDir:loser,serveAng:0.12*((ballIdx%2)?1:-1),pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},edges:[],fail:{side:loser,k:99,delay:0,speed:1}};
+      return {sim:simulate(p),level:0,attempts:0,through:true};
+    }
     for(let li=0;li<LEVELS.length;li++){
       const lvl=LEVELS[li];
       for(let a=0;a<ATTEMPTS;a++){
         const r=rng(seedBase+':'+ballIdx+':'+li+':'+a);
         const serveDir=ballIdx%2===0?'A':'B';
-        const p=genParams(r,serveDir,loser,hA,hB,lvl);
+        const p=genParams(r,serveDir,loser,hA,hB,cA,cB,lvl);
         // por semilla: bisección de la velocidad del perdedor en el cruce decisivo, para
         // que llegue tarde POR POCO (margen en ventana). Físicas intactas: solo cambia un
-        // parámetro de la pala y se vuelve a simular entero.
-        let lo=0.15, hi=1.0;
+        // parámetro de la pala y se vuelve a simular entero. v1.1: nunca por debajo del 70 %.
+        let lo=LOSER_MIN_SPEED, hi=1.0;
         for(let it=0;it<8;it++){
           const sim=simulate(p);
-          const why=validate(sim,winner,hL,hW,lvl);
+          const why=validate(sim,winner,hL,hW,lvl,o.dur);
           if(!why) return {sim,level:li,attempts:a+1+li*ATTEMPTS};
           const k=p.fail.k;
           if(sim.missSide===loser&&sim.hits===k&&sim.margin>lvl.margin*H){ lo=p.fail.speed; }        // demasiado lejos → más rápido
@@ -1932,74 +2318,102 @@ const PONG=(()=>{
       }
     }
     // último recurso: peloteo mínimo garantizado (nunca cambia el resultado)
-    const p={hA,hB,serveDir:loser,serveAng:0.2,pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},fail:{side:loser,k:0,delay:9,speed:0}};
+    const p={hA,hB,cA,cB,serveDir:loser,serveAng:0.2,pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},edges:[],fail:{side:loser,k:0,delay:9,speed:LOSER_MIN_SPEED}};
     return {sim:simulate(p),level:LEVELS.length,attempts:LEVELS.length*ATTEMPTS,forced:true};
   }
-  return {W,H,R,PW,XA,XB,DT,V0,VMAX,H_MIN,H_MAX,padH,simulate,direct,validate,genParams,rng,LEVELS,clamp};
+  return {W,H,R,PW,XA,XB,DT,V0,VMAX,H_MAX,LOSER_MIN_SPEED,padH,collH,oneMove,simulate,direct,validate,genParams,rng,LEVELS,DUR_ALL,clamp};
 })();
 /* ============ PONG v2 · FIN MOTOR ============ */
 
 /* ============ PALAS ∝ MOVES ============
    La pala de cada jugador mide según SUS Moves de la jornada (nunca la cuota) y se
-   dibuja como una pila de segmentos, uno por Move, coloreados por procedencia
-   (medalla del día, azul social, verde regularidad, gris ajuste). Una sola fuente
-   de verdad: movesOfWeek() (que ya excluye anuladas y aplica quedadaMin). */
-const MEDAL_COL=['#c9793a','#b9c2cf','#e8b83a'], SEG_SOCIAL='#2b6cb0', SEG_BONUS='#2f9e63', SEG_ADJ='#9aa3b2', SEG_NEUTRAL='#7d8aa3';
-function movesMax(){ const cfg=L.league.config; return (cfg.maxDays||7)*3+(cfg.bonusDay>0?1:0)+(cfg.quedada?1:0); }
+   dibuja como una pila de segmentos, uno por Move. v1.1: escala exacta (punto 25): altura
+   máxima = 50 % del campo = R Moves de la liga (refMoves); cada Move = 50 % / R; por encima
+   de R los segmentos se estrechan y la pala no pasa del 50 %. Color del jugador (coral /
+   lima), no de las medallas; el tipo de cada Move sigue consultable tocando el segmento.
+   Una sola fuente de verdad: movesOfWeek() (excluye anuladas, conjunta por día, ajustes). */
 const DAYN=['dom','lun','mar','mié','jue','vie','sáb'];
 function dayName(d){ return DAYN[new Date(d+'T00:00:00').getDay()]; }
 function segmentsFor(pid,w){
-  const cfg=L.league.config, social=quedadaOK(w), raw=actsOfWeek(pid,w).filter(a=>!isAnulada(a));
+  const cfg=L.league.config, qd=quedadaDay(w), raw=actsOfWeek(pid,w).filter(a=>!isAnulada(a));
   const acts=raw.filter(a=>!isQOnly(a)).slice(0,cfg.maxDays||7);
   let segs=[];
   acts.forEach(a=>{
-    const label=(a.activity&&a.activity.trim()?a.activity:'sin especificar')+' · '+LEVEL_NAMES[a.level-1]+' · '+dayName(a.day);
-    for(let i=0;i<a.level;i++) segs.push({kind:'lvl',color:MEDAL_COL[a.level-1],day:a.day,label});
-    if(a.quedada&&social) segs.push({kind:'social',color:SEG_SOCIAL,day:a.day,label:'Conjunta · +1 · '+dayName(a.day)});
+    const label=(isAdminRec(a)?'Ajuste del admin':actName(a))+' · '+LEVEL_NAMES[a.level-1]+' · '+dayName(a.day);
+    for(let i=0;i<a.level;i++) segs.push({kind:isAdminRec(a)?'adm':'lvl',day:a.day,label});
+    if(a.quedada&&a.day===qd) segs.push({kind:'social',day:a.day,label:'Conjunta · +1 · '+dayName(a.day)});
     const adj=a.adj||0;
-    for(let i=0;i<adj;i++) segs.push({kind:'adj',color:SEG_ADJ,day:a.day,label:'Ajuste del admin · +1 · '+dayName(a.day)});
+    for(let i=0;i<adj;i++) segs.push({kind:'adj',day:a.day,label:'Ajuste del admin · +1 · '+dayName(a.day)});
   });
-  if(social) raw.filter(isQOnly).forEach(a=>segs.push({kind:'social',color:SEG_SOCIAL,day:a.day,label:'Conjunta (asistencia) · +1 · '+dayName(a.day)}));
-  if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) segs.push({kind:'bonus',color:SEG_BONUS,day:null,label:'Regularidad · +1'});
-  /* el total manda: movesOfWeek() (ajustes negativos, adj de anuladas, suelo 0) acotado al techo */
-  const total=Math.max(0,Math.min(movesOfWeek(pid,w),movesMax()));
+  raw.filter(a=>isQOnly(a)&&a.day===qd).forEach(a=>segs.push({kind:'social',day:a.day,label:'Conjunta (asistencia) · +1 · '+dayName(a.day)}));
+  adjOfWeek(pid,w).filter(j=>j.value>0).forEach(j=>{ for(let i=0;i<j.value;i++) segs.push({kind:'esp',day:j.day,label:'Ajuste especial · +'+j.value+' · '+j.reason}); });
+  if(cfg.bonusDay>0&&acts.length>=cfg.bonusDay) segs.push({kind:'bonus',day:null,label:'Regularidad · +1'});
+  /* el total manda: movesOfWeek() (ajustes negativos, adj de anuladas, suelo 0) */
+  const total=Math.max(0,movesOfWeek(pid,w));
   if(segs.length>total) segs=segs.slice(0,total);
-  while(segs.length<total) segs.push({kind:'adj',color:SEG_ADJ,day:null,label:'Ajuste del admin · +1'});
+  while(segs.length<total) segs.push({kind:'adj',day:null,label:'Ajuste del admin · +1'});
   return segs;
 }
-function neutralSegs(n){ const s=[]; for(let i=0;i<Math.max(0,Math.min(n,movesMax()));i++) s.push({kind:'neutral',color:SEG_NEUTRAL,day:null,label:'La Media'}); return s; }
+function neutralSegs(n){ const s=[]; for(let i=0;i<Math.max(0,n);i++) s.push({kind:'neutral',day:null,label:'La Media'}); return s; }
 const REDUCED=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const easeBack=t=>{ t=Math.max(0,Math.min(1,t)); const c=1.70158+1, u=t-1; return 1+c*u*u*u+(c-1)*u*u; };
 
 /* ---- dibujo de la pista (compartido: mini-pista y sorteo) ----
-   st = {hA,hB,cyA,cyB,segsA,segsB,ball:{x,y,vx,vy}|null,trail:[{x,y}],squashA,squashB,
-         flashA:{idx:[],a}, flashB, ghostA:{segs,a}, ghostB, glowA, glowB} en unidades virtuales */
+   st = {hA,hB,cyA,cyB,segsA,segsB,haloA,haloB (0..3),ball:{x,y,vx,vy}|null,trail:[{x,y}],squashA,squashB,
+         flashA:{idx:[],a}, flashB, ghostA:{segs,a}, ghostB, score:{a,b,ca,cb}|null, t (ms)} en unidades virtuales
+   v1.1: pala en el color del jugador; 0 Moves = contorno vacío de un Move; halos por nivel
+   (punto 27): 1 cian con latido suave, 2 violeta con pulso marcado, 3 holográfico (degradado
+   que gira alrededor de la pala + chispas orbitando). Marcador dentro del campo (punto 31). */
+const COURT_COL={A:'#ff5a3c',B:'#9ef20d'};
+/* chispas del halo holográfico: órbita, radio y velocidad propios (fijos por sesión, sin parpadeo) */
+const SPARKS=(()=>{ const r=PONG.rng('sparks'); return Array.from({length:16},()=>({a:r()*6.28,r:r(),s:0.4+r()})); })();
 function drawCourt(cv,st){
   const dpr=window.devicePixelRatio||1, cssW=cv.clientWidth||440, cssH=cssW*PONG.H/PONG.W;
   if(cv.width!==Math.round(cssW*dpr)||cv.height!==Math.round(cssH*dpr)){ cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr); }
   const ctx=cv.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr*cssW/PONG.W,dpr*cssW/PONG.W);
-  const W=PONG.W,H=PONG.H,R=PONG.R,PW=st.wide?PONG.PW*1.6:PONG.PW;   // mini-pista: pala más ancha (sin física, solo lectura)
-  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#22375d'); g.addColorStop(1,'#18294a');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.save(); ctx.setLineDash([14,12]); ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.restore();
+  const W=PONG.W,H=PONG.H,R=PONG.R,PW=W*0.019, t=(st.t||0)/1000, still=REDUCED();
+  ctx.fillStyle='#1b2d4f'; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.setLineDash([W*.014,W*.012]); ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=W*.004; ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.restore();
+  /* marcador dentro del campo (punto 31, D9): número grande en la mitad de cada jugador, Archivo
+     Black, sin guion; ganador verde, perdedor rojo; duelo nulo: rayas grises */
+  if(st.score){
+    ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font=Math.round(H*0.42)+"px 'Archivo Black',sans-serif";
+    if(st.score.a===null||st.score.a===undefined){ ctx.fillStyle='rgba(190,196,206,.85)'; ctx.fillText('—',W*0.27,H/2); ctx.fillText('—',W*0.73,H/2); }
+    else { const put=(v,x,win)=>{ ctx.save(); ctx.shadowColor=win?'rgba(61,220,127,.6)':'rgba(255,107,107,.45)'; ctx.shadowBlur=win?26:20; ctx.fillStyle=win?'#3ddc7f':'#ff6b6b'; ctx.fillText(String(v),x,H/2); ctx.restore(); };
+      put(st.score.a,W*0.27,st.score.a>st.score.b); put(st.score.b,W*0.73,st.score.b>st.score.a); }
+    ctx.restore();
+  }
   const pad=(side)=>{
     const h=side==='A'?st.hA:st.hB, cy=side==='A'?st.cyA:st.cyB, segs=(side==='A'?st.segsA:st.segsB)||[];
-    const x=side==='A'?PONG.XA+PONG.PW-PW:PONG.XB, sq=side==='A'?(st.squashA||0):(st.squashB||0);
-    const glow=side==='A'?'rgba(255,90,60,.55)':'rgba(125,180,232,.55)';
-    const hh=h*(1-0.08*sq), top=cy-hh/2, n=segs.length, gap=0.004*H;
-    ctx.save(); ctx.shadowColor=glow; ctx.shadowBlur=14;
-    if(n===0){ ctx.strokeStyle=side==='A'?'#ff5a3c':'#7db4e8'; ctx.lineWidth=3; rr(ctx,x+1.5,top+1.5,PW-3,hh-3,5); ctx.stroke(); }
-    else{
-      const sh=(hh-(n-1)*gap)/n, fl=side==='A'?st.flashA:st.flashB;
-      segs.forEach((s,i)=>{ const y=top+i*(sh+gap);
-        ctx.fillStyle=s.color; rr(ctx,x,y,PW,Math.max(1,sh),Math.min(4,sh/2)); ctx.fill();
-        if(fl&&fl.a>0&&fl.idx.includes(i)){ ctx.fillStyle=`rgba(255,255,255,${(0.85*fl.a).toFixed(3)})`; rr(ctx,x-2,y-1,PW+4,Math.max(1,sh)+2,4); ctx.fill(); }
-      });
+    const x=side==='A'?PONG.XA:PONG.W-PONG.XA-PW, sq=side==='A'?(st.squashA||0):(st.squashB||0);   // pala B en espejo de la A (la física no cambia)
+    const col=COURT_COL[side], lvl=side==='A'?(st.haloA||0):(st.haloB||0);
+    const ph=h*(1-0.08*sq), y=cy-ph/2, n=segs.length, g=H*.006;
+    if(n===0){   // 0 Moves: contorno vacío de un Move, sin colisión (D12)
+      const oh=st.one||PONG.oneMove(13);
+      ctx.save(); ctx.strokeStyle=col; ctx.globalAlpha=.5; ctx.lineWidth=2; rr(ctx,x,cy-oh/2,PW,oh,3); ctx.stroke(); ctx.restore(); return;
     }
+    const sh=(ph-(n-1)*g)/n;
+    /* halo: siempre el nivel máximo alcanzado (punto 27). 1 cian latido suave · 2 violeta pulso
+       marcado · 3 holográfico (tono girando) con chispas orbitando */
+    if(lvl>0){
+      let col2, blur, lw; const p=still?0.5:0.5+0.5*Math.sin(t*(lvl===2?6:3)), hue=still?200:(t*110)%360;
+      if(lvl===1){ col2='#19c3e6'; blur=14+6*p; lw=2.5; }
+      if(lvl===2){ col2='#9b5cff'; blur=10+28*p; lw=2.5+3*p; }
+      if(lvl===3){ col2='hsl('+hue+',100%,66%)'; blur=28; lw=4; }
+      ctx.save(); ctx.shadowColor=col2; ctx.shadowBlur=blur;
+      if(lvl===3){ const gr=ctx.createLinearGradient(x-20,y,x+PW+20,y+ph); for(let i=0;i<=6;i++) gr.addColorStop(i/6,'hsl('+((hue+i*60)%360)+',100%,66%)'); ctx.strokeStyle=gr; }
+      else ctx.strokeStyle=col2;
+      ctx.lineWidth=lw; rr(ctx,x-6,y-6,PW+12,ph+12,9); ctx.stroke(); ctx.stroke(); ctx.restore();
+      if(lvl===3) SPARKS.forEach((sp,i)=>{ const a=sp.a+(still?0:t*sp.s), al=still?0.7:0.45+0.55*Math.sin(t*5+i);
+        ctx.fillStyle='hsla('+((hue+i*24)%360)+',100%,76%,'+al.toFixed(2)+')';
+        ctx.beginPath(); ctx.arc(x+PW/2+Math.cos(a)*(PW/2+16+sp.r*13), cy+Math.sin(a)*(ph/2+16+sp.r*13), 1.8+sp.r*1.6, 0, 6.28); ctx.fill(); });
+    }
+    const fl=side==='A'?st.flashA:st.flashB;
+    segs.forEach((sg,i)=>{ const yy=y+i*(sh+g); ctx.fillStyle=col; rr(ctx,x,yy,PW,Math.max(1,sh),2.5); ctx.fill();
+      if(fl&&fl.a>0&&fl.idx.includes(i)){ ctx.fillStyle=`rgba(255,255,255,${(0.85*fl.a).toFixed(3)})`; rr(ctx,x-2,yy-1,PW+4,Math.max(1,sh)+2,3); ctx.fill(); } });
     const gh=side==='A'?st.ghostA:st.ghostB;   // segmentos que se van (anulación/edición a la baja): destello gris
-    if(gh&&gh.a>0){ const gn=gh.segs.length, gsh=(gh.h-(gn-1)*gap)/gn, gtop=cy-gh.h/2;
-      gh.segs.forEach((s,i)=>{ if(i<n) return; ctx.fillStyle=`rgba(190,196,206,${(0.8*gh.a).toFixed(3)})`; rr(ctx,x,gtop+i*(gsh+gap),PW,Math.max(1,gsh),3); ctx.fill(); }); }
-    ctx.restore();
+    if(gh&&gh.a>0){ const gn=gh.segs.length, gsh=(gh.h-(gn-1)*g)/gn, gtop=cy-gh.h/2;
+      gh.segs.forEach((sg,i)=>{ if(i<n) return; ctx.fillStyle=`rgba(190,196,206,${(0.8*gh.a).toFixed(3)})`; rr(ctx,x,gtop+i*(gsh+g),PW,Math.max(1,gsh),2.5); ctx.fill(); }); }
   };
   pad('A'); pad('B');
   if(st.ball){
@@ -2015,17 +2429,18 @@ function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x
    Guarda el último estado por (jornada, jugador): un Move nuevo = segmento nuevo +
    estirón elástico (~320 ms, sobrepaso) + destello (~600 ms); al bajar, contracción con
    destello gris del segmento que se va. Cambiar solo la actividad (mismo nivel) no anima:
-   se repintan colores/etiquetas. Con reduced-motion: sin animación, solo el conteo. */
+   se repintan colores/etiquetas. Con reduced-motion: sin animación, solo el conteo.
+   v1.1: los halos se animan en bucle mientras haya alguno (y no haya reduced-motion). */
 const MINI_PREV={}; let miniRAF=0;
 function renderMini(spec){
   const cv=$('#miniCourt'); if(!cv) return;
   TM.once('mini','mini_view',{week:spec.w+1});
   cancelAnimationFrame(miniRAF);
-  const MM=movesMax(), key=s=>spec.w+':'+s.pid;
-  const sides={A:spec.a,B:spec.b}, st={cyA:PONG.H/2,cyB:PONG.H/2,ball:null,wide:true}, anims={};
+  const REF=refMoves(), key=s=>spec.w+':'+s.pid;
+  const sides={A:spec.a,B:spec.b}, st={cyA:PONG.H/2,cyB:PONG.H/2,ball:null,score:spec.score||null,one:PONG.oneMove(REF)}, anims={};
   for(const k of ['A','B']){
-    const s=sides[k], prev=MINI_PREV[key(s)], hNow=PONG.padH(s.segs.length,MM);
-    st['segs'+k]=s.segs; st['h'+k]=hNow;
+    const s=sides[k], prev=MINI_PREV[key(s)], hNow=PONG.padH(s.segs.length,REF);
+    st['segs'+k]=s.segs; st['h'+k]=hNow; st['halo'+k]=haloLevel(s.moves);
     if(prev&&prev.n!==s.segs.length&&!REDUCED()){
       const grow=s.segs.length>prev.n;
       anims[k]={from:prev.h,to:hNow,t0:performance.now(),grow,
@@ -2034,8 +2449,12 @@ function renderMini(spec){
     }
     MINI_PREV[key(s)]={n:s.segs.length,h:hNow,segs:s.segs};
   }
+  const loop=(st.haloA>0||st.haloB>0)&&!REDUCED();
+  const tracks=[...document.querySelectorAll('.track[data-halo]')];
   const frame=()=>{
-    let live=false; const now=performance.now();
+    if(!cv.isConnected) return;
+    let live=false; const now=performance.now(); st.t=now;
+    tracks.forEach(tr=>barGlow(tr,now/1000,REDUCED()));
     for(const k of ['A','B']){ const a=anims[k]; if(!a) continue;
       const u=(now-a.t0)/320, v=(now-a.t0)/600;
       st['h'+k]=a.from+(a.to-a.from)*easeBack(u);
@@ -2044,7 +2463,7 @@ function renderMini(spec){
       if(v<1) live=true; else { st['h'+k]=a.to; st['flash'+k]=null; st['ghost'+k]=null; }
     }
     drawCourt(cv,st);
-    if(live) miniRAF=requestAnimationFrame(frame);
+    if(live||loop) miniRAF=requestAnimationFrame(frame);
   };
   frame();
   /* E3: tocar/pasar por un segmento muestra «Natación · Oro · mié» */
@@ -2052,7 +2471,7 @@ function renderMini(spec){
   const pick=(ev)=>{
     const r=cv.getBoundingClientRect(), x=(ev.clientX-r.left)*PONG.W/r.width, y=(ev.clientY-r.top)*PONG.W/r.width;
     const side=x<PONG.W/2?'A':'B', segs=st['segs'+side], h=st['h'+side], cy=st['cy'+side];
-    if(!segs.length||Math.abs(y-cy)>h/2||(side==='A'?x>160:x<PONG.W-160)) return null;
+    if(!segs.length||Math.abs(y-cy)>h/2||(side==='A'?x>140:x<PONG.W-140)) return null;
     const i=Math.min(segs.length-1,Math.floor((y-(cy-h/2))/h*segs.length));
     return segs[i].label;
   };
@@ -2064,61 +2483,68 @@ function renderMini(spec){
    Para cada bola de d.draws, el DIRECTOR busca un peloteo real (PONG.direct) y aquí
    solo se reproduce el trace a paso fijo con acumulador + interpolación (alpha).
    Palas del tamaño de los Moves congelados (d.ma/d.mb); su tamaño no cambia durante
-   la reproducción. Con reduced-motion: resumen estático (palas, bolas, marcador). */
+   la reproducción. Con reduced-motion: resumen estático (palas, bolas, marcador).
+   v1.1 (puntos 22, 38): opts.noSkipFirst = el primer duelo (el mío) no se puede saltar; los
+   demás admiten salto individual. Duelo completo de 20 a 28 s: presentación 3 s, cierre 3 s,
+   y peloteos de 5,8–7 s (2 bolas) o 3,5–6 s (3 bolas). */
 let OV_OPEN=null;
-async function playPong(jNum,duels,_){
-  const ov=$('#ov'); let skip=false, huboSkip=false;
+async function playPong(jNum,duels,opts){
+  const ov=$('#ov'); let skip=false, huboSkip=false; const o=opts||{};
   const sleep=ms=>new Promise(r=>setTimeout(r,skip?30:ms));
-  const w=jNum-1, MM=movesMax(), reduced=REDUCED();
+  const w=jNum-1, REF=refMoves(), reduced=REDUCED();
   ov.classList.add('show');
   const tAnim=Date.now(); OV_OPEN={week:jNum,duelo:0,t0:tAnim};
   track('anim_open',{week:jNum,modo:ANIM_MODE,n_duelos:duels.length,reduced});
   if(reduced) track('anim_reduced',{week:jNum});
   for(let i=0;i<duels.length;i++){
-    const d=duels[i]; OV_OPEN.duelo=i+1;
+    const d=duels[i]; OV_OPEN.duelo=i+1; skip=false;
+    const canSkip=!(o.noSkipFirst&&i===0);
     const pa=byName(d.a), pb=byName(d.b);
     const segsA=pa?fitSegs(segmentsFor(pa.id,w),d.ma):neutralSegs(d.ma), segsB=pb?fitSegs(segmentsFor(pb.id,w),d.mb):neutralSegs(d.mb);
-    const hA=PONG.padH(d.ma,MM), hB=PONG.padH(d.mb,MM);
+    const hA=PONG.padH(d.ma,REF), hB=PONG.padH(d.mb,REF), cA=PONG.collH(d.ma,REF), cB=PONG.collH(d.mb,REF);
     ov.innerHTML=`<div class="prog">Jornada ${jNum} · duelo ${i+1} de ${duels.length} · al mejor de 3</div>
       <div class="intro">
-        <div style="text-align:left"><div class="pName" style="color:var(--duelA)">${esc(d.a)}</div><div class="pMeta">${d.ma} Moves</div></div>
-        <div style="text-align:right"><div class="pName" style="color:var(--duelB)">${esc(d.b)}</div><div class="pMeta">${d.mb} Moves</div></div>
+        <div style="text-align:left"><div class="pName" style="color:var(--duelA)">${esc(d.a)}</div><div class="pMeta">${d.ma} Moves${haloLevel(d.ma)?' · '+HALO_NAMES[haloLevel(d.ma)]:''}</div></div>
+        <div style="text-align:right"><div class="pName" style="color:var(--duelB)">${esc(d.b)}</div><div class="pMeta">${d.mb} Moves${haloLevel(d.mb)?' · '+HALO_NAMES[haloLevel(d.mb)]:''}</div></div>
       </div>
       <canvas class="court" id="court"></canvas>
       <div id="pscore">0 – 0</div><div id="pres"></div>
-      <div class="row" style="justify-content:center"><button class="btn sec" id="skipBtn">Saltar todo</button></div>`;
-    $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; };
+      <div class="row" style="justify-content:center">${canSkip?`<button class="btn sec" id="skipBtn">Saltar este duelo</button>`:''}</div>`;
+    if(canSkip) $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; };
     const cv=$('#court');
-    const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,ball:null,trail:[]};
-    drawCourt(cv,st);
-    await sleep(2200);
-    if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; await sleep(1800); continue; }
+    const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,haloA:haloLevel(d.ma),haloB:haloLevel(d.mb),ball:null,trail:[],one:PONG.oneMove(REF),t:performance.now()};
+    let haloRAF=0; const haloLoop=()=>{ st.t=performance.now(); drawCourt(cv,st); haloRAF=requestAnimationFrame(haloLoop); };
+    const idle=async(ms)=>{ if((st.haloA||st.haloB)&&!reduced){ haloLoop(); await sleep(ms); cancelAnimationFrame(haloRAF); } else { drawCourt(cv,st); await sleep(ms); } };
+    await idle(3000);
+    if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; await idle(2000); continue; }
     let sc={A:0,B:0};
     if(reduced){
       $('#pres').innerHTML=`<div class="drawlist">${d.draws.map(r=>`<span class="${r==='A'?'dA':'dB'}">${r}</span>`).join('')}</div><span class="w">${esc(d.winner)}</span> gana ${d.score}`;
       d.draws.forEach(r=>sc[r]++); $('#pscore').textContent=sc.A+' – '+sc.B;
       await sleep(3200); continue;
     }
+    const dur=d.draws.length===2?[5.8,7.0]:[3.5,6.0];
     for(let bi=0;bi<d.draws.length;bi++){
       const r=d.draws[bi]; OV_OPEN.bola=bi+1;
-      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi);
+      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi,{cA,cB,dur});
       if(DEV&&!res.sim.ok) throw new Error('PONG: '+res.sim.err);
       if(res.level>0){ track('pong_fallback',{week:jNum,duelo_i:i+1,bola_i:bi+1,nivel:res.level,intentos:res.attempts}); if(DEV) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`); }
       await playTrace(cv,st,res.sim,()=>skip);
       sc[r]++;
       const ps=$('#pscore'); ps.textContent=sc.A+' – '+sc.B; ps.classList.add('flash'); cv.classList.add('shake');
       setTimeout(()=>{ ps.classList.remove('flash'); cv.classList.remove('shake'); },200);
-      await sleep(650);
+      await idle(700);
     }
     $('#pres').innerHTML=`<span class="w">${esc(d.winner)}</span> gana ${d.score}`;
-    await sleep(2400);
+    st.score={a:sc.A,b:sc.B};
+    await idle(3000);
   }
   ov.classList.remove('show');
   OV_OPEN=null; track('anim_end',{week:jNum,ms:Date.now()-tAnim,n_duelos:duels.length,hubo_skip:huboSkip});
 }
 /* ajusta los segmentos actuales al total congelado en la jornada (siempre coinciden en
    jornadas resueltas; por si acaso: recorta o rellena en gris) */
-function fitSegs(segs,total){ segs=segs.slice(0,Math.max(0,Math.min(total,movesMax()))); while(segs.length<Math.min(total,movesMax())) segs.push({kind:'adj',color:SEG_ADJ,label:''}); return segs; }
+function fitSegs(segs,total){ segs=segs.slice(0,Math.max(0,total)); while(segs.length<total) segs.push({kind:'adj',label:''}); return segs; }
 /* reproducción de un trace: paso fijo DT con acumulador (máx. 0,25 s por frame), alpha de
    interpolación, 0,5 s de congelado en el saque, hit-stop 40 ms, squash 120 ms, estela. */
 function playTrace(cv,st,sim,isSkip){
@@ -2127,6 +2553,7 @@ function playTrace(cv,st,sim,isSkip){
     let simT=0, acc=0, last=performance.now(), hold=0.5, nextHit=0, sqA=0, sqB=0, done=false;
     st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0;
     const frame=(now)=>{
+      st.t=now;
       let dt=Math.min(0.25,(now-last)/1000); last=now; if(isSkip()) dt*=8;
       if(hold>0){ hold-=dt; if(hold>0){ drawCourt(cv,st); requestAnimationFrame(frame); return; } dt=-hold; hold=0; }
       acc+=dt;
