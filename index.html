@@ -322,7 +322,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const BUILD='web v1.1';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
+const BUILD='web v1.1.1';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
 const VERSION=BUILD+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
@@ -684,10 +684,11 @@ function quedadaClosed(w){ const d=quedadaDay(w); return !!d&&d<leagueDay(); }
 /* «una conjunta QUE CUENTE por semana»: si mi marca cayó en el día de la conjunta, ya está usada */
 function quedadaUsed(pid,w){ const d=quedadaDay(w); return !!d&&actsOfWeek(pid,w).some(a=>isSocial(a)&&!isAnulada(a)&&a.day===d); }
 /* v1.1 (punto 9): La Media = media aritmética de los Moves de todos los jugadores EXCEPTO el
-   rival, incluidos los que tienen 0, redondeada hacia arriba (réplica de _media_moves). */
+   rival, incluidos los que tienen 0, redondeada al entero más cercano, ,5 hacia arriba (réplica de
+   _media_moves v11: round de PostgreSQL = Math.round para valores positivos). */
 function mediaMoves(w,rivalName){
   const v=L.players.filter(p=>p.name!==rivalName).map(p=>movesOfWeek(p.id,w));
-  return v.length?Math.ceil(v.reduce((s,x)=>s+x,0)/v.length):0;
+  return v.length?Math.round(v.reduce((s,x)=>s+x,0)/v.length):0;
 }
 /* v1.1 (punto 25): referencia de la liga R = un oro + tres platas + el resto de días en bronce
    + conjunta + bonus. Liga de referencia (6 días, conjunta y bonus): R = 13. */
@@ -1914,7 +1915,7 @@ function tLiga(){
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
     <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad conjunta +1 Move el primer día de la semana en que la marcan ${quedadaMin()}+ personas (solo cuentan las marcas de ese día)`:'sin actividad conjunta'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
-    <p class="msg" style="margin-top:6px">La Media (rival de la jornada libre) vale la media de Moves de los demás jugadores, redondeada hacia arriba. El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
+    <p class="msg" style="margin-top:6px">La Media (rival de la jornada libre) vale la media de Moves de los demás jugadores, redondeada al entero más cercano. El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
   const log=(L.league.log||[]).slice().reverse();
   h+=`<details><summary>Registro del administrador</summary><div class="card">${log.length?log.map(x=>
     `<div class="logi">${(x.at||'').slice(0,16).replace('T',' ')} — ${esc(x.action)}${x.reason?` · <i>${esc(x.reason)}</i>`:''}</div>`).join(''):'<p class="msg">Sin cambios.</p>'}</div></details>`;
