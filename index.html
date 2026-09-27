@@ -322,7 +322,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const BUILD='web v1.1.1';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
+const BUILD='web v1.1.2';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
 const VERSION=BUILD+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
@@ -467,8 +467,13 @@ function errCode(e){
   try{
     const orig=sb.rpc.bind(sb);
     sb.rpc=function(name,args){
-      const t=Date.now(); const p=orig(name,args);
-      if(name==='track_batch'||!p||typeof p.then!=='function') return p;
+      const t=Date.now(); const b=orig(name,args);
+      if(name==='track_batch'||!b||typeof b.then!=='function') return b;
+      /* v1.1.2: el builder de postgrest-js lanza UNA petición por cada llamada a su .then().
+         Medir con p.then() y devolver el mismo builder hacía que el await de quien llamaba
+         enviase la petición por segunda vez (registros duplicados, reportes que se anulaban
+         solos). Se materializa una única Promise y se mide sobre ella. */
+      const p=(async()=>await b)();
       p.then(res=>{
         try{ const ms=Date.now()-t; if(ms>2000) track('slow',{fn:name,ms});
           if(res&&res.error){ const c=errCode(res.error); track(c==='red'?'net_fail':'error',c==='red'?{fn:name,ms}:{code:c,fn:name,pantalla:TM.lastView}); } }catch(e){}
