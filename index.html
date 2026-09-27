@@ -12,9 +12,18 @@
 <meta name="copyright" content="© 2026 Your Move Game Labs">
 <meta name="description" content="Your Move League — ligas de deporte entre amigos.">
 <title>Your Move League</title>
+<!-- v1.2 · icono de pantalla de inicio (ficheros en la raíz, junto a index.html) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+<meta name="apple-mobile-web-app-title" content="YML">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ff5a3c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#faf9f7; --card:#ffffff; --card2:#f3f1ec; --line:#e5e1da;
@@ -84,8 +93,11 @@
   .ok{color:var(--win);font-size:13px;margin-top:8px;font-weight:600;}
   .big{font-family:var(--disp);font-size:30px;letter-spacing:4px;color:var(--firma);}
   /* v1.1: contadores según yml-contadores-v1.1.html (cifras 30 px semibold, rótulo 9,5 px) */
-  .cd{font-size:30px;font-weight:600;color:var(--firma);text-align:center;margin:0;line-height:1.1;font-variant-numeric:tabular-nums;}
-  .cdlbl{text-align:center;color:var(--dim);font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:600;margin:0 0 5px;}
+  /* v1.2: contador Bebas Neue (propuesta B, marcador de estadio), sin rótulo. El rótulo sigue en el DOM
+     (applyCdState lo mantiene) pero oculto: volver a mostrarlo es quitar el display:none. */
+  .cd{font-family:'Bebas Neue',sans-serif;font-size:76px;font-weight:400;letter-spacing:.03em;color:var(--firma);text-align:center;margin:0;line-height:.92;font-variant-numeric:tabular-nums;}
+  .cd.long{font-size:62px;}
+  .cdlbl{display:none;text-align:center;color:var(--dim);font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:600;margin:0 0 5px;}
   .stickcard{position:sticky;top:10px;z-index:15;background:#1b2d4f;border:1.5px solid transparent;box-shadow:0 10px 30px rgba(27,45,79,.30);overflow:hidden;padding:14px 10px;min-height:104px;display:flex;flex-direction:column;justify-content:center;}
   .stickcard .cdlbl{color:rgba(255,255,255,.55);}
   @media(min-width:720px){ .stickcard{top:64px;} }
@@ -197,9 +209,30 @@
   .drow.mine{background:linear-gradient(90deg,rgba(255,90,60,.13),rgba(255,90,60,.04));margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:9px;}
   .drow.mine.b{background:linear-gradient(90deg,rgba(158,242,13,.04),rgba(158,242,13,.16));}
   /* v1.1: clasificación con podio (oro, plata, bronce) y zona de descenso (3 últimos, si hay 7+) */
-  tr.p1 td{background:linear-gradient(90deg,#fff1c2,#fff8e2);} tr.p1:hover td{background:#fff1c2;}
-  tr.p2 td{background:linear-gradient(90deg,#e9ecf1,#f4f6f8);} tr.p2:hover td{background:#e9ecf1;}
-  tr.p3 td{background:linear-gradient(90deg,#f5e0cd,#faeee4);} tr.p3:hover td{background:#f5e0cd;}
+  /* v1.2: color sólido por fila (el degradado por celda se veía a rayas) */
+  tr.p1 td{background:#fff1c2;} tr.p1:hover td{background:#ffeab0;}
+  tr.p2 td{background:#e9ecf1;} tr.p2:hover td{background:#dfe3ea;}
+  tr.p3 td{background:#f5e0cd;} tr.p3:hover td{background:#f0d5bd;}
+  th.sortable{cursor:pointer;user-select:none;} th.sortable.on{color:var(--firma);}
+  /* v1.2: escudo (anillo → completo → activo → gastado) */
+  .esc{vertical-align:middle;flex:none;margin:0 2px;}
+  .esc-a{animation:escPulse 1.4s ease-in-out infinite;}
+  @keyframes escPulse{0%,100%{filter:drop-shadow(0 0 2px var(--escglow,#ff5a3c));}50%{filter:drop-shadow(0 0 8px var(--escglow,#ff5a3c));}}
+  .esc-pop{animation:escPop .32s cubic-bezier(.2,.8,.2,1.3);}
+  @keyframes escPop{0%{transform:scale(.7);opacity:.4;}60%{transform:scale(1.08);}100%{transform:scale(1);}}
+  .esc-tick{animation:escTick .25s ease-out;transform-origin:12px 14px;}
+  @keyframes escTick{0%{opacity:0;transform:scale(.6);}100%{opacity:1;transform:scale(1);}}
+  .esc-ring{transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1);}
+  .esccnt{font-size:11px;color:var(--dim);font-weight:700;vertical-align:middle;margin:0 4px;}
+  .strip{display:flex;align-items:center;gap:14px;}
+  .strip .sl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .strip .sr{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;}
+  .strip .sr b{font-size:12px;color:var(--duelA);font-variant-numeric:tabular-nums;}
+  .strip .sr small{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
+  .escbox{display:flex;align-items:center;gap:10px;margin-top:8px;background:#fff2ee;border:1px solid #ffc9bd;border-radius:12px;padding:10px 14px;text-align:left;}
+  .escbox b{display:block;font-size:14px;color:var(--duelA);} .escbox span{font-size:12px;color:var(--dim);}
+  .drow.peek{cursor:pointer;} .drow.peek:hover{background:#faf8f4;}
+  @media (prefers-reduced-motion:reduce){.esc-a,.esc-pop,.esc-tick{animation:none;} .esc-ring{transition:none;}}
   tr.desc td{background:#fdeceb;} tr.desc:hover td{background:#fbe0de;}
   /* v1.1: registros del administrador en el track (visualmente distintos, no reportables) */
   .feeditem.adminrec{background:#f7f3ff;border-left:3px solid var(--halo2);border-radius:0 9px 9px 0;}
@@ -322,7 +355,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const BUILD='web v1.1.2';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
+const BUILD='web v1.2';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
 const VERSION=BUILD+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
@@ -698,10 +731,76 @@ function mediaMoves(w,rivalName){
 /* v1.1 (punto 25): referencia de la liga R = un oro + tres platas + el resto de días en bronce
    + conjunta + bonus. Liga de referencia (6 días, conjunta y bonus): R = 13. */
 function refMoves(){ const cfg=L.league.config; return 3+3*2+((cfg.maxDays||7)-4)+(cfg.quedada?1:0)+(cfg.bonusDay>0?1:0); }
-/* v1.1 (punto 27, D13): umbrales de los halos con ceil; con R = 13 → 4, 6 y 8 */
-function haloThr(){ const R=refMoves(); return [Math.ceil(R*0.30),Math.ceil(R*0.45),Math.ceil(R*0.60)]; }
+/* v1.2 (JC, 27-09): umbrales de los halos con ceil; con R = 13 → 3, 6 y 9 (v1.1: 4, 6, 8, se pasaba
+   de uno a otro demasiado deprisa). R=10 → 3/5/7 · R=11 → 3/6/8 · R=12 → 3/6/9 · R=14 → 4/7/10.
+   Solo visual: no interviene en Moves ni en puntos. El primer halo coincide con escudoMin (3). */
+function haloThr(){ const R=refMoves(); return [Math.ceil(R*0.23),Math.ceil(R*0.46),Math.ceil(R*0.69)]; }
 function haloLevel(m){ const t=haloThr(); return m>=t[2]?3:(m>=t[1]?2:(m>=t[0]?1:0)); }
 const HALO_NAMES=['','En racha','Imparable','Leyenda'];
+/* ============ ESCUDO (v1.2) ============
+   E = config.escudoMoves (0 = sin escudo) · M = config.escudoMin (Moves de la semana para activarlo).
+   acum_fin = acum_ini + Moves de la jornada · completo si >= E · activo si completo y Moves >= M ·
+   si activo se consume (gane o pierda) y acum vuelve a 0 · si completo pero no activo, espera.
+   Puntos (standings): victoria 3 · derrota con escudo activo 2 · derrota con días >= bonusDay 1. */
+function escudoCfg(){ const c=L.league.config; return {E:Math.max(0,parseInt(c.escudoMoves)||0), M:Math.max(1,parseInt(c.escudoMin)||3)}; }
+/* réplica exacta de _escudo_ini (setup12): repite la regla desde la J1 sobre las jornadas resueltas
+   anteriores; las resueltas por v1.2 llevan su 'fin' congelado, las anteriores se repiten sin puntos */
+function escudoReplay(rounds,name,E,M){
+  let acum=0;
+  for(const r of rounds){
+    const d=r.data||{};
+    if(d.escudo&&d.escudo[name]){ acum=+d.escudo[name].fin||0; continue; }
+    const mv=+((d.moves||{})[name])||0;
+    const complete=acum+mv>=E, active=complete&&mv>=M;
+    acum=active?0:acum+mv;
+  }
+  return acum;
+}
+/* estado del escudo de un jugador en la jornada w (en vivo, o congelado si la jornada está resuelta por v1.2) */
+function escudoOf(name,w){
+  const {E,M}=escudoCfg(); const off={off:true,state:'off',E,M};
+  if(!E) return off;
+  const p=byName(name); if(!p) return off;
+  if(w===undefined) w=activeW(); if(w<0) return off;
+  const r=roundOf(w);
+  if(r&&r.data&&r.data.escudo&&r.data.escudo[name]){
+    const x=r.data.escudo[name];
+    return {E,M,ini:+x.ini||0,weekMoves:+x.moves||0,acum:(+x.ini||0)+(+x.moves||0),complete:!!x.complete,active:!!x.active,spent:!!x.active,frozen:true,
+      state:x.active?'spent':(x.complete?'complete':'building')};
+  }
+  const prev=(L.rounds||[]).filter(x=>x.number<=w).sort((a,b)=>a.number-b.number);
+  const ini=escudoReplay(prev,name,E,M);
+  const wm=movesOfWeek(p.id,w), acum=ini+wm, complete=acum>=E, active=complete&&wm>=M;
+  return {E,M,ini,weekMoves:wm,acum,complete,active,spent:false,frozen:false,state:active?'active':(complete?'complete':'building')};
+}
+const SHIELD_D='M12 1 L23 5.5 V13 C23 20.5 18 25.5 12 27.5 C6 25.5 1 20.5 1 13 V5.5 Z';
+const SHIELD_COL={A:{ring:'#ff5a3c',track:'#ffe3dd',text:'#c9432a',tick:'#ffffff',astroke:'#ffffff'},
+                  B:{ring:'#9ef20d',track:'#eefbd0',text:'#6d9c00',tick:'#1b2d4f',astroke:'#6d9c00'}};
+/* icono del escudo: st = escudoOf(); side 'A' (yo / coral) o 'B' (rival / lima); size en px; opts.label = contador */
+function shieldSVG(st,side,size,opts){
+  if(!st||st.off) return '';
+  const c=SHIELD_COL[side==='B'?'B':'A'], s=size||22, o=opts||{}, label=o.label!==false;
+  const cnt=t=>label?`<span class="esccnt">${t}</span>`:'';
+  if(st.state==='building'){
+    const C=2*Math.PI*13.5, dash=(C*Math.min(1,st.acum/st.E)).toFixed(1);
+    return `<svg class="esc esc-b" width="${s}" height="${s}" viewBox="0 0 32 32" role="img" aria-label="Escudo ${st.acum} de ${st.E}"><circle cx="16" cy="16" r="13.5" fill="none" stroke="${c.track}" stroke-width="3.6"/><circle class="esc-ring" cx="16" cy="16" r="13.5" fill="none" stroke="${c.ring}" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="${dash} 200" transform="rotate(-90 16 16)"/><g transform="translate(9.4 8) scale(0.55)"><path d="${SHIELD_D}" fill="#fff" stroke="${c.text}" stroke-width="2.4" stroke-linejoin="round"/></g></svg>${cnt(st.acum+'/'+st.E)}`;
+  }
+  if(st.state==='spent'){
+    return `<svg class="esc esc-s" width="${s}" height="${s}" viewBox="0 0 32 32" role="img" aria-label="Escudo gastado"><g transform="translate(2.5 1) scale(1.13)"><path d="${SHIELD_D}" fill="#eceff3" stroke="#b7bec9" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="2 1.4"/><path d="M12.5 3 L10 11 L14.5 13.5 L9.5 25" fill="none" stroke="#b7bec9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg>${cnt('gastado')}`;
+  }
+  const active=st.state==='active';
+  /* completo sin activar: contador de activación (Moves de la semana / M); activo: sin contador */
+  const act=(!active&&st.M)?cnt(Math.min(st.weekMoves||0,st.M-1)+'/'+st.M):'';
+  return `<svg class="esc esc-c${active?' esc-a':''}${o.pop?' esc-pop':''}" style="--escglow:${c.ring}" width="${s}" height="${s}" viewBox="0 0 32 32" role="img" aria-label="${active?'Escudo activo':'Escudo completo'}"><g transform="translate(2.5 1) scale(1.13)"><path d="${SHIELD_D}" fill="${c.ring}" stroke="${active?c.astroke:c.text}" stroke-width="1.8" stroke-linejoin="round"/>${active?`<path class="esc-tick" d="M7.5 14 L10.8 17.3 L16.8 10.5" fill="none" stroke="${c.tick}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`:''}</g></svg>${act}`;
+}
+/* texto de ayuda de una línea (minihint y tira de Moves) */
+function escudoHint(st){
+  if(!st||st.off) return '';
+  if(st.state==='building') return `te faltan ${st.E-st.acum} Moves para el escudo`;
+  if(st.state==='complete') return `escudo completo · se activa con ${st.M} Moves esta semana`;
+  if(st.state==='active') return 'escudo activo · si pierdes, 2 pts';
+  return 'escudo gastado';
+}
 /* v1.0: umbral de reportes = ceil(reportPct × (jugadores − 1)); el autor no se reporta.
    Se redondea antes del ceil para que 0,70×10 no dé 7,000000001 → 8. */
 function reportThr(){ const den=Math.max(1,L.players.length-1); return Math.max(1,Math.ceil(+(reportPct()*den).toFixed(6))); }
@@ -789,7 +888,8 @@ function standings(){
       if(st[d.winner]){ st[d.winner].v++; st[d.winner].pts+=3; }
       const los=d.winner===d.a?d.b:d.a;
       const ld=d.winner===d.a?d.days_b:d.days_a;
-      if(st[los]&&bd>0&&ld>=bd) st[los].pts+=1;
+      const esc=d.winner===d.a?!!d.esc_b:!!d.esc_a;   // v1.2: escudo activo del perdedor (solo jornadas v1.2)
+      if(st[los]){ if(esc) st[los].pts+=2; else if(bd>0&&ld>=bd) st[los].pts+=1; }
     });
   });
   const w=activeW();
@@ -798,16 +898,26 @@ function standings(){
 }
 let FILTERP=null;
 function filterP(name){ FILTERP=FILTERP===name?null:name; render(); }
-/* v1.1 (punto 45): podio oro/plata/bronce y descenso (3 últimos) solo con 7+ jugadores */
+/* v1.2: orden de la clasificación por Pts (defecto), Días o Moves; se reinicia al cambiar de pestaña */
+let SORT='pts';
+function setSort(col){ SORT=SORT===col?'pts':col; try{ track('standings_sort',{col:SORT}); }catch(e){} render(); }
+/* v1.1 (punto 45): podio oro/plata/bronce y descenso (3 últimos) solo con 7+ jugadores.
+   v1.2: podio y descenso solo con el orden por puntos; escudo junto a los Moves. */
 function clasifHTML(){
-  const st=standings(), n=st.length, zones=n>=7;
-  return `<table><tr><th>#</th><th>Nombre</th><th class="num">Pts</th><th class="num">Días</th><th class="num">Moves</th><th>Forma</th></tr>${
-    st.map((s,i)=>{ const cls=i<3?'p'+(i+1):(zones&&i>=n-3?'desc':'');
-      return `<tr class="${cls}" style="cursor:pointer${FILTERP===s.name?';outline:2px solid var(--firma);outline-offset:-2px':''}" onclick="filterP('${esc(s.name)}')"><td>${i+1}</td><td>${esc(s.name)}${catBadge(byName(s.name))}</td><td class="num"><b>${s.pts}</b></td><td class="num">${s.dias}</td><td class="num">${s.moves}</td><td>${formChips(s.name,5)}</td></tr>`; }).join('')}
-  </table>`;
+  let st=standings(); const n=st.length, zones=n>=7, w=activeW();
+  if(SORT==='dias') st=st.slice().sort((a,b)=>b.dias-a.dias||b.pts-a.pts||b.moves-a.moves||a.name.localeCompare(b.name));
+  if(SORT==='moves') st=st.slice().sort((a,b)=>b.moves-a.moves||b.pts-a.pts||b.dias-a.dias||a.name.localeCompare(b.name));
+  const th=(col,lab)=>`<th class="num sortable ${SORT===col?'on':''}" onclick="setSort('${col}')">${lab}${SORT===col?' ▾':''}</th>`;
+  const {E}=escudoCfg();
+  return `<table><tr><th>#</th><th>Nombre</th>${th('pts','Pts')}${th('dias','Días')}${th('moves','Moves')}<th>Forma</th></tr>${
+    st.map((s,i)=>{ const cls=SORT==='pts'?(i<3?'p'+(i+1):(zones&&i>=n-3?'desc':'')):'';
+      return `<tr class="${cls}" style="cursor:pointer${FILTERP===s.name?';outline:2px solid var(--firma);outline-offset:-2px':''}" onclick="filterP('${esc(s.name)}')"><td>${i+1}</td><td>${esc(s.name)}${catBadge(byName(s.name))}</td><td class="num"><b>${s.pts}</b></td><td class="num">${s.dias}</td><td class="num" style="white-space:nowrap">${s.moves}${E&&w>=0?shieldSVG(escudoOf(s.name,w),'A',15,{label:false}):''}</td><td>${formChips(s.name,5)}</td></tr>`; }).join('')}
+  </table>${E?`<p class="msg" style="margin-top:8px;font-size:11.5px">${shieldSVG({state:'building',acum:9,E:20},'A',13,{label:false})} escudo en construcción · ${shieldSVG({state:'complete'},'A',13)} completo · ${shieldSVG({state:'active'},'A',13)} activo esta jornada</p>`:''}`;
 }
 
 /* ============ CUENTA ATRÁS ============ */
+/* v1.2: el formato largo (3d 14h 22m) va un punto más pequeño para caber en la tarjeta */
+function setCd(el,t){ el.textContent=t; el.classList.toggle('long',/\dd /.test(t)); }
 function fmtCd(ms){
   if(ms<=0) return null;
   const s=Math.floor(ms/1000), d=Math.floor(s/86400), h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60), sec=s%60;
@@ -837,13 +947,13 @@ setInterval(()=>{
   if(cj){
     const target=calWeek()<0?weekStart(0):weekClose(activeW());
     const t=fmtCd(target-nowT());
-    if(t){ cj.textContent=t; applyCdState(); }
+    if(t){ setCd(cj,t); applyCdState(); }
     else { render(); return; }   // llegó a 0 → repintar (y se dispara la resolución)
   }
   const cr=document.getElementById('cdR');   // descanso entre jornadas
   if(cr){
     const t=fmtCd(weekEnd(activeW())-nowT());
-    if(t) cr.textContent=t;
+    if(t) setCd(cr,t);
     else { render(); return; }   // lunes 00:00 → nueva jornada
   }
   const cd=document.getElementById('cdD');
@@ -851,7 +961,7 @@ setInterval(()=>{
     const n=nowT(), mid=new Date(n); mid.setHours(24,0,0,0);
     const target=Math.min(mid.getTime(), weekClose(activeW()).getTime());
     const t=fmtCd(target-n);
-    if(t){ cd.textContent=t; applyCdState(); }
+    if(t){ setCd(cd,t); applyCdState(); }
     else { render(); return; }
   }
   /* v1.1 (punto 5): la resolución desde la app es el respaldo del pg_cron y se reintenta sola */
@@ -863,7 +973,7 @@ function buildNav(){
   document.querySelectorAll('#nav button').forEach((b,i)=>{
     const [t,lab,icn]=NAV[i];
     b.innerHTML=ic(icn,21)+`<span>${lab}</span>`;
-    b.onclick=()=>{ TAB=t; render(); softRefresh(); };
+    b.onclick=()=>{ TAB=t; VIEW_DUEL=null; SORT='pts'; render(); softRefresh(); };
   });
 }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
@@ -983,6 +1093,10 @@ function vCreate(){
       <div style="flex:1"><label>Máx. días/sem</label><select id="cMax"><option>5</option><option selected>6</option><option>7</option></select></div>
       <div style="flex:1"><label>Bonus regularidad</label><select id="cBonus"><option value="0">No</option><option value="3">Día 3</option><option value="4" selected>Día 4</option><option value="5">Día 5</option></select></div>
     </div>
+    <div class="row">
+      <div style="flex:1"><label>Escudo (Moves acumulados)</label><select id="cEscudo"><option value="0">Sin escudo</option><option value="1" >R</option><option value="1.25">1,25·R</option><option value="1.5" selected>1,5·R (recomendado)</option><option value="2">2·R</option></select></div>
+      <div style="flex:1"><label>Se activa con</label><select id="cEscMin">${[1,2,3,4,5].map(x=>`<option value="${x}" ${x===3?'selected':''}>${x} Move${x>1?'s':''} en la semana</option>`).join('')}</select></div>
+    </div>
     <div class="row" style="margin-top:12px;align-items:flex-end">
       <label style="flex:2;margin:0"><input type="checkbox" id="cQuedada" checked style="width:auto" onchange="document.getElementById('cQMin').disabled=!this.checked"> Actividad conjunta semanal (+1 Move)</label>
       <div style="flex:1;min-width:130px"><label style="margin-top:0">Mínimo de personas</label><input type="number" id="cQMin" value="${QUEDADA_MIN_DEF}" min="${QUEDADA_MIN_DEF}" max="99"></div>
@@ -1007,6 +1121,9 @@ function vCreate(){
 const DECLARACION_ADMIN='Confirmo que he informado a las personas que voy a inscribir y que cuento con su permiso para añadirlas a esta liga. Si alguna de ellas es menor de 14 años, confirmo que tengo la autorización de su padre, madre o tutor.';
 /* v1.1 (punto 18): nombres comparados sin mayúsculas, tildes ni espacios sobrantes (réplica de _norm_name) */
 function normName(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().replace(/\s+/g,' ').toLowerCase(); }
+/* v1.2: escudo por defecto = ceil(1,5·R) con la R de la config del formulario (réplica de _ref_moves) */
+function refMovesOf(cfg){ return 3+3*2+((cfg.maxDays||7)-4)+(cfg.quedada?1:0)+(cfg.bonusDay>0?1:0); }
+function escudoFromFactor(f,cfg){ if(!f) return 0; return Math.ceil(refMovesOf(cfg)*f); }
 let CREATE_KEY=null;
 async function createLeague(){
   const lines=$('#cPlayers').value.split('\n').map(x=>x.trim()).filter(Boolean);
@@ -1027,6 +1144,8 @@ async function createLeague(){
     weeks:parseInt($('#cWeeks').value)||12, maxDays:parseInt($('#cMax').value),
     bonusDay:parseInt($('#cBonus').value), quedada:$('#cQuedada').checked,
     quedadaMin:qMin, reportPct:parseFloat($('#cRepPct').value)||REPORT_PCT_NEW,   // v1.1: elegido al crear (40 % por defecto)
+    escudoMoves:escudoFromFactor(parseFloat($('#cEscudo').value),{maxDays:parseInt($('#cMax').value),quedada:$('#cQuedada').checked,bonusDay:parseInt($('#cBonus').value)}),   // v1.2
+    escudoMin:parseInt($('#cEscMin').value)||3,
     oculto:$('#cOculto').checked, levels:$('#cLevels').value, version:VERSION,
     beta:DEV   // v0.9: las ligas creadas en beta quedan marcadas y no se abren en producción
   };
@@ -1127,11 +1246,15 @@ async function goLeague(code){
     render();
   }catch(e){ if($('#jErr'))$('#jErr').textContent=e.message||'Error de conexión'; else toast(e.message||'Error de conexión'); track('league_open_fail',{motivo:errCode(e)}); OPEN_VIA=null; }
 }
-let lastFetch=0;
+let lastFetch=0, REFRESH_RETRY=0;
+/* v1.2: si get_league falla (red), se avisa y se reintenta una vez a los 2 s; antes fallaba en silencio
+   y la pantalla se quedaba desactualizada hasta cambiar de pestaña */
 async function refresh(){
   lastFetch=Date.now();
   const {data,error}=await sb.rpc('get_league',{p_code:CUR});
-  if(!error&&data){ L=data; render(); }
+  if(!error&&data){ L=data; REFRESH_RETRY=0; render(); return true; }
+  if(REFRESH_RETRY<1){ REFRESH_RETRY++; toast('Sin conexión · reintentando…'); await new Promise(r=>setTimeout(r,2000)); return refresh(); }
+  REFRESH_RETRY=0; toast('Sin conexión. Cambia de pestaña o desliza para actualizar.'); return false;
 }
 /* actualización silenciosa: al volver a la app o cambiar de pestaña (máx. 1 vez cada 8 s) */
 function softRefresh(){ if(L&&CUR&&Date.now()-lastFetch>8000) refresh(); }
@@ -1206,14 +1329,15 @@ function movesOfName(name,rival,w,d){
 /* fila de enfrentamiento unificada (Jornada y Liga): marcador del duelo en el centro
    («/» hasta que la jornada se resuelve y la he visto), Moves junto a cada nombre y las
    medallas a los lados. r = jornada resuelta y VISIBLE (si no, se pinta como en curso). */
-function duelRow(a,b,w,r,mine){
+function duelRow(a,b,w,r,mine,peekable){
   const pa=byName(a), pb=byName(b);
   const d=r?(r.data.duels||[]).find(x=>x.a===a&&x.b===b):null;
   let sa=0,sb=0;
   if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sa=d.winner===a?hi:lo; sb=d.winner===b?hi:lo; }
   const wa=d&&!d.nulo&&d.winner===a, wb=d&&!d.nulo&&d.winner===b;
   const ma=movesOfName(a,b,w,d), mb=movesOfName(b,a,w,d);
-  return `<div class="drow${mine?' mine'+(mine==='b'?' b':''):''}">
+  const sel=VIEW_DUEL&&VIEW_DUEL.a===a&&VIEW_DUEL.b===b;
+  return `<div class="drow${mine?' mine'+(mine==='b'?' b':''):''}${peekable?' peek':''}${sel?' mine':''}"${peekable?` onclick="peekDuel('${esc(a)}','${esc(b)}')" title="Ver este duelo en la pista"`:''}>
     <span class="dn"><span class="${wa?'wname':''}">${esc(a)}</span></span><span class="dmv">${ma}</span>
     <span class="dm a">${pa?medIcons(pa.id,w):''}</span>
     <span class="ds">${d?(d.nulo?'—':sa+'–'+sb):'/'}</span>
@@ -1230,9 +1354,8 @@ function playPanel(j){
   const myPair=me?pairsFor(j).find(([a,b])=>a===me.name||b===me.name):null;
   TM.once('panel'+j,'play_panel_view',{week:j+1,min_desde_cierre:minsSinceClose(j),tiene_duelo:!!myPair});
   return `<div class="card" style="text-align:center">
-    <div class="cdlbl">Se ha resuelto la</div>
     <div class="bigjt">JORNADA ${j+1}</div>
-    <button class="playbig" onclick="run(this,watchRound,${j})" title="Ver la jornada">${ic('play',32)}</button>
+    <button class="btn" style="margin:12px auto 4px;padding:14px 34px;font-size:17px" onclick="run(this,watchRound,${j})">${ic('play',18)} ¡Jugar!</button>
   </div>`;
 }
 function resultBanner(j){
@@ -1246,9 +1369,12 @@ function resultBanner(j){
     MEM[CUR]=MEM[CUR]||{}; MEM[CUR].celebrated=MEM[CUR].celebrated||{}; MEM[CUR].celebrated[j]=true; saveMem();
     setTimeout(confetti,250);
   }
+  /* v1.2: escudo activo del perdedor → 2 pts; del ganador → consumido sin efecto */
+  const esc_me=d.a===me.name?!!d.esc_a:!!d.esc_b, {E}=escudoCfg();
+  const st=E?escudoOf(me.name,j):null;
   return win
-    ?`<div class="card winban"><div class="bigjt">¡VICTORIA!</div><p class="msg">Te llevas la jornada ${j+1} (${d.score}).</p></div>`
-    :`<div class="card loseban"><div class="bigjt" style="font-size:23px;color:var(--dim)">Derrota</div><p class="msg">La jornada ${j+1} se fue ${d.score}. La próxima cae.</p></div>`;
+    ?`<div class="card winban"><div class="bigjt">¡VICTORIA!</div><p class="msg">Te llevas la jornada ${j+1} (${d.score}).</p>${esc_me?`<p class="msg" style="margin-top:6px">Escudo consumido: no hizo falta.</p>`:''}</div>`
+    :`<div class="card loseban"><div class="bigjt" style="font-size:23px;color:var(--dim)">Derrota</div><p class="msg">La jornada ${j+1} se fue ${d.score}.${esc_me?'':' La próxima cae.'}</p>${esc_me?`<div class="escbox">${shieldSVG({state:'spent'},'A',30,{label:false})}<div><b>El escudo ha aguantado: +2 pts</b><span>Gastado. El lunes vuelves a 0 / ${E}.</span></div></div>`:''}</div>`;
 }
 function confetti(){
   const cols=['#ff5a3c','#2b6cb0','#2f9e63','#e8b83a','#7db4e8'];
@@ -1350,65 +1476,80 @@ function tJornada(){
   if(r){
     if(t>=weekClose(w)&&t<weekEnd(w)){
       stick=' restcard';
-      cdHtml=`<div class="cdlbl">Descanso · la jornada ${w+2} arranca en</div><div class="cd" id="cdR">…</div>`;
+      /* v1.2: durante el descanso se puede volver a ver la jornada recién jugada */
+      cdHtml=`<div class="cdlbl">Descanso · la jornada ${w+2} arranca en</div><div class="cd" id="cdR">…</div>
+      <div class="minirow" style="margin-top:8px"><button onclick="replay(${w})">Repetición jornada ${w+1}</button></div>`;
     } else {
-      cdHtml=`<p class="ok">Jornada ${w+1} resuelta.</p>
-      <button class="btn sec" onclick="replay(${w})">${ic('play')} Repetir la animación</button>`;
+      cdHtml=`<p class="ok">Jornada ${w+1} jugada.</p>
+      <button class="btn sec" onclick="replay(${w})">${ic('play')} Repetición jornada ${w+1}</button>`;
     }
   } else if(t>=weekClose(w)){
-    cdHtml=`<p class="msg">La jornada ${w+1} ha llegado a su cierre. Resolviendo…</p>
+    cdHtml=`<p class="msg">Preparando enfrentamientos…</p>
     <button class="btn sec" onclick="run(this,maybeResolve,true)">${ic('refresh')} Comprobar de nuevo</button>
     <div class="err" id="rErr2"></div>`;
   } else {
     stick=' stickcard '+cdState(w);
     cdHtml=`<div class="cdlbl">${cdLabel(cdState(w),'Cierre de la jornada')}</div><div class="cd" id="cdJ">…</div>`;
   }
-  // mi duelo
+  // mi duelo · v1.2: o el duelo ajeno elegido tocando una fila de «Jornada X» (VIEW_DUEL)
   let duelHtml=me?'<p class="msg">Esta semana descansas.</p>':'<p class="msg">Estás como organizador; no participas en esta liga.</p>';
-  if(pair){
-    const rivalName=pair[0]===me.name?pair[1]:pair[0];
-    const rival=byName(rivalName);
-    const d=r?(r.data.duels||[]).find(x=>x.a===pair[0]&&x.b===pair[1]):null;
+  let duelTitle=me?'Mi jornada':'Duelos';
+  if(VIEW_DUEL&&(cfg.oculto||!pairsFor(w).some(([a,b])=>a===VIEW_DUEL.a&&b===VIEW_DUEL.b))) VIEW_DUEL=null;
+  const peek=VIEW_DUEL;
+  const shown=peek?[peek.a,peek.b]:pair;
+  if(shown){
+    let nameA=shown[0], nameB=shown[1];
+    if(peek){ if(nameA==='La Media'){ nameA=shown[1]; nameB=shown[0]; } }
+    else if(nameA!==me.name){ nameA=me.name; nameB=shown[0]; }   // yo siempre en A
+    const pA=byName(nameA), pB=byName(nameB);
+    const d=r?(r.data.duels||[]).find(x=>x.a===shown[0]&&x.b===shown[1]):null;
     /* Moves: en vivo hasta resolver; congelados (instantánea) una vez resuelta */
-    const ma=d?(d.a===me.name?d.ma:d.mb):movesOfWeek(me.id,w);
-    const mb=d?(d.a===me.name?d.mb:d.ma):(rival?movesOfWeek(rival.id,w):mediaMoves(w,me.name));
-    /* v1.0: fuera los porcentajes (se leían como certeza). serieProb() se conserva
-       para el script de auditoría del sorteo. */
-    let sMine=0,sRiv=0;
-    if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sMine=d.winner===me.name?hi:lo; sRiv=d.winner===me.name?lo:hi; }
+    const ma=movesOfName(nameA,nameB,w,d), mb=movesOfName(nameB,nameA,w,d);
+    let sA=0,sB=0;
+    if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sA=d.winner===nameA?hi:lo; sB=d.winner===nameA?lo:hi; }
+    const escA=escudoOf(nameA,w), escB=pB?escudoOf(nameB,w):null;
     let resHtml='';
-    if(d) resHtml=`<p class="${d.nulo?'msg':(d.winner===me.name?'ok':'err')}" style="margin-top:8px;text-align:center">${d.nulo?'Duelo nulo.':(d.winner===me.name?'¡Victoria!':'Derrota — la próxima cae.')}</p>`;
-    TM.once('duel','duel_view',{week:w+1,dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),moves_propios:ma,moves_rival:mb,es_media:!rival});
+    if(d){
+      if(peek) resHtml=`<p class="msg" style="margin-top:8px;text-align:center">${d.nulo?'Duelo nulo.':`Ganó ${esc(d.winner)} (${d.score}).`}</p>`;
+      else resHtml=`<p class="${d.nulo?'msg':(d.winner===me.name?'ok':'err')}" style="margin-top:8px;text-align:center">${d.nulo?'Duelo nulo.':(d.winner===me.name?'¡Victoria!':(escA.state==='spent'?'Derrota — el escudo ha aguantado: 2 pts.':'Derrota — la próxima cae.'))}</p>`;
+    }
+    if(!peek) TM.once('duel','duel_view',{week:w+1,dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),moves_propios:ma,moves_rival:mb,es_media:!pB});
+    else duelTitle=`Duelo · ${esc(nameA)} – ${esc(nameB)}`;
+    const hintTxt=(!d&&escA&&!escA.off&&!peek)?`${haloLevel(ma)?HALO_NAMES[haloLevel(ma)]+' · ':''}${escudoHint(escA)}`:'';
     duelHtml=`<div class="duelbox">
-      <div class="names"><span style="color:var(--duelA)">${esc(me.name)}</span><span style="color:var(--duelB)">${esc(rivalName)}</span></div>
+      <div class="names"><span style="color:var(--duelA)">${esc(nameA)}${shieldSVG(escA,'A',22)}</span><span style="color:var(--duelB)">${escB?shieldSVG(escB,'B',22):''}${esc(nameB)}</span></div>
       <div class="bars">${movesBar(ma,'A')}${movesBar(mb,'B')}</div>
-      <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(me.name)} ${ma} Moves, ${esc(rivalName)} ${mb} Moves${d?(d.nulo?', duelo nulo':', resultado '+sMine+' a '+sRiv):''}"></canvas>
-      <div class="minihint" id="miniHint"></div>
+      <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(nameA)} ${ma} Moves, ${esc(nameB)} ${mb} Moves${d?(d.nulo?', duelo nulo':', resultado '+sA+' a '+sB):''}"></canvas>
+      <div class="minihint" id="miniHint">${hintTxt}</div>
       ${resHtml}
+      ${peek?`<div class="minirow"><button onclick="VIEW_DUEL=null;render()">Volver a mi duelo</button></div>`:''}
     </div>`;
     /* v1.1 (punto 31, D9): marcador dentro del campo solo al resolverse; se mantiene durante el descanso */
-    const score=d?{a:d.nulo?null:sMine,b:d.nulo?null:sRiv}:null;
-    miniSpec={w, score, a:{pid:me.id,moves:ma,segs:d?fitSegs(segmentsFor(me.id,w),ma):segmentsFor(me.id,w)}, b:{pid:rival?rival.id:'__media__',moves:mb,segs:rival?(d?fitSegs(segmentsFor(rival.id,w),mb):segmentsFor(rival.id,w)):neutralSegs(mb)}};
+    const score=d?{a:d.nulo?null:sA,b:d.nulo?null:sB}:null;
+    miniSpec={w, score, a:{pid:pA.id,moves:ma,segs:d?fitSegs(segmentsFor(pA.id,w),ma):segmentsFor(pA.id,w)}, b:{pid:pB?pB.id:'__media__',moves:mb,segs:pB?(d?fitSegs(segmentsFor(pB.id,w),mb):segmentsFor(pB.id,w)):neutralSegs(mb)}};
   } else miniSpec=null;
   // v1.1 (punto 34): JORNADA X con todos los enfrentamientos, el mío resaltado
   const all=pairsFor(w);
   if(cfg.quedada) TM.once('qstate','quedada_state_view',{week:w+1,count:quedadaCount(w),min:quedadaMin(),ok:quedadaOK(w)});
   if(all.length) TM.once('otros','otros_duelos_view',{week:w+1,n:all.length});
-  const prevR=w>0&&roundVisible(w-1)?roundOf(w-1):null;
+  /* v1.2: la jornada anterior solo mientras no haya otra ya jugada (en el descanso se repite la recién jugada) */
+  const prevR=(!r&&w>0&&roundVisible(w-1))?roundOf(w-1):null;
   /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
   const banner=(r&&t<weekEnd(w))?resultBanner(w):'';
   $('#main').innerHTML=`
   ${banner}
   <div class="card${stick}" ${stick.includes('stickcard')?'data-cd="Cierre de la jornada"':''}>${cdHtml}</div>
-  <div class="card"><h2>${ic('zap')} ${me?'Mi jornada':'Duelos'}</h2>${duelHtml}</div>
-  ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)))).join('')}</div>`:''}
+  <div class="card"><h2>${ic('zap')} ${duelTitle}</h2>${duelHtml}</div>
+  ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)),!cfg.oculto&&me&&a!==me.name&&b!==me.name)).join('')}</div>`:''}
   ${prevR?`<div class="card"><h2>${ic('play')} Jornada anterior · J${w}</h2>
     ${pairsFor(w-1).map(([a,b])=>duelRow(a,b,w-1,prevR)).join('')}
-    <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetir la animación</button></div>`:''}
+    <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetición jornada ${w}</button></div>`:''}
   `+btnBar();
   if(miniSpec) renderMini(miniSpec);
 }
 let miniSpec=null;
+let VIEW_DUEL=null;   // v1.2: duelo ajeno mostrado en la tarjeta superior de Jornada ({a,b}); se limpia al cambiar de pestaña
+function peekDuel(a,b){ VIEW_DUEL={a,b}; try{ track('duel_peek',{week:activeW()+1}); }catch(e){} render(); }
 let ANIM_MODE='vivo';
 function replay(w){
   const r=roundOf(w); if(!r) return;
@@ -1531,6 +1672,7 @@ function tMoves(){
   ${rest
     ?`<div class="card restcard"><div class="cdlbl">Descanso · nueva jornada en</div><div class="cd" id="cdR">…</div></div>`
     :`<div class="card stickcard ${cdSt}" data-cd="Cierre del día"><div class="cdlbl">${cdLabel(cdSt,'Cierre del día')}</div><div class="cd" id="cdD">…</div></div>`}
+  ${movesStrip(me,w)}
   <div class="card"><h2>${ic('activity')} ${todayAct&&!EDITING?'Actividad de hoy':'Consigue tus Moves'} — ${esc(me?me.name:'')}</h2>${formHtml}</div>
   <div class="card"><h2>${ic('calendar')} Mi semana · ${dias}/${cfg.maxDays||7} días</h2>
     ${(myActs.length||myAdj.length)?`<table><tr><th>Día</th><th>Hora</th><th>Actividad</th></tr>${
@@ -1539,6 +1681,37 @@ function tMoves(){
       <p class="msg" style="margin-top:6px">${ic('lock',12)} Solo el registro de hoy se puede editar. Errores de otros días: contacta con tu admin.</p>`
       :'<p class="msg empty">Aún nada esta semana. Your move.</p>'}
   </div>`+btnBar();
+  animateStrip();
+}
+/* v1.2: tira «Mi jornada» en Moves — barra de Moves con halo (la misma de Jornada), número de Moves de
+   la semana y escudo. Es donde se ve el efecto de cada registro sin salir de la pestaña. */
+let STRIP_PREV=null;
+function stripState(me){ if(!me) return null; const w=activeW(); if(w<0) return null; const st=escudoOf(me.name,w); return {moves:movesOfWeek(me.id,w),state:st.off?'off':st.state,acum:st.acum||0,E:st.E}; }
+function movesStrip(me,w){
+  if(!me||w<0||roundOf(w)) return '';
+  const m=movesOfWeek(me.id,w), st=escudoOf(me.name,w), lvl=haloLevel(m);
+  /* JC (27-09): solo el nombre del halo alcanzado; nada de cuentas ni ayudas */
+  const halo=lvl?`¡${HALO_NAMES[lvl]}!`:'';
+  const prev=STRIP_PREV, pop=!!(prev&&!st.off&&st.state!==prev.state&&(st.state==='complete'||st.state==='active'));
+  /* bajo el escudo: construyendo → acumulado/E · completo sin activar → Moves de la semana/M · activo → nada */
+  const cnt=st.off?'':(st.state==='building'?st.acum+' / '+st.E:(st.state==='complete'?Math.min(st.weekMoves,st.M-1)+' / '+st.M:''));
+  return `<div class="card strip" id="strip">
+    <div class="sl"><h2 style="margin-bottom:2px">${ic('zap')} Mi jornada · J${w+1}</h2>${movesBar(m,'A')}${halo?`<div style="font-size:13px;font-weight:800;color:var(--duelA)">${halo}</div>`:''}</div>
+    ${st.off?'':`<div class="sr">${shieldSVG(st,'A',54,{label:false,pop})}${cnt?`<b>${cnt}</b>`:''}</div>`}
+  </div>`;
+}
+/* anima la tira tras un registro: la barra crece desde el ancho anterior y el anillo desde el arco anterior */
+function animateStrip(){
+  const el=$('#strip'); const prev=STRIP_PREV; STRIP_PREV=null;
+  if(!el) return;
+  el.querySelectorAll('.track[data-halo]').forEach(tr=>barGlow(tr,0,true));
+  if(!prev||REDUCED()) return;
+  const fill=el.querySelector('.track .fill');
+  if(fill){ const R=refMoves(), from=(Math.min(1,Math.max(0,prev.moves)/R)*100).toFixed(1)+'%', to=fill.style.width;
+    if(from!==to){ fill.style.transition='none'; fill.style.width=from; void fill.offsetWidth; fill.style.transition='width .35s cubic-bezier(.2,.8,.2,1.2)'; fill.style.width=to; } }
+  const ring=el.querySelector('.esc-ring');
+  if(ring&&prev.state==='building'){ const C=2*Math.PI*13.5, from=(C*Math.min(1,prev.acum/prev.E)).toFixed(1)+' 200', to=ring.getAttribute('stroke-dasharray');
+    if(from!==to){ ring.style.transition='none'; ring.setAttribute('stroke-dasharray',from); void ring.getBoundingClientRect(); ring.style.transition=''; requestAnimationFrame(()=>ring.setAttribute('stroke-dasharray',to)); } }
 }
 /* telemetría del formulario de registro: apertura, cambios y abandono (sin tocar el flujo) */
 let TMF=null;
@@ -1589,9 +1762,21 @@ function readForm(){
   if(otro&&!selOther.trim()) return {error:'Indica de qué actividad se trata.'};
   return {level:selLevel,activity:legacy?'sin especificar':selType,activity2:selType2||null,other:otro?selOther.trim():null,quedada:qChecked};
 }
+/* v1.2: mensaje tras registrar según lo que le pase al escudo (prev = estado antes del registro) */
+function escudoToast(prev){
+  const s=ses(), me=s?L.players.find(p=>p.id===s.playerId):null;
+  const st=me?escudoOf(me.name):null;
+  if(!st||st.off||!prev||prev.off) return 'Actividad registrada';
+  const dm=st.weekMoves-prev.weekMoves;
+  if(st.state==='active'&&prev.state!=='active'){ track('escudo_active',{semana:st.weekMoves}); return '¡Escudo activo! Si pierdes esta jornada, 2 pts'; }
+  if(st.state==='complete'&&prev.state==='building'){ track('escudo_ready',{acum:st.acum,E:st.E}); return `Escudo completo · se activa al ${st.M}.º Move de la semana`; }
+  if(st.state==='building') return `${dm>0?'+'+dm+' Moves · ':''}escudo ${st.acum}/${st.E}`;
+  return dm>0?`+${dm} Moves`:'Registro actualizado';
+}
 async function registrar(){
   const s=ses(); $('#aErr').textContent='';
   const f=readForm(); if(f.error){ $('#aErr').textContent=f.error; return; }
+  const me0=L.players.find(p=>p.id===s.playerId), prevEsc=me0?escudoOf(me0.name):null; STRIP_PREV=stripState(me0);
   try{
     const {error}=await sb.rpc('log_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,
       p_day:leagueDay(),p_level:f.level,p_activity:f.activity,p_quedada:f.quedada,p_activity2:f.activity2,p_other:f.other});
@@ -1599,8 +1784,9 @@ async function registrar(){
     try{ const w=activeW(), t=nowT(); track('log_submit',{actividad:f.activity,actividad2:f.activity2,otro:!!f.other,level:f.level,quedada:f.quedada,solo_conjunta:f.activity==='[conjunta]',
       dia_jornada:Math.min(7,Math.floor((t-weekStart(w))/86400000)+1),dia_semana:t.getDay(),hora_local:t.getHours(),week:w+1,
       dias_previos:daysOfWeek(s.playerId,w),ms_en_formulario:TMF?Date.now()-TMF.t0:null,cambios_tipo:TMF?TMF.tipo:null,cambios_nivel:TMF?TMF.nivel:null}); TMF=null; }catch(e2){}
-    resetForm(); toast('Actividad registrada');
-    await refresh(); TAB='jornada'; render();
+    resetForm();
+    /* v1.2: sin saltar a Jornada; la tira «Mi jornada» de esta pestaña anima la barra y el escudo */
+    await refresh(); toast(escudoToast(prevEsc));
   }catch(e){ $('#aErr').textContent=e.message||'Error al registrar'; track('log_fail',{code:errCode(e)}); }
 }
 async function guardarEdicion(){
@@ -1613,8 +1799,10 @@ async function guardarEdicion(){
     if(error) throw error;
     try{ const campos=[]; if(prev){ if(prev.activity!==f.activity||(prev.activity2||null)!==f.activity2) campos.push('actividad'); if(prev.level!==f.level) campos.push('nivel'); if(!!prev.quedada!==!!f.quedada) campos.push('conjunta'); }
       track('log_edit',{campos,edits:(prev?prev.edits||0:0)+1,min_desde_registro:prev&&prev.created_at?Math.round((Date.now()-new Date(prev.created_at))/60000):null}); }catch(e2){}
-    EDITING=false; resetForm(); toast('Registro actualizado');
-    await refresh();   // Moves y duelo en vivo al día en el acto
+    EDITING=false; resetForm();
+    STRIP_PREV=stripState(L.players.find(p=>p.id===s.playerId));
+    const prevEsc=escudoOf(L.players.find(p=>p.id===s.playerId).name);
+    await refresh(); toast(escudoToast(prevEsc));   // Moves y duelo en vivo al día en el acto
   }catch(e){ $('#aErr').textContent=e.message||'Error al guardar'; track('log_fail',{code:errCode(e)}); }
 }
 /* eliminar el registro de hoy: sin confirm() del navegador — dos toques */
@@ -1626,6 +1814,7 @@ async function borrarHoy(){
     const {error}=await sb.rpc('delete_own_activity',{p_code:CUR,p_player:s.playerId,p_pin:s.pin,p_day:leagueDay()});
     if(error) throw error;
     track('log_delete',{doble_toque:true});
+    STRIP_PREV=stripState(L.players.find(p=>p.id===s.playerId));
     toast('Registro de hoy eliminado'); await refresh();
   }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al eliminar'; else toast(e.message||'Error'); track('log_fail',{code:errCode(e)}); }
 }
@@ -1636,7 +1825,9 @@ async function registrarConjunta(){
       p_day:leagueDay(),p_level:1,p_activity:'[conjunta]',p_quedada:false});
     if(error) throw error;
     track('conjunta_only',{week:activeW()+1});
-    toast('Asistencia registrada'); await refresh();
+    STRIP_PREV=stripState(L.players.find(p=>p.id===s.playerId));
+    const prevEsc=escudoOf(L.players.find(p=>p.id===s.playerId).name);
+    await refresh(); toast(escudoToast(prevEsc));
   }catch(e){ if($('#aErr'))$('#aErr').textContent=e.message||'Error al registrar'; track('log_fail',{code:errCode(e)}); }
 }
 /* Funciones de desarrollador: inertes fuera de beta (DEV=false → no hacen nada)
@@ -1864,12 +2055,12 @@ function tLiga(){
   let h=calWeek()<0?`<div class="card stickcard"><div class="cdlbl">La liga empieza en</div><div class="cd" id="cdJ">…</div></div>`:'';
   try{ const st=standings(), me=s?L.players.find(p=>p.id===s.playerId):null; TM.once('ranking','ranking_view',{week:Math.max(w,0)+1,posicion_propia:me?st.findIndex(x=>x.name===me.name)+1:null,n_jugadores:nP}); TM.once('track','track_view',{filtrado:!!FILTERP}); }catch(e){}
   h+=`<div class="card"><h2>${ic('trophy')} Clasificación</h2>${clasifHTML()}
-    <p class="msg" style="margin-top:6px">Victoria 3 pts${cfg.bonusDay>0?` · derrota con ${cfg.bonusDay}+ días 1 pt`:''} · desempate por regularidad.</p></div>`;
+    <p class="msg" style="margin-top:6px">Victoria 3 pts${escudoCfg().E?' · derrota con escudo activo 2 pts':''}${cfg.bonusDay>0?` · derrota con ${cfg.bonusDay}+ días 1 pt`:''} · desempate por regularidad.${escudoCfg().E?` Escudo: cada ${escudoCfg().E} Moves acumulados; se activa con ${escudoCfg().M} Moves en la semana y se gasta al cierre, ganes o pierdas.`:''}</p></div>`;
   h+=`<div class="card"><h2>${ic('calendar')} Calendario</h2>`;
   for(let j=0;j<cfg.weeks;j++){
     const r=roundVisible(j)?roundOf(j):null;   // v1.1 (punto 21): resultados solo cuando he visto la jornada
     const hidden=cfg.oculto&&!r&&j!==Math.max(w,0);
-    h+=`<p style="margin:8px 0 4px;font-weight:700;font-size:12px;color:var(--dim)">JORNADA ${j+1} ${r?'· resuelta':(j===w?'· en curso':'')} ${hidden?'· oculta':''}</p>`;
+    h+=`<p style="margin:8px 0 4px;font-weight:700;font-size:12px;color:var(--dim)">JORNADA ${j+1} ${r?'· jugada':(j===w?'· en curso':'')} ${hidden?'· oculta':''}</p>`;
     if(hidden) continue;
     pairsFor(j).forEach(([a,b])=>{ h+=duelRow(a,b,j,r); });
   }
@@ -1920,7 +2111,7 @@ function tLiga(){
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
     <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad conjunta +1 Move el primer día de la semana en que la marcan ${quedadaMin()}+ personas (solo cuentan las marcas de ese día)`:'sin actividad conjunta'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
-    <p class="msg" style="margin-top:6px">La Media (rival de la jornada libre) vale la media de Moves de los demás jugadores, redondeada al entero más cercano. El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
+    <p class="msg" style="margin-top:6px">${escudoCfg().E?`Escudo: cada ${escudoCfg().E} Moves acumulados completas un escudo; se activa en una jornada con ${escudoCfg().M}+ Moves y, si pierdes esa jornada, vale 2 pts. Se gasta al cierre ganes o pierdas; el sobrante no se guarda. Halos de la pala: ${haloThr().join(' / ')} Moves. `:''}La Media (rival de la jornada libre) vale la media de Moves de los demás jugadores, redondeada al entero más cercano. El registro de hoy se puede editar o eliminar hasta el final del día; la hora original se conserva y se marca como editado.</p></div></details>`;
   const log=(L.league.log||[]).slice().reverse();
   h+=`<details><summary>Registro del administrador</summary><div class="card">${log.length?log.map(x=>
     `<div class="logi">${(x.at||'').slice(0,16).replace('T',' ')} — ${esc(x.action)}${x.reason?` · <i>${esc(x.reason)}</i>`:''}</div>`).join(''):'<p class="msg">Sin cambios.</p>'}</div></details>`;
@@ -2003,6 +2194,10 @@ function tAdmin(){
       <div style="flex:1"><label>Máx. días/sem</label><select id="eMax">${[5,6,7].map(x=>`<option ${x===cfg.maxDays?'selected':''}>${x}</option>`).join('')}</select></div>
       <div style="flex:1"><label>Bonus</label><select id="eBonus">${[[0,'No'],[3,'Día 3'],[4,'Día 4'],[5,'Día 5']].map(([v,t])=>`<option value="${v}" ${v===cfg.bonusDay?'selected':''}>${t}</option>`).join('')}</select></div>
     </div>
+    <div class="row">
+      <div style="flex:1"><label>Escudo (Moves acumulados; 0 = sin escudo; R = ${refMoves()})</label><input type="number" id="eEscudo" value="${parseInt(cfg.escudoMoves)||0}" min="0" max="${2*refMoves()}"></div>
+      <div style="flex:1"><label>Se activa con (Moves en la semana)</label><input type="number" id="eEscMin" value="${parseInt(cfg.escudoMin)||3}" min="1" max="5"></div>
+    </div>
     <div class="row" style="margin-top:10px;align-items:flex-end">
       <label style="flex:2;margin:0"><input type="checkbox" id="eQuedada" ${cfg.quedada?'checked':''} style="width:auto" onchange="document.getElementById('eQMin').disabled=!this.checked"> Actividad conjunta</label>
       <div style="flex:1;min-width:130px"><label style="margin-top:0">Mínimo de personas</label><input type="number" id="eQMin" value="${quedadaMin()}" min="${QUEDADA_MIN_DEF}" max="${L.players.length}" ${cfg.quedada?'':'disabled'}></div>
@@ -2075,6 +2270,7 @@ async function saveConfig(){
     weeks:parseInt($('#eWeeks').value), maxDays:parseInt($('#eMax').value),
     bonusDay:parseInt($('#eBonus').value), quedada:$('#eQuedada').checked,
     quedadaMin:qMin, reportPct:parseFloat($('#eRepPct').value)||REPORT_PCT_DEF,
+    escudoMoves:parseInt($('#eEscudo').value)||0, escudoMin:parseInt($('#eEscMin').value)||3,   // v1.2
     oculto:$('#eOculto').checked, levels:$('#eLevels').value };
   try{
     const {error}=await sb.rpc('admin_update_league',{p_code:CUR,p_patch:patch,p_reason:$('#eReason').value.trim()});
