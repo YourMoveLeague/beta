@@ -231,7 +231,7 @@
   .strip .sr small{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
   .escbox{display:flex;align-items:center;gap:10px;margin-top:8px;background:#fff2ee;border:1px solid #ffc9bd;border-radius:12px;padding:10px 14px;text-align:left;}
   .escbox b{display:block;font-size:14px;color:var(--duelA);} .escbox span{font-size:12px;color:var(--dim);}
-  .drow.peek{cursor:pointer;} .drow.peek:hover{background:#faf8f4;}
+  .drow.peek{cursor:pointer;-webkit-tap-highlight-color:transparent;} .drow.peek:hover{background:#faf8f4;} .drow.peek:active{background:#f3f1ec;} .drow.peek:focus-visible{outline:2px solid var(--firma);outline-offset:-2px;border-radius:9px;}
   /* v1.2.1 · escudo de campeón (maqueta escudo-campeon.html) */
   :root{--gold:#f2ae0b;--gold-d:#a86f00;--gold-l:#fff6dc;--gold-line:#f3d98f;}
   .pips{display:inline-flex;gap:3px;vertical-align:middle;margin:0 3px;flex:none;}
@@ -1596,7 +1596,10 @@ function duelRow(a,b,w,r,mine,peekable){
   const wa=d&&!d.nulo&&d.winner===a, wb=d&&!d.nulo&&d.winner===b;
   const ma=movesOfName(a,b,w,d), mb=movesOfName(b,a,w,d);
   const sel=VIEW_DUEL&&VIEW_DUEL.a===a&&VIEW_DUEL.b===b;
-  return `<div class="drow${mine?' mine'+(mine==='b'?' b':''):''}${peekable?' peek':''}${sel?' mine':''}"${peekable?(mine?` onclick="VIEW_DUEL=null;render()" title="Volver a mi jornada"`:` onclick="peekDuel('${esc(a)}','${esc(b)}')" title="Ver este duelo en la pista"`):''}>
+  /* v1.2.1 (JC 03-10): el degradado marca el duelo que está en la pista: el mío por defecto; si he tocado otro,
+     ese (y el mío queda plano). Sin onclick inline: los nombres van en data-* y lo recoge el delegado de #main. */
+  const hl=VIEW_DUEL?sel:!!mine;
+  return `<div class="drow${hl?' mine'+(!VIEW_DUEL&&mine==='b'?' b':''):''}${peekable?' peek':''}" ${peekable?`data-peek-a="${esc(a)}" data-peek-b="${esc(b)}" data-peek-mine="${mine?1:0}" role="button" tabindex="0" title="${mine?'Volver a mi jornada':'Ver este duelo en la pista'}"`:''}>
     <span class="dn"><span class="${wa?'wname':''}">${esc(a)}</span></span><span class="dmv">${ma}</span>
     <span class="dm a">${pa?medIcons(pa.id,w):''}</span>
     <span class="ds">${d?(d.nulo?'—':sa+'–'+sb):'/'}</span>
@@ -1757,7 +1760,7 @@ function tJornada(){
   // mi duelo · v1.2: o el duelo ajeno elegido tocando una fila de «Jornada X» (VIEW_DUEL)
   let duelHtml=me?'<p class="msg">Esta semana descansas.</p>':'<p class="msg">Estás como organizador; no participas en esta liga.</p>';
   let duelTitle=me?'Mi jornada':'Duelos';
-  if(VIEW_DUEL&&(cfg.oculto||!pairsFor(w).some(([a,b])=>a===VIEW_DUEL.a&&b===VIEW_DUEL.b))) VIEW_DUEL=null;
+  if(VIEW_DUEL&&!pairsFor(w).some(([a,b])=>a===VIEW_DUEL.a&&b===VIEW_DUEL.b)) VIEW_DUEL=null;
   const peek=VIEW_DUEL;
   const shown=peek?[peek.a,peek.b]:pair;
   if(shown){
@@ -1802,7 +1805,7 @@ function tJornada(){
   ${banner}
   <div class="card${stick}" ${stick.includes('stickcard')?'data-cd="Cierre de la jornada"':''}>${cdHtml}</div>
   <div class="card"><h2>${ic('zap')} ${duelTitle}</h2>${duelHtml}</div>
-  ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)),!cfg.oculto&&!!me)).join('')}</div>`:''}
+  ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)),!!me)).join('')}</div>`:''}
   ${prevR?`<div class="card"><h2>${ic('play')} Jornada anterior · J${w}</h2>
     ${pairsFor(w-1).map(([a,b])=>duelRow(a,b,w-1,prevR)).join('')}
     <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetición jornada ${w}</button></div>`:''}
@@ -1812,6 +1815,16 @@ function tJornada(){
 let miniSpec=null;
 let VIEW_DUEL=null;   // v1.2: duelo ajeno mostrado en la tarjeta superior de Jornada ({a,b}); se limpia al cambiar de pestaña
 function peekDuel(a,b){ VIEW_DUEL={a,b}; try{ track('duel_peek',{week:activeW()+1}); }catch(e){} render(); }
+/* v1.2.1: las filas de «Jornada X» son botones (clic, toque o Enter/espacio). Tocar la mía devuelve «Mi jornada». */
+function onRowPeek(e){
+  const row=e.target.closest&&e.target.closest('.drow.peek'); if(!row||!document.getElementById('main').contains(row)) return;
+  if(e.type==='keydown'&&e.key!=='Enter'&&e.key!==' ') return;
+  if(e.type==='keydown') e.preventDefault();
+  if(row.dataset.peekMine==='1'){ VIEW_DUEL=null; render(); }
+  else peekDuel(row.dataset.peekA,row.dataset.peekB);
+}
+document.addEventListener('click',onRowPeek);
+document.addEventListener('keydown',onRowPeek);
 let ANIM_MODE='vivo';
 function replay(w){
   const r=roundOf(w); if(!r) return;
