@@ -400,7 +400,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const BUILD='web v1.2.1';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
+const BUILD='web v1.3';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
 const VERSION=BUILD+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
@@ -710,7 +710,23 @@ function roundRobin(names){
   }
   return cal;
 }
-function serieProb(a,b){ if(a+b===0) return .5; const p=a/(a+b); return p*p*(3-2*p); }
+/* v1.3 · MODELO DEL DUELO. Hasta la v1.2.1 la probabilidad de cada bola era proporcional:
+   p = a/(a+b). Desde setup14 (todas las ligas, todas las jornadas que se resuelvan) cuenta la DIFERENCIA de Moves:
+   por bola 63,7 / 69,7 / 75,6 / 80,4 % con +1 / +2 / +3 / +4 o más (70 / 78 / 85 / 90 % al mejor
+   de 3). Réplica exacta de _duel_p() en el servidor (setup14). Las reglas del 0 no cambian
+   (X-0 gana directo, 0-0 nulo): las aplica el servidor antes de sortear. */
+const P_DIF=[0.5,0.637,0.697,0.756,0.804];
+function pBola(a,b,model){
+  if(model==='diferencia'){ const p=P_DIF[Math.min(4,Math.abs(a-b))]; return a>=b?p:1-p; }
+  return a/(a+b);
+}
+function serieProb(a,b,model){ if(a+b===0) return .5; const p=pBola(a,b,model); return p*p*(3-2*p); }
+/* modelo de la jornada w (0-based): el congelado si ya está jugada (las anteriores a setup14 no lo
+   llevan: proporcional, y se reproducen como siempre); las que están por jugar, «diferencia» */
+function duelModel(w){
+  const r=roundOf(w); if(r) return (r.data&&r.data.duel_model)||'proporcional';
+  return 'diferencia';
+}
 function isoDay(d){ const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
 /* el "día de liga" es siempre el día en hora española, estés donde estés
    (igual que el cierre de las 22:00): así el registro funciona en viajes
@@ -2612,6 +2628,7 @@ const PONG=(()=>{
   const V0=950, VMAX=1700, VGAIN=1.06, MAX_ANGLE=52*Math.PI/180, MIN_VX=0.56;
   const PAD_VMAX=620, PAD_ACC=5000;
   const H_MAX=0.50*H;            // v1.1: altura máxima de la pala = 50 % del campo (punto 25)
+  const SERVE_GAP=40;            // v1.3: con ventaja, la bola saca separada de la cara de la pala
   const LOSER_MIN_SPEED=0.70;    // v1.1: la pala perdedora nunca baja del 70 % (punto 36)
   const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
   /* PRNG mulberry32 sembrado con texto: (código de liga, jornada, duelo, bola, intento) */
@@ -2645,6 +2662,8 @@ const PONG=(()=>{
     const pad={A:{cy:H/2,vy:0,h:p.hA,c:cA,hc:Math.max(p.hA,cA),x:XA,plane:XA+R,dir:1},B:{cy:H/2,vy:0,h:p.hB,c:cB,hc:Math.max(p.hB,cB),x:XB,plane:XB-R,dir:-1}};
     const ball={x:W/2,y:H/2,vx:0,vy:0};
     const dir=p.serveDir==='A'?-1:1;   // hacia A = vx negativo
+    // v1.3 (bola de ventaja): saque desde la pala del que va por delante. Sin p.serveFrom, como siempre.
+    if(p.serveFrom) ball.x=pad[p.serveFrom].plane+(p.serveFrom==='A'?1:-1)*SERVE_GAP;
     ball.vx=dir*V0*Math.cos(p.serveAng); ball.vy=V0*Math.sin(p.serveAng);
     const trace=[], events=[];
     let t=0, crossing=0, toward=p.serveDir, hits=0, walls=0, wallsThisCross=0, lastHitT=0;
@@ -2799,6 +2818,7 @@ const PONG=(()=>{
     const hL=loser==='A'?hA:hB, hW=winner==='A'?hA:hB;
     if((loser==='A'?cA:cB)<=0){
       const p={hA,hB,cA,cB,serveDir:loser,serveAng:0.12*((ballIdx%2)?1:-1),pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},edges:[],fail:{side:loser,k:99,delay:0,speed:1}};
+      if(o.serveFrom===winner) p.serveFrom=winner;   // v1.3: X-0, saca el que va por delante
       return {sim:simulate(p),level:0,attempts:0,through:true};
     }
     // v1.2.1: ¿bola corta? Lo decide la semilla de la bola; si ninguna semilla corta valida, se
@@ -2809,8 +2829,10 @@ const PONG=(()=>{
       const lvl=LEVELS[li];
       for(let a=0;a<ATTEMPTS;a++){
         const r=rng(seedBase+':'+ballIdx+':'+li+':'+a+(short?':s':''));
-        const serveDir=ballIdx%2===0?'A':'B';
+        // v1.3: con ventaja, todas las bolas las saca el que va por delante (opts.serveFrom)
+        const serveDir=o.serveFrom?(o.serveFrom==='A'?'B':'A'):(ballIdx%2===0?'A':'B');
         const p=genParams(r,serveDir,loser,hA,hB,cA,cB,lvl,short);
+        if(o.serveFrom) p.serveFrom=o.serveFrom;
         // por semilla: bisección de la velocidad del perdedor en el cruce decisivo, para
         // que llegue tarde POR POCO (margen en ventana). Físicas intactas: solo cambia un
         // parámetro de la pala y se vuelve a simular entero. v1.1: nunca por debajo del 70 %.
@@ -2830,9 +2852,10 @@ const PONG=(()=>{
     }
     // último recurso: peloteo mínimo garantizado (nunca cambia el resultado)
     const p={hA,hB,cA,cB,serveDir:loser,serveAng:0.2,pads:{A:{delay:0,speed:1,err:[]},B:{delay:0,speed:1,err:[]}},edges:[],fail:{side:loser,k:0,delay:9,speed:LOSER_MIN_SPEED}};
+    if(o.serveFrom===winner) p.serveFrom=winner;
     return {sim:simulate(p),level:LEVELS.length,attempts:LEVELS.length*ATTEMPTS,forced:true};
   }
-  return {W,H,R,PW,XA,XB,DT,V0,VMAX,H_MAX,LOSER_MIN_SPEED,padH,collH,oneMove,simulate,direct,validate,genParams,rng,LEVELS,DUR_ALL,P_SHORT,clamp};
+  return {SERVE_GAP,W,H,R,PW,XA,XB,DT,V0,VMAX,H_MAX,LOSER_MIN_SPEED,padH,collH,oneMove,simulate,direct,validate,genParams,rng,LEVELS,DUR_ALL,P_SHORT,clamp};
 })();
 /* ============ PONG v2 · FIN MOTOR ============ */
 
@@ -2927,12 +2950,54 @@ function drawCourt(cv,st){
       gh.segs.forEach((sg,i)=>{ if(i<n) return; ctx.fillStyle=`rgba(190,196,206,${(0.8*gh.a).toFixed(3)})`; rr(ctx,x,gtop+i*(gsh+g),PW,Math.max(1,gsh),2.5); ctx.fill(); }); }
   };
   pad('A'); pad('B');
-  if(st.ball){
+  if(st.ball&&st.adv&&st.adv.side){ advBall(ctx,st,t,still); }   // v1.3: bola de ventaja
+  else if(st.ball){
     (st.trail||[]).forEach((p,i,arr)=>{ const a=0.28*(1-i/arr.length); ctx.fillStyle=`rgba(255,255,255,${a.toFixed(3)})`; ctx.beginPath(); ctx.arc(p.x,p.y,R*(1-0.12*i),0,Math.PI*2); ctx.fill(); });
     const b=st.ball, sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0;
     ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
-    ctx.shadowColor='rgba(255,255,255,.6)'; ctx.shadowBlur=16; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fill(); ctx.restore();
+    ctx.shadowColor='rgba(255,255,255,.6)'; ctx.shadowBlur=16; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,R*(st.ballScale||1),0,Math.PI*2); ctx.fill(); ctx.restore();
   }
+}
+/* ---- v1.3 · BOLA DE VENTAJA (modelo «diferencia») ----
+   La bola toma el color del que va por delante; una bolita por cada Move de diferencia (sin límite)
+   gira a su alrededor. Empate: bola blanca. 0-0: sin bola.
+   Sorteo: la bola va a la pala con ventaja sin que las bolitas dejen de girar; al sacar hay un
+   destello y las bolitas pasan, una a una (escalonadas), a ser la estela de la bola. Las de delante
+   (en la dirección del saque) ocupan los huecos más cercanos, así ninguna se cruza. Con +1 y +2 la
+   estela es más pequeña y tenue. En cada bola se repite. La velocidad no cambia nunca.
+   st.adv = {side:'A'|'B'|null, k}, st.ballScale, st.serveT (ms del saque), st.slotOf, st.hist, st.bursts */
+const ADV={WEEK_SCALE:1.35, ORB_R:6.5, STAG:55, TRANS:420, TSTEP:4};
+function advOf(ma,mb){ return ma===mb?{side:null,k:0}:{side:ma>mb?'A':'B',k:Math.abs(ma-mb)}; }
+const advEase=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+function advOrbit(st,i,n,t,still){
+  const b=st.ball, sc=st.ballScale||1, rot=still?0:t*1.8;
+  const ang=rot+i*Math.PI*2/n-Math.PI/2, ro=PONG.R*sc+9+Math.max(0,n-8)*1.2;
+  return {x:b.x+Math.cos(ang)*ro,y:b.y+Math.sin(ang)*ro};
+}
+const advTrailR=(i,n)=>PONG.R*Math.min(0.62,0.36+0.065*n)*(1-0.5*(n>1?i/(n-1):0));
+const advTrailA=(i,n)=>Math.min(0.9,0.32+0.14*n)*(1-0.6*(n>1?i/(n-1):0));
+function advSlot(st,i){ const h=st.hist||[]; return h[Math.min(h.length-1,(i+1)*ADV.TSTEP)]||st.ball; }
+function advDot(ctx,x,y,r,col,al){ ctx.save(); ctx.globalAlpha=al; ctx.shadowColor=col; ctx.shadowBlur=6; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+function advSlots(st,t){   // al sacar: bolitas de delante → huecos cercanos de la estela
+  const n=st.adv.k, dir=st.adv.side==='A'?1:-1, o=[];
+  for(let i=0;i<n;i++){ const p=advOrbit(st,i,n,t,false); o.push({i,f:(p.x-st.ball.x)*dir}); }
+  o.sort((p,q)=>q.f-p.f); st.slotOf=[]; o.forEach((e,s)=>st.slotOf[e.i]=s);
+}
+function advBall(ctx,st,t,still){
+  const R=PONG.R, b=st.ball, a=st.adv, col=COURT_COL[a.side], n=a.k, sc=st.ballScale||1, now=t*1000;
+  if(n){
+    if(!st.serveT){ for(let i=0;i<n;i++){ const p=advOrbit(st,i,n,t,still); advDot(ctx,p.x,p.y,ADV.ORB_R,col,1); } }
+    else for(let i=n-1;i>=0;i--){
+      const s=st.slotOf[i], u=advEase(Math.max(0,Math.min(1,(now-st.serveT-ADV.STAG*s)/ADV.TRANS)));
+      const o=advOrbit(st,i,n,t,still), q=advSlot(st,s);
+      advDot(ctx,o.x+(q.x-o.x)*u,o.y+(q.y-o.y)*u,ADV.ORB_R+(advTrailR(s,n)-ADV.ORB_R)*u,col,1+(advTrailA(s,n)-1)*u);
+    }
+  }
+  (st.bursts||[]).forEach(bu=>{ const u=(now-bu.t0)/360; if(u<0||u>1) return;
+    ctx.save(); ctx.globalAlpha=1-u; ctx.strokeStyle=col; ctx.lineWidth=4*(1-u)+1; ctx.beginPath(); ctx.arc(bu.x,bu.y,R*(1.1+2*u),0,Math.PI*2); ctx.stroke(); ctx.restore(); });
+  const sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0;
+  ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
+  ctx.shadowColor=col; ctx.shadowBlur=12; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(0,0,R*sc,0,Math.PI*2); ctx.fill(); ctx.restore();
 }
 function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
@@ -2960,7 +3025,11 @@ function renderMini(spec){
     }
     MINI_PREV[key(s)]={n:s.segs.length,h:hNow,segs:s.segs};
   }
-  const loop=(st.haloA>0||st.haloB>0)&&!REDUCED();
+  /* v1.3: con el modelo «diferencia», bola en el centro (color del que va por delante + bolitas) */
+  if(duelModel(spec.w)==='diferencia'&&(spec.a.moves>0||spec.b.moves>0)){
+    st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.ballScale=ADV.WEEK_SCALE; st.adv=advOf(spec.a.moves,spec.b.moves);
+  }
+  const loop=(st.haloA>0||st.haloB>0||(st.adv&&st.adv.k>0))&&!REDUCED();
   const tracks=[...document.querySelectorAll('.track[data-halo]')];
   const frame=()=>{
     if(!cv.isConnected) return;
@@ -3003,6 +3072,7 @@ async function playPong(jNum,duels,opts){
   const ov=$('#ov'); let skip=false, huboSkip=false; const o=opts||{};
   const sleep=ms=>new Promise(r=>setTimeout(r,skip?30:ms));
   const w=jNum-1, REF=refMoves(), reduced=REDUCED();
+  const model=duelModel(w);   // v1.3: cada jornada se reproduce con el modelo con el que se jugó
   ov.classList.add('show');
   const tAnim=Date.now(); OV_OPEN={week:jNum,duelo:0,t0:tAnim};
   track('anim_open',{week:jNum,modo:ANIM_MODE,n_duelos:duels.length,reduced});
@@ -3024,8 +3094,13 @@ async function playPong(jNum,duels,opts){
     if(canSkip) $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; };
     const cv=$('#court');
     const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,haloA:haloLevel(d.ma),haloB:haloLevel(d.mb),ball:null,trail:[],one:PONG.oneMove(REF),t:performance.now()};
+    /* v1.3: presentación con la bola de la semana (color + bolitas); empate: blanca; 0-0: sin bola */
+    const adv=model==='diferencia'&&!d.nulo?advOf(d.ma,d.mb):null;
+    if(adv){ st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.ballScale=ADV.WEEK_SCALE; st.adv=adv; st.bursts=[]; }
     let haloRAF=0; const haloLoop=()=>{ st.t=performance.now(); drawCourt(cv,st); haloRAF=requestAnimationFrame(haloLoop); };
-    const idle=async(ms)=>{ if((st.haloA||st.haloB)&&!reduced){ haloLoop(); await sleep(ms); cancelAnimationFrame(haloRAF); } else { drawCourt(cv,st); await sleep(ms); } };
+    const idle=async(ms)=>{ if((st.haloA||st.haloB||(adv&&adv.k>0&&st.ball))&&!reduced){ haloLoop(); await sleep(ms); cancelAnimationFrame(haloRAF); } else { st.t=performance.now(); drawCourt(cv,st); await sleep(ms); } };
+    /* v1.3: animación corta (la bola va a la pala, aparece…), acelerada si se salta el duelo */
+    const tween=(ms,fn)=>new Promise(res=>{ const t0=performance.now(), dur=skip?Math.min(ms,60):ms; const f=now=>{ const u=Math.min(1,(now-t0)/dur); fn(advEase(u)); st.t=now; drawCourt(cv,st); if(u<1) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
     await idle(3000);
     if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; await idle(2000); continue; }
     let sc={A:0,B:0};
@@ -3035,11 +3110,18 @@ async function playPong(jNum,duels,opts){
       await sleep(3200); continue;
     }
     const dur=d.draws.length===2?[5.8,7.0]:[3.5,6.0];
+    const tx=adv&&adv.side?(adv.side==='A'?PONG.XA+PONG.R+PONG.SERVE_GAP:PONG.XB-PONG.R-PONG.SERVE_GAP):0;
     for(let bi=0;bi<d.draws.length;bi++){
       const r=d.draws[bi]; OV_OPEN.bola=bi+1;
-      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi,{cA,cB,dur});
+      if(adv&&adv.side){   // v1.3: la bola va a la pala que saca (1.ª bola) o reaparece en ella (2.ª y 3.ª)
+        st.serveT=null; st.hist=[];
+        if(bi===0){ const x0=st.ball.x; await tween(600,e=>{ st.ball.x=x0+(tx-x0)*e; st.ballScale=ADV.WEEK_SCALE+(1-ADV.WEEK_SCALE)*e; }); }
+        else { st.ball={x:tx,y:PONG.H/2,vx:0,vy:0}; await tween(280,e=>{ st.ballScale=0.2+0.8*e; }); }
+      }
+      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi,adv&&adv.side?{cA,cB,dur,serveFrom:adv.side}:{cA,cB,dur});
       if(DEV&&!res.sim.ok) throw new Error('PONG: '+res.sim.err);
       if(res.level>0){ track('pong_fallback',{week:jNum,duelo_i:i+1,bola_i:bi+1,nivel:res.level,intentos:res.attempts,corta:!!res.short}); if(DEV) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`); }
+      if(adv&&!adv.side) st.ball=null;   // empate: la bola blanca de la presentación pasa al saque del centro
       await playTrace(cv,st,res.sim,()=>skip);
       sc[r]++;
       const ps=$('#pscore'); ps.textContent=sc.A+' – '+sc.B; ps.classList.add('flash'); cv.classList.add('shake');
@@ -3062,11 +3144,16 @@ function playTrace(cv,st,sim,isSkip){
   return new Promise(resolve=>{
     const DT=PONG.DT, tr=sim.trace, hits=sim.events.filter(e=>e.type==='hit');
     let simT=0, acc=0, last=performance.now(), hold=0.5, nextHit=0, sqA=0, sqB=0, done=false;
-    st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0;
+    const adv=st.adv&&st.adv.side?st.adv:null;   // v1.3: bola de ventaja
+    st.ball=adv?{x:st.ball?st.ball.x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}:{x:PONG.W/2,y:PONG.H/2,vx:0,vy:0};
+    st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0;
+    if(adv){ st.ballScale=1; st.serveT=null; st.hist=[]; st.bursts=st.bursts||[]; }
+    const serveX=st.ball.x; let served=false;
     const frame=(now)=>{
       st.t=now;
       let dt=Math.min(0.25,(now-last)/1000); last=now; if(isSkip()) dt*=8;
       if(hold>0){ hold-=dt; if(hold>0){ drawCourt(cv,st); requestAnimationFrame(frame); return; } dt=-hold; hold=0; }
+      if(adv&&!served){ served=true; advSlots(st,now/1000); st.serveT=now; st.bursts.push({x:st.ball.x,y:st.ball.y,t0:now}); }
       acc+=dt;
       while(acc>=DT&&!done){
         simT+=DT; acc-=DT;
@@ -3078,9 +3165,14 @@ function playTrace(cv,st,sim,isSkip){
       st.ball.vx=(b.bx-a.bx)/DT; st.ball.vy=(b.by-a.by)/DT;
       st.ball.x=lerp(a.bx,b.bx); st.ball.y=lerp(a.by,b.by); st.cyA=lerp(a.ay,b.ay); st.cyB=lerp(a.by2,b.by2);
       st.trail=[]; for(let k=1;k<=5;k++){ const s=tr[Math.max(0,i-k*2)]; st.trail.push({x:s.bx,y:s.by}); }
+      if(adv){   // v1.3: posiciones recientes de la bola para la estela de bolitas (antes del saque: la bola quieta)
+        st.hist=[{x:st.ball.x,y:st.ball.y}]; const nh=(adv.k+1)*ADV.TSTEP+1;
+        for(let k=1;k<nh;k++){ const s=tr[i-k]; st.hist.push(s?{x:s.bx,y:s.by}:{x:serveX,y:PONG.H/2}); }
+        st.bursts=st.bursts.filter(b=>now-b.t0<400);
+      }
       sqA=Math.max(0,sqA-dt); sqB=Math.max(0,sqB-dt); st.squashA=sqA/0.12; st.squashB=sqB/0.12;
       drawCourt(cv,st);
-      if(done){ st.ball=null; st.trail=[]; resolve(); return; }
+      if(done){ st.ball=null; st.trail=[]; if(adv){ st.hist=[]; st.serveT=null; } resolve(); return; }
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
