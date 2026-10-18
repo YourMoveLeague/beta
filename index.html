@@ -338,6 +338,29 @@
     /* v1.0: el duelo sirve un resumen estático (ver playPong); las palas aparecen sin animación */
   }
 
+  /* ============ v1.4 · barra de partido, overlay del duelo (laboratorio aprobado 18-10) ============ */
+  .partido{margin:0 0 14px;position:relative;}
+  .plabel{display:flex;justify-content:center;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;min-height:15px;}
+  .plabel.a{color:var(--duelA);} .plabel.b{color:var(--duelB);}
+  .plabel .nm{font-family:var(--disp);text-transform:none;letter-spacing:.3px;font-size:12.5px;}
+  .pbar{position:relative;height:12px;border-radius:6px;background:var(--card2);overflow:hidden;--spring:cubic-bezier(.34,1.56,.64,1);}
+  .pbar .fa,.pbar .fb{position:absolute;top:0;bottom:0;transition:width .55s var(--spring);}
+  .pbar .fa{left:0;background:var(--courtA);} .pbar .fb{right:0;background:var(--courtB);}
+  .pbar .mid{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;margin-left:-1px;background:var(--card);z-index:2;}
+  .pbar .seam{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;z-index:3;transition:left .55s var(--spring);animation:seamspark .7s ease-in-out infinite alternate;}
+  @keyframes seamspark{from{box-shadow:0 0 4px 2px rgba(255,255,255,.7),0 0 10px 3px rgba(255,255,255,.2);}to{box-shadow:0 0 8px 4px rgba(255,255,255,.95),0 0 22px 9px rgba(255,255,255,.4);}}
+  .pbar.pulse{animation:barpulse .45s cubic-bezier(.34,1.56,.64,1) 1;}
+  @keyframes barpulse{0%{transform:scaleY(1);}35%{transform:scaleY(1.45);}100%{transform:scaleY(1);}}
+  .pbar .fa.gain,.pbar .fb.gain{animation:gain .6s ease-out 1;}
+  @keyframes gain{0%{filter:brightness(1.9);}100%{filter:brightness(1);}}
+  .qbtn{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--dim);font:800 10.5px 'Inter',sans-serif;cursor:pointer;line-height:1;padding:0;margin-left:2px;flex:none;}
+  .qpop{position:absolute;left:50%;transform:translateX(-50%);top:100%;margin-top:8px;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 8px 24px rgba(27,45,79,.14);z-index:5;white-space:nowrap;text-align:left;}
+  .qpop::before{content:'';position:absolute;top:-6px;left:50%;width:10px;height:10px;margin-left:-5px;background:var(--card);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg);}
+  .qpop b{font-weight:800;}
+  #ov .partido{width:100%;max-width:440px;margin:10px 0 0;}
+  #ov .pbar{height:10px;border-radius:5px;}
+  #pscore.off{visibility:hidden;min-height:8px;height:8px;}
+  #ov .row .btn.sec.on{border-color:var(--firma);color:var(--firma);background:#fff2ee;}
   /* ============ v1.3.1 · La Línea, escudos tocables, jornadas y calendario (maqueta aprobada 10-10) ============ */
   [hidden]{display:none!important;}
   svg.esc{overflow:visible;}   /* la punta del escudo se salía 1 px del viewBox y se recortaba */
@@ -511,7 +534,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
    yourmoveleague.com       → DEV=false (producción: tiempo real, sin panel dev)
    El mismo index.html se publica en ambos repos sin tocar nada. */
 const DEV=location.hostname.startsWith('beta.');
-const BUILD='web v1.3.1';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
+const BUILD='web v1.4';                 // v1.1: literal que compara el autoactualizador (checkUpdate)
 const VERSION=BUILD+(DEV?'-dev':'');
 /* ============ TELEMETRÍA (v1.0.1) ============
    Recogida de uso seudonimizada. Fire-and-forget: track() solo encola; nunca hay un
@@ -831,17 +854,49 @@ function pBola(a,b,model){
   if(model==='diferencia'){ const p=P_DIF[Math.min(4,Math.abs(a-b))]; return a>=b?p:1-p; }
   return a/(a+b);
 }
-function serieProb(a,b,model){ if(a+b===0) return .5; const p=pBola(a,b,model); return p*p*(3-2*p); }
+/* v1.4: al mejor de N. Probabilidad de ganar el duelo = P(≥ n bolas de N) con n = (N+1)/2. */
+function serieProb(a,b,model,N){ if(a+b===0) return .5; const p=pBola(a,b,model); N=N||3; const n=(N+1)/2; let s=0;
+  for(let i=n;i<=N;i++){ let c=1; for(let k=1;k<=i;k++) c=c*(N-i+k)/k; s+=c*Math.pow(p,i)*Math.pow(1-p,N-i); } return s; }
+/* v1.4 · ¿A cuántas bolas se juega la jornada w (0-based)? Jugada: lo congelado (sin best_of = 3, jornadas
+   anteriores a setup16). Por jugar: config.bestOf (5 si no está). Réplica de _best_of() en el servidor. */
+function bestOfWeek(w){ const r=roundOf(w); if(r) return (r.data&&r.data.best_of)?+r.data.best_of:3; return bestOfLive(); }
+function bestOfLive(){ return (+L.league.config.bestOf)===3?3:5; }
+/* v1.4 · probabilidad de que A gane el duelo de la jornada w (null = 0-0). Es lo que pinta la barra de partido. */
+function duelProb(ma,mb,w){ if(ma===0&&mb===0) return null; if(ma===0) return 0; if(mb===0) return 1; return serieProb(ma,mb,duelModel(w),bestOfWeek(w)); }
+/* tramos de la etiqueta (JC 18-10): igualado < 56 % · ligera ventaja 56–65 · favorito 65–80 · favorito claro ≥ 80 */
+function tierOf(p){ if(p>=.80) return 3; if(p>=.65) return 2; if(p>=.56) return 1; if(p>.44) return 0; if(p>.35) return -1; if(p>.20) return -2; return -3; }
+const TIER_TXT={3:'favorito claro',2:'favorito',1:'ligera ventaja'};
+/* HTML de la barra de partido (Mi jornada y presentación del duelo): etiqueta con el nombre del favorito en su
+   color, barra coral/lima partida en la probabilidad, marca del 50 % y costura con destello. Sin cifras.
+   q = true añade el botón «?» con los tramos. */
+function partidoHTML(nameA,nameB,p,id,q){
+  let lab='Igualado', cls='';
+  if(p===null){ lab='Sin Moves'; }
+  else { const t=tierOf(p); if(t>0){ cls='a'; lab=`<span class="nm">${esc(nameA)}</span> ${TIER_TXT[t]}`; } else if(t<0){ cls='b'; lab=`<span class="nm">${esc(nameB)}</span> ${TIER_TXT[-t]}`; } }
+  const pa=p===null?0:p*100, pb=p===null?0:(1-p)*100, seam=p===null?50:p*100;
+  return `<div class="partido" id="${id}">
+    <div class="plabel ${cls}"><span>${lab}</span>${q?`<button class="qbtn" type="button" onclick="toggleQPop(event)" aria-label="Qué significa">?</button>`:''}</div>
+    <div class="pbar ${p===null?'':(tierOf(p)===0?'igualado':(tierOf(p)>0?'fav-a':'fav-b'))}"><div class="fa" style="width:${pa.toFixed(2)}%"></div><div class="fb" style="width:${pb.toFixed(2)}%"></div><div class="mid"></div><div class="seam" style="left:${seam.toFixed(2)}%"></div></div>
+    ${q?`<div class="qpop" id="qpop" hidden><b>Igualado</b> hasta 56 %<br><b>Ligera ventaja</b> 56–65 %<br><b>Favorito</b> 65–80 %<br><b>Favorito claro</b> más del 80 %</div>`:''}
+  </div>`;
+}
+function toggleQPop(ev){ ev.stopPropagation(); const q=$('#qpop'); if(!q) return; q.hidden=!q.hidden; if(!q.hidden) try{ track('partido_q_open',{}); }catch(e){} }
+document.addEventListener('click',()=>{ const q=$('#qpop'); if(q) q.hidden=true; });
+/* x de la bola en reposo en la mini-pista y en la presentación: la costura de la barra (p·W), entre las palas */
+function restX(p){ if(p===null||p===undefined) return PONG.W/2; const lo=PONG.XA+PONG.R+PONG.SERVE_GAP+PONG.R, hi=PONG.XB-PONG.R-PONG.SERVE_GAP-PONG.R; return Math.max(lo,Math.min(hi,p*PONG.W)); }
+/* animación de la barra al cambiar p: la costura se desplaza con muelle (CSS), la barra da un pulso y el lado que gana terreno destella */
+const PARTIDO_LAST={};
+function partidoPulse(key,id,p){ const el=$('#'+id); if(!el||p===null) return; const bar=el.querySelector('.pbar'), prev=PARTIDO_LAST[key];
+  if(prev!==undefined&&prev!==p&&bar){ const side=bar.querySelector(p>prev?'.fa':'.fb'); side.classList.add('gain'); bar.classList.add('pulse'); }
+  PARTIDO_LAST[key]=p; }
 /* modelo de la jornada w (0-based): el congelado si ya está jugada (las anteriores a setup14 no lo
    llevan: proporcional, y se reproducen como siempre); las que están por jugar, «diferencia» */
 function duelModel(w){
   const r=roundOf(w); if(r) return (r.data&&r.data.duel_model)||'proporcional';
   return 'proporcional';   // v1.3.1 (setup15): vuelve el proporcional en todas las ligas
 }
-/* v1.3.1: la bola de ventaja (color + bolitas + estela) se ve en todas las jornadas jugadas desde la
-   v1.3 (llevan duel_model, sea cual sea) y en las que están por jugar. Las anteriores a la v1.3 se
-   siguen viendo exactamente como se jugaron. */
-function advVisual(w){ const r=roundOf(w); return r?!!(r.data&&r.data.duel_model):true; }
+/* v1.4: las bolitas por Move de diferencia de la v1.3 desaparecen; la bola toma el color del favorito y
+   descansa en la costura de la barra de partido (ver restX). */
 function isoDay(d){ const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
 /* el "día de liga" es siempre el día en hora española, estés donde estés
    (igual que el cierre de las 22:00): así el registro funciona en viajes
@@ -1531,6 +1586,7 @@ function whatsText(code,name,cfg,roster){
     `📌 Ábrelo en tu navegador (mejor que el de WhatsApp) y añádelo a la pantalla de inicio: entrarás directo, sin códigos.\n`+
     `\n📸 Foto instantánea al grupo + registra tu día en la web (guarda la hora, que case con tu foto).\n`+
     `\n📏 NIVELES (🥉1 Move · 🥈2 · 🥇3):\n${cfg.levels}\n`+
+    `⚔️ Duelo al mejor de ${(+cfg.bestOf)===3?3:5}.\n`+
     `➖ La Línea: si superas la mediana de Moves de la jornada y pierdes, 2 pts.\n`+
     ((parseInt(cfg.escudoMoves)||0)>0?`🛡️ Escudo: cada ${parseInt(cfg.escudoMoves)} Moves acumulados consigues uno. Actívalo cuando quieras: si pierdes esa jornada, 2 pts.\n`:'')+
     (cfg.quedada?`\n👥 Actividad social: +1 Move el primer día de la semana en que la marquen ${cfg.quedadaMin||QUEDADA_MIN_DEF}+ personas; solo cuentan las marcas de ese día.\n`:'')+
@@ -2003,15 +2059,18 @@ function tJornada(){
     else duelTitle=`Jornada ${w+1}`;   // JC (03-10): la caja pasa a «Jornada X» con el duelo tocado
     /* JC (03-10): bajo la pista NADA de texto; el hueco solo muestra la etiqueta del segmento mientras se toca la pala */
     const mineA=!peek&&me&&nameA===me.name, myRow=mineA?myShieldsRow(nameA,w,rest):null;
+    /* v1.4: barra de partido (probabilidad de ganar el duelo, sin cifras) entre las barras y la pista */
+    const pDuel=duelProb(ma,mb,w);
     duelHtml=`<div class="duelbox">
       <div class="names"><span style="color:var(--duelA)">${esc(nameA)}${myRow!==null?myRow:shieldSVG(escA,'A',22)+campA}</span><span style="color:var(--duelB)">${campB}${escB?shieldSVG(escB,'B',22):''}${esc(nameB)}</span></div>
       <div class="bars">${movesBar(ma,'A')}${movesBar(mb,'B')}</div>
+      ${partidoHTML(nameA,nameB,pDuel,'partidoJ',true)}
       <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(nameA)} ${ma} Moves, ${esc(nameB)} ${mb} Moves${d?(d.nulo?', duelo nulo':', resultado '+sA+' a '+sB):''}"></canvas>
       <div class="minihint" id="miniHint"></div>
     </div>`;
     /* v1.1 (punto 31, D9): marcador dentro del campo solo al resolverse; se mantiene durante el descanso */
     const score=d?{a:d.nulo?null:sA,b:d.nulo?null:sB}:null;
-    miniSpec={w, score, a:{pid:pA.id,moves:ma,segs:d?fitSegs(segmentsFor(pA.id,w),ma):segmentsFor(pA.id,w)}, b:{pid:pB?pB.id:'__media__',moves:mb,segs:pB?(d?fitSegs(segmentsFor(pB.id,w),mb):segmentsFor(pB.id,w)):neutralSegs(mb)}};
+    miniSpec={w, score, p:pDuel, a:{pid:pA.id,moves:ma,segs:d?fitSegs(segmentsFor(pA.id,w),ma):segmentsFor(pA.id,w)}, b:{pid:pB?pB.id:'__media__',moves:mb,segs:pB?(d?fitSegs(segmentsFor(pB.id,w),mb):segmentsFor(pB.id,w)):neutralSegs(mb)}};
   } else miniSpec=null;
   // v1.1 (punto 34): JORNADA X con todos los enfrentamientos, el mío resaltado
   const all=pairsFor(w);
@@ -2032,7 +2091,7 @@ function tJornada(){
     ${pairsFor(w-1).map(([a,b])=>duelRow(a,b,w-1,prevR,null,false,lineaOfRound(prevR))).join('')}
     <button class="btn sec" onclick="replay(${w-1})">${ic('play')} Repetición jornada ${w}</button></div>`:''}
   `+btnBar();
-  if(miniSpec) renderMini(miniSpec);
+  if(miniSpec){ renderMini(miniSpec); partidoPulse('J'+w+':'+miniSpec.a.pid+':'+miniSpec.b.pid,'partidoJ',miniSpec.p); }
   TM.once('linea'+w,'linea_view',{week:w+1});
 }
 /* v1.3.1 · CLASIFICACIÓN JORNADA X (opción D1, JC 10-10): misma estructura que la Clasificación de Liga
@@ -2721,7 +2780,7 @@ function tLiga(){
     ${cfg.prize?`<p class="msg"><b>Premio:</b> ${esc(cfg.prize)}</p>`:''}
     <p class="msg" style="margin-top:6px;white-space:pre-wrap">${esc(cfg.levels||PLANTILLA_DEF)}</p>
     <p class="msg" style="margin-top:4px">Dos actividades el mismo día cuentan como plata${parseTypes().some(x=>x.solo)?'; las marcadas con * no se combinan':''}.</p>
-    <p class="msg" style="margin-top:4px">Duelo al mejor de 3: en cada bola, tus opciones son tus Moves entre los Moves de los dos. Con 0 Moves pierdes; si los dos tenéis 0, perdéis los dos.</p>
+    <p class="msg" style="margin-top:4px">Duelo al mejor de ${bestOfLive()}: en cada bola, tus opciones son tus Moves entre los Moves de los dos. Con 0 Moves pierdes; si los dos tenéis 0, perdéis los dos.</p>
     <p class="msg" style="margin-top:4px">La Línea: es la mediana de los Moves de la jornada. Si la superas y pierdes tu duelo, sumas 2 pts.</p>
     <p class="msg" style="margin-top:4px">Escudo de campeón: lo da el admin por torneos o retos de la liga; vale la jornada en curso y las dos siguientes. Lo activas en Jornada o en Moves y esa jornada sumas 3 pts, ganes o pierdas. Un escudo por jornada. Hora de la liga: ${esc(leagueTZ())}.</p>
     <p class="msg" style="margin-top:6px">Máx. ${cfg.maxDays} días/semana · ${cfg.bonusDay>0?`bonus +1 Move al llegar al día ${cfg.bonusDay}`:'sin bonus de regularidad'} · ${cfg.quedada?`actividad social +1 Move el primer día de la semana en que la marcan ${quedadaMin()}+ personas (solo cuentan las marcas de ese día)`:'sin actividad social'} · reportes: anulación con ${umbral} · calendario ${cfg.oculto?'con rival oculto':'público'}.</p>
@@ -2897,7 +2956,9 @@ function tAdmin(){
     </div>
     <div class="row">
       <div style="flex:1"><label>Escudo (Moves acumulados; 0 = sin escudo; R = ${refMoves()})</label><input type="number" id="eEscudo" value="${parseInt(cfg.escudoMoves)||0}" min="0" max="${2*refMoves()}"></div>
+      <div style="flex:1"><label>Duelo al mejor de</label><select id="eBestOf" onchange="run(this,setBestOf)">${[3,5].map(x=>`<option value="${x}" ${x===bestOfLive()?'selected':''}>${x}</option>`).join('')}</select></div>
     </div>
+    <p class="msg" style="margin-top:4px">Se guarda al cambiarlo y vale para la primera jornada que se resuelva después.</p>
     <p class="msg" style="margin-top:4px">Por defecto 1,5 × R. Lo activa el jugador cuando quiere.</p>
     <div class="row" style="margin-top:10px;align-items:flex-end">
       <label style="flex:2;margin:0"><input type="checkbox" id="eQuedada" ${cfg.quedada?'checked':''} style="width:auto" onchange="document.getElementById('eQMin').disabled=!this.checked"> Actividad social</label>
@@ -2950,6 +3011,17 @@ function previewLevels(){
   const incompletas=list.filter(x=>x.thr.some(t=>!t)).length;
   el.innerHTML=`<b>${list.length} actividad${list.length===1?'':'es'} reconocida${list.length===1?'':'s'}</b>${incompletas?` · ${incompletas} sin los tres tramos`:''}<br>`+
     list.map(x=>`${esc(x.name)}${x.solo?'<i> (no combinable)</i>':''}: ${[0,1,2].map(i=>x.thr[i]?esc(x.thr[i]):'<i>—</i>').join(' / ')}`).join('<br>');
+}
+/* v1.4: duelo al mejor de 3 o de 5 (RPC admin_set_best_of, setup16; queda en el registro) */
+async function setBestOf(){
+  const v=parseInt($('#eBestOf').value)||5;
+  try{
+    const {data,error}=await sb.rpc('admin_set_best_of',{p_code:CUR,p_best_of:v});
+    if(error) throw error;
+    track('best_of_set',{best_of:v,changed:!!(data&&data.changed)});
+    toast('Duelo al mejor de '+v);
+    await refresh();
+  }catch(e){ $('#eErr').textContent=e.message; }
 }
 async function changeAdminPlayer(){
   const id=$('#eAdminP').value;
@@ -3148,12 +3220,15 @@ const PONG=(()=>{
     return {trace,events,hits,walls,missSide,margin,duration:tOut,ok:!err,err,hA:p.hA,hB:p.hB,cA,cB,serveDir:p.serveDir};
   }
   /* --- DIRECTOR --- */
+  /* v1.4 (JC 18-10): margen MÍNIMO del fallo por nivel (minMargin). Hasta la v1.3.1 era 0,02·H = 9 px en todos
+     los niveles: la bola rozaba la pala y su halo, y a cámara lenta se veía. Ahora 32 px en el nivel 0, 27 en 1–2,
+     18 en 3 y solo el último recurso vuelve a 9 (se ve en pong_fallback). Los máximos se abren para compensar. */
   const LEVELS=[ // relajación en orden fijo (v1.1: hasta 11 golpes; ventana de duración por bola)
-    {margin:0.09,maxHits:9,prefHits:7,wall:true,underdog:true,dur:0},
-    {margin:0.12,maxHits:11,wall:true,underdog:true,dur:0},
-    {margin:0.12,maxHits:11,wall:true,underdog:true,dur:1},
-    {margin:0.12,maxHits:11,wall:false,underdog:true,dur:1},
-    {margin:0.12,maxHits:11,wall:false,underdog:false,dur:2},
+    {margin:0.12,minMargin:0.07,maxHits:9,prefHits:7,wall:true,underdog:true,dur:0},
+    {margin:0.16,minMargin:0.06,maxHits:11,wall:true,underdog:true,dur:0},
+    {margin:0.16,minMargin:0.06,maxHits:11,wall:true,underdog:true,dur:1},
+    {margin:0.16,minMargin:0.04,maxHits:11,wall:false,underdog:true,dur:1},
+    {margin:0.18,minMargin:0.02,maxHits:11,wall:false,underdog:false,dur:2},
   ];
   const DUR_ALL=[3.5,7.0];   // v1.1 (punto 38): peloteos de 3,5 a 7 s
   /* v1.2.1 (JC 02-10): BOLAS CORTAS. Hasta ahora toda bola llevaba al menos 3 golpes antes del fallo
@@ -3163,12 +3238,13 @@ const PONG=(()=>{
      servidor: solo cambia el camino. */
   const P_SHORT=0.14, DUR_SHORT=[0.8,3.4];
   function validate(sim,winner,hLoser,hWinner,lvl,dur,short){
+    const DUR_ALL=validate.durAll||[3.5,7.0];   // v1.4: ventana general por duelo (opts.durAll)
     if(!sim.ok) return sim.err;
     const loser=winner==='A'?'B':'A';
     if(sim.missSide!==loser) return 'gana el lado equivocado';
     if(short?(sim.hits<1||sim.hits>2):(sim.hits<3||sim.hits>lvl.maxHits)) return 'golpes '+sim.hits;
     if(lvl.wall&&!short&&sim.walls<1) return 'sin pared';   // en una bola corta la pared no es obligatoria
-    if(sim.margin<0.02*H||sim.margin>lvl.margin*H) return 'margen '+sim.margin.toFixed(1);
+    if(sim.margin<(lvl.minMargin||0.02)*H||sim.margin>lvl.margin*H) return 'margen '+sim.margin.toFixed(1);
     const miss=sim.events.find(e=>e.type==='miss'), first=sim.events.find(e=>e.type==='hit');
     if(!miss) return 'sin fallo';
     const win=short?DUR_SHORT:(lvl.dur===0?(dur||DUR_ALL):(lvl.dur===1?[Math.max(DUR_ALL[0],(dur||DUR_ALL)[0]-0.8),Math.min(DUR_ALL[1],(dur||DUR_ALL)[1]+0.8)]:DUR_ALL));
@@ -3200,7 +3276,7 @@ const PONG=(()=>{
     return {hA,hB,cA,cB,serveDir,serveAng:ang,pads:{A:mk(),B:mk()},edges,
       fail:{side:loser,k,delay:0.08+r()*0.45,speed:LOSER_MIN_SPEED+r()*(1-LOSER_MIN_SPEED),edge:0.2+r()*0.65}};
   }
-  const ATTEMPTS=100;   // semillas por nivel de relajación (una simulación ≈ 0,15 ms)
+  const ATTEMPTS=140;   // semillas por nivel de relajación (una simulación ≈ 0,15 ms; v1.4: 140, antes 100)
   /* direct(): busca el peloteo para una bola. Devuelve {sim, level, attempts}.
      opts.dur = [mín, máx] segundos del peloteo (según el duelo se decida a 2 o 3 bolas).
      v1.1 (D12): si el perdedor tiene 0 Moves (colisión 0), la bola atraviesa su pala vacía:
@@ -3216,7 +3292,9 @@ const PONG=(()=>{
     }
     // v1.2.1: ¿bola corta? Lo decide la semilla de la bola; si ninguna semilla corta valida, se
     // busca una normal (nunca se fuerza: el fallback de nivel es el mismo de siempre).
-    const shortBall=rng(seedBase+':'+ballIdx+':short')()<P_SHORT;
+    // v1.4: la cuota de bolas cortas y la ventana general llegan en opts (según el «mejor de» de la jornada).
+    validate.durAll=o.durAll||[3.5,7.0];
+    const shortBall=rng(seedBase+':'+ballIdx+':short')()<(o.pShort!==undefined?o.pShort:P_SHORT);
     for(const short of (shortBall?[true,false]:[false]))
     for(let li=0;li<LEVELS.length;li++){
       const lvl=LEVELS[li];
@@ -3237,6 +3315,7 @@ const PONG=(()=>{
           const k=p.fail.k;
           if(sim.missSide===loser&&sim.hits===k&&sim.margin>lvl.margin*H){ lo=p.fail.speed; }        // demasiado lejos → más rápido
           else if(sim.hits>k&&(sim.missSide===null||sim.hits>k)){ hi=p.fail.speed; }                 // llegó → más lento
+          else if(sim.missSide===loser&&sim.hits===k&&sim.margin<(lvl.minMargin||0.02)*H){ hi=p.fail.speed; }   // v1.4: demasiado cerca → más lento
           else break;
           p.fail.speed=(lo+hi)/2;
           if(hi-lo<0.01) break;
@@ -3300,7 +3379,14 @@ function drawCourt(cv,st){
   const ctx=cv.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr*cssW/PONG.W,dpr*cssW/PONG.W);
   const W=PONG.W,H=PONG.H,R=PONG.R,PW=W*0.019, t=(st.t||0)/1000, still=REDUCED();
   ctx.fillStyle='#1b2d4f'; ctx.fillRect(0,0,W,H);
+  const now=st.t||0;
+  /* v1.4 · fin de punto: destello del campo de quien gana el punto, en su color */
+  if(st.halfFlash){ const u=(now-st.halfFlash.t0)/380; if(u<1){ ctx.save(); ctx.globalAlpha=0.30*(1-u); ctx.fillStyle=COURT_COL[st.halfFlash.side]; ctx.fillRect(st.halfFlash.side==='A'?0:W/2,0,W/2,H); ctx.restore(); } else st.halfFlash=null; }
   ctx.save(); ctx.setLineDash([W*.014,W*.012]); ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=W*.004; ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.restore();
+  /* v1.4 · bola de partido: el marco late en el color de quien la tiene (dorado si la tienen los dos) + rótulo */
+  if(st.matchBall){ const p=still?0.5:0.5+0.5*Math.sin(t*5), col=st.matchBall==='both'?GOLD_COL:COURT_COL[st.matchBall];
+    ctx.save(); ctx.strokeStyle=col; ctx.globalAlpha=0.35+0.5*p; ctx.lineWidth=6+6*p; ctx.shadowColor=col; ctx.shadowBlur=24; rr(ctx,4,4,W-8,H-8,14); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.font="800 20px 'Inter',sans-serif"; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillStyle=col; ctx.globalAlpha=0.75+0.25*p; ctx.fillText('BOLA DE PARTIDO',W/2,H-16); ctx.restore(); }
   /* marcador dentro del campo (punto 31, D9): número grande en la mitad de cada jugador, Archivo
      Black, sin guion; ganador verde, perdedor rojo; duelo nulo: rayas grises */
   if(st.score){
@@ -3310,11 +3396,19 @@ function drawCourt(cv,st){
       put(st.score.a,W*0.27,st.score.a>st.score.b); put(st.score.b,W*0.73,st.score.b>st.score.a); }
     ctx.restore();
   }
+  /* v1.4 · marcador de luces en las esquinas: n por lado, se encienden con cada punto */
+  if(st.lights){ const n=st.lights.n, lr=11, g=30; for(const side of ['A','B']){ const won=st.lights[side]||0, x0=side==='A'?36:W-36-(n-1)*g;
+    for(let i=0;i<n;i++){ const x=side==='A'?x0+i*g:x0+(n-1-i)*g; ctx.save();
+      if(i<won){ ctx.fillStyle=COURT_COL[side]; ctx.shadowColor=COURT_COL[side]; ctx.shadowBlur=14; ctx.beginPath(); ctx.arc(x,28,lr,0,6.28); ctx.fill(); }
+      else { ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,28,lr-1,0,6.28); ctx.stroke(); }
+      ctx.restore(); } } }
   const pad=(side)=>{
     const h=side==='A'?st.hA:st.hB, cy=side==='A'?st.cyA:st.cyB, segs=(side==='A'?st.segsA:st.segsB)||[];
     const x=side==='A'?PONG.XA:PONG.W-PONG.XA-PW, sq=side==='A'?(st.squashA||0):(st.squashB||0);   // pala B en espejo de la A (la física no cambia)
     const col=COURT_COL[side], lvl=side==='A'?(st.haloA||0):(st.haloB||0);
     const ph=h*(1-0.08*sq), y=cy-ph/2, n=segs.length, g=H*.006;
+    /* v1.4 · cierre: la pala ganadora brilla, la perdedora se apaga */
+    if(st.final){ ctx.save(); if(st.final===side){ ctx.shadowColor=col; ctx.shadowBlur=30; } else ctx.globalAlpha=0.3; }
     if(n===0){   // 0 Moves: contorno vacío de un Move, sin colisión (D12)
       const oh=st.one||PONG.oneMove(13);
       ctx.save(); ctx.strokeStyle=col; ctx.globalAlpha=.5; ctx.lineWidth=2; rr(ctx,x,cy-oh/2,PW,oh,3); ctx.stroke(); ctx.restore(); return;
@@ -3341,57 +3435,29 @@ function drawCourt(cv,st){
     const gh=side==='A'?st.ghostA:st.ghostB;   // segmentos que se van (anulación/edición a la baja): destello gris
     if(gh&&gh.a>0){ const gn=gh.segs.length, gsh=(gh.h-(gn-1)*g)/gn, gtop=cy-gh.h/2;
       gh.segs.forEach((sg,i)=>{ if(i<n) return; ctx.fillStyle=`rgba(190,196,206,${(0.8*gh.a).toFixed(3)})`; rr(ctx,x,gtop+i*(gsh+g),PW,Math.max(1,gsh),2.5); ctx.fill(); }); }
+    if(st.final) ctx.restore();
   };
   pad('A'); pad('B');
-  if(st.ball&&st.adv&&st.adv.side){ advBall(ctx,st,t,still); }   // v1.3: bola de ventaja
-  else if(st.ball){
-    (st.trail||[]).forEach((p,i,arr)=>{ const a=0.28*(1-i/arr.length); ctx.fillStyle=`rgba(255,255,255,${a.toFixed(3)})`; ctx.beginPath(); ctx.arc(p.x,p.y,R*(1-0.12*i),0,Math.PI*2); ctx.fill(); });
-    const b=st.ball, sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0;
+  /* v1.4 · chispas en el contacto con la pala y tic en la pared */
+  if(st.sparks&&st.sparks.length){ st.sparks=st.sparks.filter(s=>now-s.t0<260); st.sparks.forEach(s=>{ const u=(now-s.t0)/260; ctx.save(); ctx.globalAlpha=1-u;
+    for(let i=0;i<s.n;i++){ const a=s.a0+i*6.28/s.n, d=6+u*34; ctx.fillStyle=s.col; ctx.beginPath(); ctx.arc(s.x+Math.cos(a)*d*s.dx,s.y+Math.sin(a)*d,2.6*(1-u)+0.6,0,6.28); ctx.fill(); } ctx.restore(); }); }
+  /* bola: color del favorito (st.ballCol; blanca si empate; dorada en la bola de partido doble), estela única */
+  if(st.ball){
+    const b=st.ball, sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0, bc=st.ballCol||'#fff';
+    (st.trail||[]).forEach((p,i,arr)=>{ const a=0.28*(1-i/arr.length); ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=bc; ctx.beginPath(); ctx.arc(p.x,p.y,R*(1-0.12*i),0,Math.PI*2); ctx.fill(); ctx.restore(); });
+    /* anillo del saque / de la bola al posarse en la costura */
+    (st.bursts||[]).forEach(bu=>{ const u=(now-bu.t0)/360; if(u<0||u>1) return; ctx.save(); ctx.globalAlpha=1-u; ctx.strokeStyle=bc; ctx.lineWidth=4*(1-u)+1; ctx.beginPath(); ctx.arc(bu.x,bu.y,R*(1.1+2*u),0,Math.PI*2); ctx.stroke(); ctx.restore(); });
     ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
-    ctx.shadowColor='rgba(255,255,255,.6)'; ctx.shadowBlur=16; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,R*(st.ballScale||1),0,Math.PI*2); ctx.fill(); ctx.restore();
+    ctx.shadowColor=bc; ctx.shadowBlur=14+34*(k/0.28); ctx.fillStyle=bc; ctx.beginPath(); ctx.arc(0,0,R*(st.ballScale||1),0,Math.PI*2); ctx.fill(); ctx.restore();
   }
+  /* v1.4 · confeti del cierre, dentro de la pista */
+  if(st.confetti&&st.confetti.length){ st.confetti.forEach(c=>{ c.x+=c.vx; c.y+=c.vy; c.vy+=0.25; c.r+=c.vr; c.life-=1; }); st.confetti=st.confetti.filter(c=>c.life>0&&c.y<H+10);
+    st.confetti.forEach(c=>{ ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.r); ctx.globalAlpha=Math.min(1,c.life/20); ctx.fillStyle=c.col; ctx.fillRect(-5,-3,10,6); ctx.restore(); }); }
 }
-/* ---- v1.3 · BOLA DE VENTAJA (modelo «diferencia») ----
-   La bola toma el color del que va por delante; una bolita por cada Move de diferencia (sin límite)
-   gira a su alrededor. Empate: bola blanca. 0-0: sin bola.
-   Sorteo: la bola va a la pala con ventaja sin que las bolitas dejen de girar; al sacar hay un
-   destello y las bolitas pasan, una a una (escalonadas), a ser la estela de la bola. Las de delante
-   (en la dirección del saque) ocupan los huecos más cercanos, así ninguna se cruza. Con +1 y +2 la
-   estela es más pequeña y tenue. En cada bola se repite. La velocidad no cambia nunca.
-   st.adv = {side:'A'|'B'|null, k}, st.ballScale, st.serveT (ms del saque), st.slotOf, st.hist, st.bursts */
-const ADV={WEEK_SCALE:1.35, ORB_R:6.5, STAG:55, TRANS:420, TSTEP:4};
-function advOf(ma,mb){ return ma===mb?{side:null,k:0}:{side:ma>mb?'A':'B',k:Math.abs(ma-mb)}; }
-const advEase=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
-function advOrbit(st,i,n,t,still){
-  const b=st.ball, sc=st.ballScale||1, rot=still?0:t*1.8;
-  const ang=rot+i*Math.PI*2/n-Math.PI/2, ro=PONG.R*sc+9+Math.max(0,n-8)*1.2;
-  return {x:b.x+Math.cos(ang)*ro,y:b.y+Math.sin(ang)*ro};
-}
-const advTrailR=(i,n)=>PONG.R*Math.min(0.62,0.36+0.065*n)*(1-0.5*(n>1?i/(n-1):0));
-const advTrailA=(i,n)=>Math.min(0.9,0.32+0.14*n)*(1-0.6*(n>1?i/(n-1):0));
-function advSlot(st,i){ const h=st.hist||[]; return h[Math.min(h.length-1,(i+1)*ADV.TSTEP)]||st.ball; }
-function advDot(ctx,x,y,r,col,al){ ctx.save(); ctx.globalAlpha=al; ctx.shadowColor=col; ctx.shadowBlur=6; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
-function advSlots(st,t){   // al sacar: bolitas de delante → huecos cercanos de la estela
-  const n=st.adv.k, dir=st.adv.side==='A'?1:-1, o=[];
-  for(let i=0;i<n;i++){ const p=advOrbit(st,i,n,t,false); o.push({i,f:(p.x-st.ball.x)*dir}); }
-  o.sort((p,q)=>q.f-p.f); st.slotOf=[]; o.forEach((e,s)=>st.slotOf[e.i]=s);
-}
-function advBall(ctx,st,t,still){
-  const R=PONG.R, b=st.ball, a=st.adv, col=COURT_COL[a.side], n=a.k, sc=st.ballScale||1, now=t*1000;
-  if(n){
-    if(!st.serveT){ for(let i=0;i<n;i++){ const p=advOrbit(st,i,n,t,still); advDot(ctx,p.x,p.y,ADV.ORB_R,col,1); } }
-    else for(let i=n-1;i>=0;i--){
-      const s=st.slotOf[i], u=advEase(Math.max(0,Math.min(1,(now-st.serveT-ADV.STAG*s)/ADV.TRANS)));
-      const o=advOrbit(st,i,n,t,still), q=advSlot(st,s);
-      advDot(ctx,o.x+(q.x-o.x)*u,o.y+(q.y-o.y)*u,ADV.ORB_R+(advTrailR(s,n)-ADV.ORB_R)*u,col,1+(advTrailA(s,n)-1)*u);
-    }
-  }
-  (st.bursts||[]).forEach(bu=>{ const u=(now-bu.t0)/360; if(u<0||u>1) return;
-    ctx.save(); ctx.globalAlpha=1-u; ctx.strokeStyle=col; ctx.lineWidth=4*(1-u)+1; ctx.beginPath(); ctx.arc(bu.x,bu.y,R*(1.1+2*u),0,Math.PI*2); ctx.stroke(); ctx.restore(); });
-  const sp=Math.hypot(b.vx||0,b.vy||0), k=sp?Math.min(0.28,(sp-PONG.V0)/(PONG.VMAX-PONG.V0)*0.28+0.06):0;
-  ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
-  ctx.shadowColor=col; ctx.shadowBlur=12; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(0,0,R*sc,0,Math.PI*2); ctx.fill(); ctx.restore();
-}
+const GOLD_COL='#f2ae0b';   // v1.4: bola de partido doble (= --gold)
+function courtConfetti(st,side){ const r=PONG.rng('conf'+Date.now()); const cols=[COURT_COL[side],'#ffffff',side==='A'?'#ffb3a3':'#d9ff8a']; st.confetti=[];
+  for(let i=0;i<90;i++) st.confetti.push({x:PONG.W/2+(r()-.5)*200,y:PONG.H*0.55,vx:(r()-.5)*14,vy:-6-r()*9,r:r()*6.28,vr:(r()-.5)*.3,life:70+r()*40,col:cols[Math.floor(r()*cols.length)]}); }
+/* v1.4: el bloque «bola de ventaja» de la v1.3 (bolitas por Move de diferencia, estela de bolitas) se ha retirado. */
 function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
 /* ---- mini-pista del duelo en vivo: palas a escala, sin bola; feedback al cambiar Moves ----
@@ -3400,7 +3466,10 @@ function rr(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x
    destello gris del segmento que se va. Cambiar solo la actividad (mismo nivel) no anima:
    se repintan colores/etiquetas. Con reduced-motion: sin animación, solo el conteo.
    v1.1: los halos se animan en bucle mientras haya alguno (y no haya reduced-motion). */
-const MINI_PREV={}; let miniRAF=0;
+const MINI_PREV={}, MINI_BALL={}; let miniRAF=0;
+const BALL_REST_SCALE=1.35;   // v1.3/v1.4: la bola en reposo (presentación y mini-pista) es algo mayor que en juego
+function favCol(ma,mb){ return ma===mb?'#fff':COURT_COL[ma>mb?'A':'B']; }
+const advEase=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
 function renderMini(spec){
   const cv=$('#miniCourt'); if(!cv) return;
   TM.once('mini','mini_view',{week:spec.w+1});
@@ -3418,11 +3487,16 @@ function renderMini(spec){
     }
     MINI_PREV[key(s)]={n:s.segs.length,h:hNow,segs:s.segs};
   }
-  /* v1.3: con el modelo «diferencia», bola en el centro (color del que va por delante + bolitas) */
-  if(advVisual(spec.w)&&(spec.a.moves>0||spec.b.moves>0)){
-    st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.ballScale=ADV.WEEK_SCALE; st.adv=advOf(spec.a.moves,spec.b.moves);
-  }
-  const loop=(st.haloA>0||st.haloB>0||(st.adv&&st.adv.k>0))&&!REDUCED();
+  /* v1.4: la bola descansa en la costura de la barra de partido con el color del favorito (empate: blanca);
+     sin bolitas. Al cambiar los Moves viaja a la nueva costura con muelle, se hincha y suelta un anillo. */
+  let ballAnim=null;
+  if(spec.a.moves>0||spec.b.moves>0){
+    const bkey=spec.w+':'+spec.a.pid+':'+spec.b.pid, x1=restX(spec.p), prevX=MINI_BALL[bkey];
+    st.ball={x:x1,y:PONG.H/2,vx:0,vy:0}; st.ballScale=BALL_REST_SCALE; st.ballCol=favCol(spec.a.moves,spec.b.moves); st.bursts=[];
+    if(prevX!==undefined&&Math.abs(prevX-x1)>0.5&&!REDUCED()){ ballAnim={x0:prevX,x1,t0:performance.now()}; st.ball.x=prevX; }
+    MINI_BALL[bkey]=x1;
+  } else delete MINI_BALL[spec.w+':'+spec.a.pid+':'+spec.b.pid];
+  const loop=(st.haloA>0||st.haloB>0)&&!REDUCED();
   const tracks=[...document.querySelectorAll('.track[data-halo]')];
   const frame=()=>{
     if(!cv.isConnected) return;
@@ -3435,6 +3509,9 @@ function renderMini(spec){
       st['ghost'+k]=a.ghost?{segs:a.ghost.segs,h:a.from+(a.to-a.from)*easeBack(u),a:Math.max(0,1-v)}:null;
       if(v<1) live=true; else { st['h'+k]=a.to; st['flash'+k]=null; st['ghost'+k]=null; }
     }
+    if(ballAnim){ const u=Math.min(1,(now-ballAnim.t0)/520); st.ball.x=ballAnim.x0+(ballAnim.x1-ballAnim.x0)*easeBack(u); st.ballScale=BALL_REST_SCALE*(1+0.4*Math.sin(Math.PI*u));
+      if(u>=1){ st.bursts.push({x:st.ball.x,y:st.ball.y,t0:now}); ballAnim=null; st.ballScale=BALL_REST_SCALE; } live=true; }
+    if(st.bursts&&st.bursts.length){ st.bursts=st.bursts.filter(b=>now-b.t0<400); if(st.bursts.length) live=true; }
     drawCourt(cv,st);
     if(live||loop) miniRAF=requestAnimationFrame(frame);
   };
@@ -3452,78 +3529,134 @@ function renderMini(spec){
   cv.onpointerleave=()=>{ if(hint) hint.textContent=base; };
 }
 
+let OV_OPEN=null, X2=false;
+/* ============ v1.4 · SONIDO (WebAudio sintetizado, sin ficheros; juego «retro melódico») ============
+   Apagado por defecto; interruptor en el overlay (se guarda en localStorage). El gesto de «¡Jugar!» o del
+   propio interruptor desbloquea el audio en móvil. Victoria/derrota solo en mi duelo. */
+const SND={ctx:null,noise:null,on:false};
+try{ SND.on=localStorage.getItem('yml_sound')==='1'; }catch(e){}
+function sndUnlock(){ try{ if(!SND.ctx){ SND.ctx=new (window.AudioContext||window.webkitAudioContext)(); const n=SND.ctx.createBuffer(1,SND.ctx.sampleRate*1.5,SND.ctx.sampleRate), d=n.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; SND.noise=n; } if(SND.ctx.state==='suspended') SND.ctx.resume(); }catch(e){} }
+function sndTone(o){ const c=SND.ctx; if(!c) return; try{ const t0=c.currentTime+(o.at||0), osc=c.createOscillator(), g=c.createGain(); osc.type=o.type||'square'; osc.frequency.setValueAtTime(o.f,t0);
+  if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to,t0+o.ms/1000);
+  if(o.vib){ const l=c.createOscillator(), lg=c.createGain(); l.frequency.value=o.vib; lg.gain.value=o.f*0.02; l.connect(lg); lg.connect(osc.frequency); l.start(t0); l.stop(t0+o.ms/1000+0.05); }
+  g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(o.vol||0.07,t0+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t0+o.ms/1000); osc.connect(g); g.connect(c.destination); osc.start(t0); osc.stop(t0+o.ms/1000+0.05); }catch(e){} }
+function sndNoise(o){ const c=SND.ctx; if(!c||!SND.noise) return; try{ const t0=c.currentTime+(o.at||0), s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain(); s.buffer=SND.noise; f.type='bandpass'; f.Q.value=o.q||1; f.frequency.setValueAtTime(o.f||1000,t0);
+  g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(o.vol||0.08,t0+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t0+o.ms/1000); s.connect(f); f.connect(g); g.connect(c.destination); s.start(t0); s.stop(t0+o.ms/1000+0.05); }catch(e){} }
+const SFX={
+  serve:()=>[523,659,784].forEach((f,i)=>sndTone({f,ms:70,at:i*.055})),
+  hit:(i)=>sndTone({f:440*Math.pow(1.0595,Math.min(14,i||0)),ms:55}),          // sube un semitono con cada toque del peloteo
+  wall:()=>sndNoise({f:3000,ms:30,q:2}),
+  point:()=>[784,988,1175].forEach((f,i)=>sndTone({f,ms:110,at:i*.08})),
+  match:()=>{ sndTone({f:98,ms:400,type:'sawtooth',vol:.05,vib:6}); sndTone({f:98,ms:400,type:'sawtooth',vol:.05,vib:6,at:.45}); },
+  win:()=>[523,523,523,659,784,1047].forEach((f,i)=>sndTone({f,ms:i<3?110:220,at:[0,.12,.24,.38,.6,.85][i]})),
+  lose:()=>{ [392,349,311].forEach((f,i)=>sndTone({f,ms:150,vol:.06,at:i*.17})); sndTone({f:294,to:262,ms:600,vol:.06,at:.52}); }
+};
+function sfx(k,arg){ if(SND.on&&SFX[k]) SFX[k](arg); }
+function toggleSound(jNum){ SND.on=!SND.on; try{ localStorage.setItem('yml_sound',SND.on?'1':'0'); }catch(e){} if(SND.on) sndUnlock(); const b=$('#sndBtn'); if(b) b.classList.toggle('on',SND.on); try{ track(SND.on?'anim_sound_on':'anim_sound_off',{week:jNum}); }catch(e){} }
+
 /* ---- SORTEO: reproducción del peloteo dictado por el servidor ----
    Para cada bola de d.draws, el DIRECTOR busca un peloteo real (PONG.direct) y aquí
    solo se reproduce el trace a paso fijo con acumulador + interpolación (alpha).
    Palas del tamaño de los Moves congelados (d.ma/d.mb); su tamaño no cambia durante
    la reproducción. Con reduced-motion: resumen estático (palas, bolas, marcador).
-   v1.1 (puntos 22, 38): opts.noSkipFirst = el primer duelo (el mío) no se puede saltar; los
-   demás admiten salto individual. Duelo completo de 20 a 28 s: presentación 3 s, cierre 3 s,
-   y peloteos de 5,8–7 s (2 bolas) o 3,5–6 s (3 bolas). */
-let OV_OPEN=null;
+   v1.1 (puntos 22, 38): opts.noSkipFirst = el primer duelo (el mío) no se puede saltar.
+   v1.4 (JC 13–18-10, laboratorio del duelo): al mejor de N (marcador de luces en la pista), barra de
+   partido en la presentación, la bola descansa en la costura y la recoge el favorito para sacar (anillo al
+   sacar), bola de partido (marco + rótulo, cámara lenta final; dorada si la tienen los dos: sale del centro),
+   fin de punto (congelado + destello del campo del que gana), cierre (pala ganadora brilla, confeti),
+   «Saltar» = resultado directo, botón ×2, sonido opcional, vibración solo en mi duelo (Android). */
 async function playPong(jNum,duels,opts){
   const ov=$('#ov'); let skip=false, huboSkip=false; const o=opts||{};
-  const sleep=ms=>new Promise(r=>setTimeout(r,skip?30:ms));
-  const w=jNum-1, REF=refMoves(), reduced=REDUCED();
-  const model=duelModel(w);   // v1.3: cada jornada se reproduce con el modelo con el que se jugó
+  const w=jNum-1, REF=refMoves(), reduced=REDUCED(), bestOf=bestOfWeek(w), need=(bestOf+1)/2;
+  const ses0=ses(), me=ses0?L.players.find(p=>p.id===ses0.playerId):null;
+  const ctl={skip:()=>skip,x2:()=>X2};
+  const sleep=ms=>new Promise(r=>setTimeout(r,skip?0:(X2?ms/2:ms)));
   ov.classList.add('show');
   const tAnim=Date.now(); OV_OPEN={week:jNum,duelo:0,t0:tAnim};
-  track('anim_open',{week:jNum,modo:ANIM_MODE,n_duelos:duels.length,reduced});
+  track('anim_open',{week:jNum,modo:ANIM_MODE,n_duelos:duels.length,reduced,best_of:bestOf});
   if(reduced) track('anim_reduced',{week:jNum});
+  if(SND.on) sndUnlock();
   for(let i=0;i<duels.length;i++){
-    const d=duels[i]; OV_OPEN.duelo=i+1; skip=false;
+    const d=duels[i]; OV_OPEN.duelo=i+1; skip=false; X2=false;
     const canSkip=!(o.noSkipFirst&&i===0);
+    const mine=!!(me&&(d.a===me.name||d.b===me.name));
     const pa=byName(d.a), pb=byName(d.b);
     const segsA=pa?fitSegs(segmentsFor(pa.id,w),d.ma):neutralSegs(d.ma), segsB=pb?fitSegs(segmentsFor(pb.id,w),d.mb):neutralSegs(d.mb);
     const hA=PONG.padH(d.ma,REF), hB=PONG.padH(d.mb,REF), cA=PONG.collH(d.ma,REF), cB=PONG.collH(d.mb,REF);
-    ov.innerHTML=`<div class="prog">Jornada ${jNum} · duelo ${i+1} de ${duels.length} · al mejor de 3</div>
+    const pDuel=d.nulo?null:duelProb(d.ma,d.mb,w);
+    ov.innerHTML=`<div class="prog">Jornada ${jNum} · duelo ${i+1} de ${duels.length} · al mejor de ${bestOf}</div>
       <div class="intro">
         <div style="text-align:left"><div class="pName" style="color:var(--duelA)">${esc(d.a)}</div><div class="pMeta">${d.ma} Moves${haloLevel(d.ma)?' · '+HALO_NAMES[haloLevel(d.ma)]:''}</div></div>
         <div style="text-align:right"><div class="pName" style="color:var(--duelB)">${esc(d.b)}</div><div class="pMeta">${d.mb} Moves${haloLevel(d.mb)?' · '+HALO_NAMES[haloLevel(d.mb)]:''}</div></div>
       </div>
+      ${d.nulo?'':partidoHTML(d.a,d.b,pDuel,'partidoOv',false)}
       <canvas class="court" id="court"></canvas>
-      <div id="pscore">0 – 0</div><div id="pres"></div>
-      <div class="row" style="justify-content:center">${canSkip?`<button class="btn sec" id="skipBtn">Saltar este duelo</button>`:''}</div>`;
-    if(canSkip) $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; };
+      <div id="pscore" class="${reduced?'':'off'}">0 – 0</div><div id="pres"></div>
+      <div class="row" style="justify-content:center">${canSkip?`<button class="btn sec" id="skipBtn">Saltar este duelo</button>`:''}<button class="btn sec" id="x2Btn">×2</button><button class="btn sec${SND.on?' on':''}" id="sndBtn" aria-label="Sonido">♪</button></div>`;
+    if(canSkip) $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; $('#skipBtn').disabled=true; };
+    $('#x2Btn').onclick=()=>{ X2=!X2; $('#x2Btn').classList.toggle('on',X2); if(X2) track('anim_speed2x',{week:jNum,duelo_i:i+1}); };
+    $('#sndBtn').onclick=()=>toggleSound(jNum);
     const cv=$('#court');
-    const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,haloA:haloLevel(d.ma),haloB:haloLevel(d.mb),ball:null,trail:[],one:PONG.oneMove(REF),t:performance.now()};
-    /* v1.3: presentación con la bola de la semana (color + bolitas); empate: blanca; 0-0: sin bola */
-    const adv=advVisual(w)&&!d.nulo?advOf(d.ma,d.mb):null;
-    if(adv){ st.ball={x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}; st.ballScale=ADV.WEEK_SCALE; st.adv=adv; st.bursts=[]; }
-    let haloRAF=0; const haloLoop=()=>{ st.t=performance.now(); drawCourt(cv,st); haloRAF=requestAnimationFrame(haloLoop); };
-    const idle=async(ms)=>{ if((st.haloA||st.haloB||(adv&&adv.k>0&&st.ball))&&!reduced){ haloLoop(); await sleep(ms); cancelAnimationFrame(haloRAF); } else { st.t=performance.now(); drawCourt(cv,st); await sleep(ms); } };
-    /* v1.3: animación corta (la bola va a la pala, aparece…), acelerada si se salta el duelo */
-    const tween=(ms,fn)=>new Promise(res=>{ const t0=performance.now(), dur=skip?Math.min(ms,60):ms; const f=now=>{ const u=Math.min(1,(now-t0)/dur); fn(advEase(u)); st.t=now; drawCourt(cv,st); if(u<1) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
+    const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,haloA:haloLevel(d.ma),haloB:haloLevel(d.mb),ball:null,trail:[],one:PONG.oneMove(REF),t:performance.now(),
+      lights:{n:need,A:0,B:0},ballCol:favCol(d.ma,d.mb),sparks:[],bursts:[]};
+    OV_OPEN.st=st;   // estado de la pista del duelo en curso (lo lee el banco de pruebas)
+    const favSide=d.ma===d.mb?null:(d.ma>d.mb?'A':'B');
+    if(!d.nulo){ st.ball={x:restX(pDuel),y:PONG.H/2,vx:0,vy:0}; st.ballScale=BALL_REST_SCALE; }
+    let loopRAF=0; const loopFn=()=>{ st.t=performance.now(); drawCourt(cv,st); loopRAF=requestAnimationFrame(loopFn); };
+    const idle=async(ms)=>{ if(!reduced){ loopFn(); await sleep(ms); cancelAnimationFrame(loopRAF); } else { st.t=performance.now(); drawCourt(cv,st); await sleep(ms); } };
+    const tween=(ms,fn)=>new Promise(res=>{ if(skip||reduced){ fn(1); return res(); } const t0=performance.now(); const f=now=>{ if(skip){ fn(1); return res(); } const u=Math.min(1,(now-t0)/(X2?ms/2:ms)); fn(advEase(u)); st.t=now; drawCourt(cv,st); if(u<1) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
+    const sc={A:0,B:0};
+    /* cierre (también al saltar: resultado directo) */
+    const final=async(skipped)=>{
+      cancelAnimationFrame(loopRAF); st.matchBall=null; st.halfFlash=null; st.ball=null; st.trail=[];
+      const fin={A:d.draws.filter(x=>x==='A').length,B:d.draws.filter(x=>x==='B').length};
+      st.lights.A=fin.A; st.lights.B=fin.B; $('#pscore').textContent=fin.A+' – '+fin.B;
+      $('#pres').innerHTML=`<span class="w">${esc(d.winner)}</span> gana ${d.score}`;
+      st.score={a:fin.A,b:fin.B};
+      const wside=d.winner===d.a?'A':'B';
+      if(!skipped&&!reduced){ st.final=wside; courtConfetti(st,wside); }
+      if(!skipped){ if(mine) sfx(d.winner===me.name?'win':'lose'); else sfx('point'); }
+      skip=false; await idle(skipped?1500:2500);
+    };
     await idle(3000);
-    if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; await idle(2000); continue; }
-    let sc={A:0,B:0};
+    if(d.nulo){ $('#pres').textContent='Duelo nulo (0 Moves ambos)'; st.score={a:null,b:null}; await idle(2000); continue; }
+    if(skip){ await final(true); continue; }
     if(reduced){
       $('#pres').innerHTML=`<div class="drawlist">${d.draws.map(r=>`<span class="${r==='A'?'dA':'dB'}">${r}</span>`).join('')}</div><span class="w">${esc(d.winner)}</span> gana ${d.score}`;
-      d.draws.forEach(r=>sc[r]++); $('#pscore').textContent=sc.A+' – '+sc.B;
+      d.draws.forEach(r=>sc[r]++); $('#pscore').textContent=sc.A+' – '+sc.B; st.lights.A=sc.A; st.lights.B=sc.B; st.score={a:sc.A,b:sc.B}; st.t=performance.now(); drawCourt(cv,st);
       await sleep(3200); continue;
     }
-    const dur=d.draws.length===2?[5.8,7.0]:[3.5,6.0];
-    const tx=adv&&adv.side?(adv.side==='A'?PONG.XA+PONG.R+PONG.SERVE_GAP:PONG.XB-PONG.R-PONG.SERVE_GAP):0;
-    for(let bi=0;bi<d.draws.length;bi++){
+    /* ventanas del peloteo según el «mejor de» (JC 18-10): a 3, las de siempre; a 5, más cortas y más bolas cortas */
+    const total=d.draws.length, durAll=[3.5,7.0]; let dur, pShort;
+    if(bestOf===3){ pShort=0.14; dur=total===2?[5.8,7.0]:[3.5,6.0]; }
+    else { pShort=total>=need+2?0.30:0.25; dur=total<=need?[3.5,6.0]:[3.5,5.5]; }
+    const tx=favSide?(favSide==='A'?PONG.XA+PONG.R+PONG.SERVE_GAP:PONG.XB-PONG.R-PONG.SERVE_GAP):PONG.W/2;
+    let broke=false;
+    for(let bi=0;bi<total;bi++){
+      if(skip){ broke=true; break; }
       const r=d.draws[bi]; OV_OPEN.bola=bi+1;
-      if(adv&&adv.side){   // v1.3: la bola va a la pala que saca (1.ª bola) o reaparece en ella (2.ª y 3.ª)
-        st.serveT=null; st.hist=[];
-        if(bi===0){ const x0=st.ball.x; await tween(600,e=>{ st.ball.x=x0+(tx-x0)*e; st.ballScale=ADV.WEEK_SCALE+(1-ADV.WEEK_SCALE)*e; }); }
-        else { st.ball={x:tx,y:PONG.H/2,vx:0,vy:0}; await tween(280,e=>{ st.ballScale=0.2+0.8*e; }); }
-      }
-      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi,adv&&adv.side?{cA,cB,dur,serveFrom:adv.side}:{cA,cB,dur});
+      /* bola de partido: a un punto. Los dos a un punto → dorada, sale del centro, nadie saca */
+      const mA=sc.A===need-1, mB=sc.B===need-1;
+      st.matchBall=(mA||mB)?(mA&&mB?'both':(mA?'A':'B')):null;
+      const gold=st.matchBall==='both'; st.ballCol=gold?GOLD_COL:favCol(d.ma,d.mb);
+      const txb=gold?PONG.W/2:tx;
+      if(bi===0){ const x0=st.ball.x; await tween(600,e=>{ st.ball.x=x0+(txb-x0)*e; st.ballScale=BALL_REST_SCALE+(1-BALL_REST_SCALE)*e; }); }
+      else { st.ball={x:txb,y:PONG.H/2,vx:0,vy:0}; await tween(gold?700:280,e=>{ st.ballScale=0.2+0.8*e; }); }
+      if(st.matchBall){ sfx('match'); track('anim_matchball_view',{week:jNum,duelo_i:i+1,dorada:gold}); if(!skip) await idle(gold?1100:500); }
+      const res=PONG.direct(L.league.code+':'+jNum+':'+i,r,hA,hB,bi,{cA,cB,dur:gold?[5.5,7.0]:dur,durAll,pShort:gold?0:pShort,serveFrom:gold?undefined:(favSide||undefined)});
       if(DEV&&!res.sim.ok) throw new Error('PONG: '+res.sim.err);
       if(res.level>0){ track('pong_fallback',{week:jNum,duelo_i:i+1,bola_i:bi+1,nivel:res.level,intentos:res.attempts,corta:!!res.short}); if(DEV) console.info(`[pong] J${jNum} duelo ${i+1} bola ${bi+1}: fallback nivel ${res.level} (${res.attempts} intentos)`); }
-      if(adv&&!adv.side) st.ball=null;   // empate: la bola blanca de la presentación pasa al saque del centro
-      await playTrace(cv,st,res.sim,()=>skip);
+      await playTrace(cv,st,res.sim,ctl,{decisive:st.matchBall!==null,gold});
+      if(skip){ broke=true; break; }
       sc[r]++;
+      st.halfFlash={side:r,t0:performance.now()}; st.lights[r]=sc[r];
       const ps=$('#pscore'); ps.textContent=sc.A+' – '+sc.B; ps.classList.add('flash'); cv.classList.add('shake');
       setTimeout(()=>{ ps.classList.remove('flash'); cv.classList.remove('shake'); },200);
+      sfx('point');
+      if(mine&&navigator.vibrate){ try{ navigator.vibrate(sc[r]===need?[40,60,80]:30); }catch(e){} }
       await idle(700);
     }
-    $('#pres').innerHTML=`<span class="w">${esc(d.winner)}</span> gana ${d.score}`;
-    st.score={a:sc.A,b:sc.B};
-    await idle(3000);
+    await final(broke);
   }
   ov.classList.remove('show');
   OV_OPEN=null; track('anim_end',{week:jNum,ms:Date.now()-tAnim,n_duelos:duels.length,hubo_skip:huboSkip});
@@ -3532,25 +3665,34 @@ async function playPong(jNum,duels,opts){
    jornadas resueltas; por si acaso: recorta o rellena en gris) */
 function fitSegs(segs,total){ segs=segs.slice(0,Math.max(0,total)); while(segs.length<total) segs.push({kind:'adj',label:''}); return segs; }
 /* reproducción de un trace: paso fijo DT con acumulador (máx. 0,25 s por frame), alpha de
-   interpolación, 0,5 s de congelado en el saque, hit-stop 40 ms, squash 120 ms, estela. */
-function playTrace(cv,st,sim,isSkip){
+   interpolación, 0,5 s de congelado en el saque, hit-stop 40 ms, squash 120 ms, estela.
+   v1.4: anillo al sacar, chispas y sonido en golpes y paredes, congelado de 120 ms en el fallo, cámara lenta
+   en el punto decisivo desde que la bola cruza la mitad tras el último golpe, ×2, y «saltar» corta aquí. */
+function playTrace(cv,st,sim,ctl,opts){
   return new Promise(resolve=>{
-    const DT=PONG.DT, tr=sim.trace, hits=sim.events.filter(e=>e.type==='hit');
-    let simT=0, acc=0, last=performance.now(), hold=0.5, nextHit=0, sqA=0, sqB=0, done=false;
-    const adv=st.adv&&st.adv.side?st.adv:null;   // v1.3: bola de ventaja
-    st.ball=adv?{x:st.ball?st.ball.x:PONG.W/2,y:PONG.H/2,vx:0,vy:0}:{x:PONG.W/2,y:PONG.H/2,vx:0,vy:0};
-    st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0;
-    if(adv){ st.ballScale=1; st.serveT=null; st.hist=[]; st.bursts=st.bursts||[]; }
-    const serveX=st.ball.x; let served=false;
+    const DT=PONG.DT, tr=sim.trace, hits=sim.events.filter(e=>e.type==='hit'), walls=sim.events.filter(e=>e.type==='wall'), miss=sim.events.find(e=>e.type==='miss');
+    let simT=0, acc=0, last=performance.now(), hold=0.5, nextHit=0, nextWall=0, sqA=0, sqB=0, done=false, missDone=false, served=false;
+    st.ball=st.ball||{x:PONG.W/2,y:PONG.H/2,vx:0,vy:0};
+    st.trail=[]; st.cyA=PONG.H/2; st.cyB=PONG.H/2; st.squashA=0; st.squashB=0; st.bursts=st.bursts||[]; st.sparks=st.sparks||[];
+    let slowFrom=Infinity; const slowK=opts.gold?0.28:0.4;
+    if(opts.decisive){ const lh=hits[hits.length-1], i0=lh?Math.floor(lh.t/DT)+1:0;
+      for(let i=Math.max(1,i0);i<tr.length;i++){ if((tr[i-1].bx-PONG.W/2)*(tr[i].bx-PONG.W/2)<=0){ slowFrom=tr[i].t; break; } }
+      if(slowFrom===Infinity) slowFrom=Math.max(0,sim.duration-0.32); }
     const frame=(now)=>{
+      if(ctl.skip()){ st.ball=null; st.trail=[]; resolve(); return; }   // saltar = resultado directo
       st.t=now;
-      let dt=Math.min(0.25,(now-last)/1000); last=now; if(isSkip()) dt*=8;
+      let dt=Math.min(0.25,(now-last)/1000); last=now; if(ctl.x2()) dt*=2;
       if(hold>0){ hold-=dt; if(hold>0){ drawCourt(cv,st); requestAnimationFrame(frame); return; } dt=-hold; hold=0; }
-      if(adv&&!served){ served=true; advSlots(st,now/1000); st.serveT=now; st.bursts.push({x:st.ball.x,y:st.ball.y,t0:now}); }
+      if(!served){ served=true; st.ballScale=1; sfx('serve'); st.bursts.push({x:st.ball.x,y:st.ball.y,t0:now}); }
+      if(simT>=slowFrom) dt*=slowK;
       acc+=dt;
       while(acc>=DT&&!done){
         simT+=DT; acc-=DT;
-        if(nextHit<hits.length&&simT>=hits[nextHit].t){ hold=0.04; if(hits[nextHit].side==='A') sqA=0.12; else sqB=0.12; nextHit++; acc=0; break; }
+        if(nextHit<hits.length&&simT>=hits[nextHit].t){ const hh=hits[nextHit]; hold=0.04; if(hh.side==='A') sqA=0.12; else sqB=0.12;
+          st.sparks.push({x:hh.side==='A'?PONG.XA+PONG.R:PONG.XB-PONG.R,y:hh.y,t0:now,n:7,a0:Math.random()*6.28,col:COURT_COL[hh.side],dx:hh.side==='A'?1:-1});
+          sfx('hit',nextHit); nextHit++; acc=0; break; }
+        if(nextWall<walls.length&&simT>=walls[nextWall].t){ const wv=walls[nextWall]; st.sparks.push({x:tr[Math.min(tr.length-1,Math.floor(simT/DT))].bx,y:wv.y,t0:now,n:4,a0:0,col:'#ffffff',dx:1}); sfx('wall'); nextWall++; }
+        if(miss&&!missDone&&simT>=miss.t){ missDone=true; hold=0.12; acc=0; break; }
         if(simT>=sim.duration) done=true;
       }
       const f=Math.min(tr.length-1,simT/DT), i=Math.floor(f), al=f-i, a=tr[Math.max(0,i)], b=tr[Math.min(tr.length-1,i+1)];
@@ -3558,14 +3700,10 @@ function playTrace(cv,st,sim,isSkip){
       st.ball.vx=(b.bx-a.bx)/DT; st.ball.vy=(b.by-a.by)/DT;
       st.ball.x=lerp(a.bx,b.bx); st.ball.y=lerp(a.by,b.by); st.cyA=lerp(a.ay,b.ay); st.cyB=lerp(a.by2,b.by2);
       st.trail=[]; for(let k=1;k<=5;k++){ const s=tr[Math.max(0,i-k*2)]; st.trail.push({x:s.bx,y:s.by}); }
-      if(adv){   // v1.3: posiciones recientes de la bola para la estela de bolitas (antes del saque: la bola quieta)
-        st.hist=[{x:st.ball.x,y:st.ball.y}]; const nh=(adv.k+1)*ADV.TSTEP+1;
-        for(let k=1;k<nh;k++){ const s=tr[i-k]; st.hist.push(s?{x:s.bx,y:s.by}:{x:serveX,y:PONG.H/2}); }
-        st.bursts=st.bursts.filter(b=>now-b.t0<400);
-      }
+      st.bursts=st.bursts.filter(bu=>now-bu.t0<400);
       sqA=Math.max(0,sqA-dt); sqB=Math.max(0,sqB-dt); st.squashA=sqA/0.12; st.squashB=sqB/0.12;
       drawCourt(cv,st);
-      if(done){ st.ball=null; st.trail=[]; if(adv){ st.hist=[]; st.serveT=null; } resolve(); return; }
+      if(done){ st.ball=null; st.trail=[]; resolve(); return; }
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
