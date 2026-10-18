@@ -360,7 +360,14 @@
   #ov .partido{width:100%;max-width:440px;margin:10px 0 0;}
   #ov .pbar{height:10px;border-radius:5px;}
   #pscore.off{visibility:hidden;min-height:8px;height:8px;}
-  #ov .row .btn.sec.on{border-color:var(--firma);color:var(--firma);background:#fff2ee;}
+  .drow.nxt .ds{color:var(--dim);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+  .drow.nxt .dn{font-size:14px;}
+  .drow.casc{animation:rowin .32s ease both;}
+  @keyframes rowin{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .lockbox{text-align:center;padding:4px 0 8px;} .lockbox .btn{margin:6px auto 10px;padding:14px 30px;font-size:16px;}
+  .names .enter{display:inline-block;animation:nameIn .42s cubic-bezier(.34,1.56,.64,1) both;}
+  @keyframes nameIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:none;}}
+  .jtag{font-family:var(--disp);font-size:11px;color:var(--firma);margin-left:auto;letter-spacing:.3px;}
   /* ============ v1.3.1 · La Línea, escudos tocables, jornadas y calendario (maqueta aprobada 10-10) ============ */
   [hidden]{display:none!important;}
   svg.esc{overflow:visible;}   /* la punta del escudo se salía 1 px del viewBox y se recortaba */
@@ -939,6 +946,19 @@ function initWatched(){
    resultados se ven sin más (la animación sigue disponible en «Repetir»). Todas las vistas
    (Jornada, Liga, clasificación, calendario) consultan esta única función. */
 function roundVisible(j){ return !!roundOf(j)&&(watched(j)||nowT()>=weekEnd(j)); }
+/* v1.4 (JC 18-10): en cuanto he visto la jornada jugada, los duelos de la siguiente se descubren, aunque siga el
+   descanso (domingo 22:00 → lunes 00:00). Vale para la pestaña Jornada y para Jornadas en Liga (rival oculto). */
+function nextLockable(j){ const w=activeW(); return j===w+1&&j<L.league.config.weeks&&!!roundOf(w)&&watched(w)&&nowT()<weekEnd(w); }
+/* …pero hay que DESBLOQUEARLA con el botón «Desbloquear Jornada X» (JC 18-10): una vez por dispositivo (MEM) */
+function unlockedNext(j){ const m=MEM[CUR]; return !!(m&&m.unlocked&&m.unlocked[j]); }
+function nextUnlocked(j){ return nextLockable(j)&&unlockedNext(j); }
+let NEXT_ENTER=-1;   // jornada recién desbloqueada: la pala del rival entra en la pista y las filas salen en cascada (una vez)
+function unlockNext(j){
+  if(SND.on){ sndUnlock(); sfx('serve'); }
+  try{ navigator.vibrate&&navigator.vibrate(30); }catch(e){}
+  MEM[CUR]=MEM[CUR]||{}; MEM[CUR].unlocked=MEM[CUR].unlocked||{}; MEM[CUR].unlocked[j]=true; saveMem();
+  NEXT_ENTER=j; render();
+}
 /* jornada resuelta que aún no he visto y cuyo descanso sigue en curso (estreno obligatorio) */
 function firstUnwatched(){ for(let j=0;j<L.league.config.weeks;j++){ if(!roundOf(j)) return -1; if(!watched(j)&&nowT()<weekEnd(j)) return j; } return -1; }
 function firstUnresolved(){ for(let j=0;j<L.league.config.weeks;j++){ if(!(L.rounds||[]).find(x=>x.number===j+1)) return j; } return L.league.config.weeks; }
@@ -1892,7 +1912,7 @@ function playPanel(j){
   TM.once('panel'+j,'play_panel_view',{week:j+1,min_desde_cierre:minsSinceClose(j),tiene_duelo:!!myPair});
   return `<div class="card" style="text-align:center">
     <div class="bigjt">JORNADA ${j+1}</div>
-    <button class="btn" style="margin:12px auto 4px;padding:14px 34px;font-size:17px" onclick="run(this,watchRound,${j})">${ic('play',18)} ¡Jugar!</button>
+    <button class="btn" style="margin:12px 0 4px;padding:14px 34px;font-size:17px" onclick="run(this,watchRound,${j})">${ic('play',18)} ¡Jugar!</button>
   </div>`;
 }
 function resultBanner(j){
@@ -2012,7 +2032,9 @@ function tJornada(){
     ${DEV?'<p class="msg">Modo dev: esta liga está completa — crea otra de prueba o amplía las jornadas desde Admin → Configuración.</p>':''}</div>`+btnBar(); return;
   }
   const r=roundOf(w), t=nowT();
-  const pair=me?pairsFor(w).find(([a,b])=>a===me.name||b===me.name):null;
+  /* v1.4: en el descanso, tras desbloquear la siguiente jornada, «Mi jornada» enseña ya ese duelo (a 0 Moves) */
+  const wShow=nextUnlocked(w+1)?w+1:w, rShow=wShow===w?r:null, entering=NEXT_ENTER===wShow; if(entering) NEXT_ENTER=-1;
+  const pair=me?pairsFor(wShow).find(([a,b])=>a===me.name||b===me.name):null;
   // tarjeta de estado: cuenta atrás en juego / descanso verde / resolviendo
   let cdHtml='', stick='';
   if(r){
@@ -2036,7 +2058,7 @@ function tJornada(){
   // mi duelo · v1.2: o el duelo ajeno elegido tocando una fila de «Jornada X» (VIEW_DUEL)
   let duelHtml=me?'<p class="msg">Esta semana descansas.</p>':'<p class="msg">Estás como organizador; no participas en esta liga.</p>';
   let duelTitle=me?'Mi jornada':'Duelos';
-  if(VIEW_DUEL&&!pairsFor(w).some(([a,b])=>a===VIEW_DUEL.a&&b===VIEW_DUEL.b)) VIEW_DUEL=null;
+  if(VIEW_DUEL&&!pairsFor(wShow).some(([a,b])=>a===VIEW_DUEL.a&&b===VIEW_DUEL.b)) VIEW_DUEL=null;
   const peek=VIEW_DUEL;
   const shown=peek?[peek.a,peek.b]:pair;
   if(shown){
@@ -2044,25 +2066,26 @@ function tJornada(){
     if(peek){ if(nameA==='La Media'){ nameA=shown[1]; nameB=shown[0]; } }
     else if(nameA!==me.name){ nameA=me.name; nameB=shown[0]; }   // yo siempre en A
     const pA=byName(nameA), pB=byName(nameB);
-    const d=r?(r.data.duels||[]).find(x=>x.a===shown[0]&&x.b===shown[1]):null;
+    const d=rShow?(rShow.data.duels||[]).find(x=>x.a===shown[0]&&x.b===shown[1]):null;
     /* Moves: en vivo hasta resolver; congelados (instantánea) una vez resuelta */
-    const ma=movesOfName(nameA,nameB,w,d), mb=movesOfName(nameB,nameA,w,d);
+    const ma=movesOfName(nameA,nameB,wShow,d), mb=movesOfName(nameB,nameA,wShow,d);
     let sA=0,sB=0;
     if(d&&!d.nulo){ const [hi,lo]=d.score.split('-').map(Number); sA=d.winner===nameA?hi:lo; sB=d.winner===nameA?lo:hi; }
-    const escA=escudoOf(nameA,w), escB=pB?escudoOf(nameB,w):null;
+    const escA=escudoOf(nameA,wShow), escB=pB?escudoOf(nameB,wShow):null;
     /* v1.2.1: escudo de campeón junto al nombre (gastado solo durante el descanso) */
     const rest=r&&t<weekEnd(w), cur=r?w+2:w+1;
     const showCamp=cs=>cs&&cs.kind&&(cs.kind!=='gastado'||rest);
-    const csA=champState(nameA,w), csB=pB?champState(nameB,w):{kind:null};
+    const csA=champState(nameA,wShow), csB=pB?champState(nameB,wShow):{kind:null};
     const campA=showCamp(csA)?campMark(csA,cur,22):'', campB=showCamp(csB)?campMark(csB,cur,22):'';
     if(!peek) TM.once('duel','duel_view',{week:w+1,dia_jornada:jornadaDayN(w),moves_propios:ma,moves_rival:mb,es_media:!pB});
-    else duelTitle=`Jornada ${w+1}`;   // JC (03-10): la caja pasa a «Jornada X» con el duelo tocado
+    else duelTitle=`Jornada ${wShow+1}`;   // JC (03-10): la caja pasa a «Jornada X» con el duelo tocado
+    if(!peek&&wShow!==w) duelTitle+=`<span class="jtag">J${wShow+1}</span>`;
     /* JC (03-10): bajo la pista NADA de texto; el hueco solo muestra la etiqueta del segmento mientras se toca la pala */
-    const mineA=!peek&&me&&nameA===me.name, myRow=mineA?myShieldsRow(nameA,w,rest):null;
+    const mineA=!peek&&me&&nameA===me.name, myRow=mineA?myShieldsRow(nameA,wShow,rest):null;
     /* v1.4: barra de partido (probabilidad de ganar el duelo, sin cifras) entre las barras y la pista */
-    const pDuel=duelProb(ma,mb,w);
+    const pDuel=duelProb(ma,mb,wShow);
     duelHtml=`<div class="duelbox">
-      <div class="names"><span style="color:var(--duelA)">${esc(nameA)}${myRow!==null?myRow:shieldSVG(escA,'A',22)+campA}</span><span style="color:var(--duelB)">${campB}${escB?shieldSVG(escB,'B',22):''}${esc(nameB)}</span></div>
+      <div class="names"><span style="color:var(--duelA)">${esc(nameA)}${myRow!==null?myRow:shieldSVG(escA,'A',22)+campA}</span><span style="color:var(--duelB)" class="${entering?'enter':''}">${campB}${escB?shieldSVG(escB,'B',22):''}${esc(nameB)}</span></div>
       <div class="bars">${movesBar(ma,'A')}${movesBar(mb,'B')}</div>
       ${partidoHTML(nameA,nameB,pDuel,'partidoJ',true)}
       <canvas class="mini" id="miniCourt" aria-label="Palas del duelo: ${esc(nameA)} ${ma} Moves, ${esc(nameB)} ${mb} Moves${d?(d.nulo?', duelo nulo':', resultado '+sA+' a '+sB):''}"></canvas>
@@ -2070,7 +2093,7 @@ function tJornada(){
     </div>`;
     /* v1.1 (punto 31, D9): marcador dentro del campo solo al resolverse; se mantiene durante el descanso */
     const score=d?{a:d.nulo?null:sA,b:d.nulo?null:sB}:null;
-    miniSpec={w, score, p:pDuel, a:{pid:pA.id,moves:ma,segs:d?fitSegs(segmentsFor(pA.id,w),ma):segmentsFor(pA.id,w)}, b:{pid:pB?pB.id:'__media__',moves:mb,segs:pB?(d?fitSegs(segmentsFor(pB.id,w),mb):segmentsFor(pB.id,w)):neutralSegs(mb)}};
+    miniSpec={w:wShow, score, p:pDuel, enter:entering, a:{pid:pA.id,moves:ma,segs:d?fitSegs(segmentsFor(pA.id,wShow),ma):segmentsFor(pA.id,wShow)}, b:{pid:pB?pB.id:'__media__',moves:mb,segs:pB?(d?fitSegs(segmentsFor(pB.id,wShow),mb):segmentsFor(pB.id,wShow)):neutralSegs(mb)}};
   } else miniSpec=null;
   // v1.1 (punto 34): JORNADA X con todos los enfrentamientos, el mío resaltado
   const all=pairsFor(w);
@@ -2080,9 +2103,21 @@ function tJornada(){
   const prevR=(!r&&w>0&&roundVisible(w-1))?roundOf(w-1):null;
   /* banner Victoria/Derrota: solo mientras no haya empezado la siguiente jornada */
   const banner=(r&&t<weekEnd(w))?resultBanner(w):'';
+  /* v1.4: en el descanso, una vez vista la jornada, se descubren los duelos de la siguiente (mi duelo primero) */
+  let nextHtml='';
+  if(nextLockable(w+1)){
+    const np=pairsFor(w+1).slice(); const mi=me?np.findIndex(([a,b])=>a===me.name||b===me.name):-1;
+    if(mi>0){ const [x]=np.splice(mi,1); np.unshift(x); }
+    if(!unlockedNext(w+1))
+      nextHtml=`<div class="card"><h2>${ic('zap')} Jornada ${w+2}</h2><div class="lockbox"><button class="btn" type="button" onclick="unlockNext(${w+1})">Desbloquear Jornada ${w+2}</button></div>${np.map(()=>`<div class="drow ghost"><span class="dn"><i></i></span><span class="ds">/</span><span class="dn b"><i></i></span></div>`).join('')}</div>`;
+    else
+      nextHtml=`<div class="card"><h2>${ic('zap')} Jornada ${w+2}</h2>${np.map(([a,b],i)=>{ const mine=me&&(a===me.name||b===me.name);
+        return `<div class="drow nxt${mine?' mine'+(b===me.name?' b':''):''}${entering?' casc':''}" style="${entering?`animation-delay:${i*80}ms`:''}"><span class="dn">${esc(a)}</span><span class="ds">vs</span><span class="dn b">${esc(b)}</span></div>`; }).join('')}</div>`;
+  }
   $('#main').innerHTML=`
   ${banner}
   <div class="card${stick}" ${stick.includes('stickcard')?'data-cd="Cierre de la jornada"':''}>${cdHtml}</div>
+  ${nextHtml}
   <div class="card"><h2>${ic('zap')} ${duelTitle}</h2>${duelHtml}</div>
   ${lineaCard(w,me)}
   ${all.length?`<div class="card"><h2>${ic('users')} Jornada ${w+1}</h2>${all.map(([a,b])=>duelRow(a,b,w,r,me&&(a===me.name?'a':(b===me.name?'b':null)),!!me,lineaOfWeek(w))).join('')}</div>`:''}
@@ -2844,7 +2879,7 @@ const MESC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','d
 function fmtDayShort(iso){ const [y,m,d]=iso.split('-').map(Number); return `${DAYN[new Date(Date.UTC(y,m-1,d,12)).getUTCDay()]} ${d} ${MESC[m-1]}`; }
 function jornadasHTML(cfg,w,s){
   const me=s?L.players.find(p=>p.id===s.playerId):null, cur=Math.max(w,0);
-  const isHidden=j=>!!cfg.oculto&&!roundVisible(j)&&j!==cur;
+  const isHidden=j=>!!cfg.oculto&&!roundVisible(j)&&j!==cur&&!nextUnlocked(j);
   if(FILTERP){
     const P=FILTERP;
     let h=`<div class="jhead"><span>Duelos de ${esc(P)}</span><button class="lnk2" type="button" onclick="filterP('${esc(P)}')">${ic('x',12)} Ver todos</button></div>`;
@@ -3404,7 +3439,7 @@ function drawCourt(cv,st){
       ctx.restore(); } } }
   const pad=(side)=>{
     const h=side==='A'?st.hA:st.hB, cy=side==='A'?st.cyA:st.cyB, segs=(side==='A'?st.segsA:st.segsB)||[];
-    const x=side==='A'?PONG.XA:PONG.W-PONG.XA-PW, sq=side==='A'?(st.squashA||0):(st.squashB||0);   // pala B en espejo de la A (la física no cambia)
+    const x=side==='A'?PONG.XA:PONG.W-PONG.XA-PW+(st.padOffB||0), sq=side==='A'?(st.squashA||0):(st.squashB||0);   // pala B en espejo de la A (la física no cambia); padOffB: entrada de la pala (v1.4)
     const col=COURT_COL[side], lvl=side==='A'?(st.haloA||0):(st.haloB||0);
     const ph=h*(1-0.08*sq), y=cy-ph/2, n=segs.length, g=H*.006;
     /* v1.4 · cierre: la pala ganadora brilla, la perdedora se apaga */
@@ -3450,6 +3485,8 @@ function drawCourt(cv,st){
     ctx.save(); ctx.translate(b.x,b.y); if(sp) ctx.rotate(Math.atan2(b.vy,b.vx)); ctx.scale(1+k,1-k*0.6);
     ctx.shadowColor=bc; ctx.shadowBlur=14+34*(k/0.28); ctx.fillStyle=bc; ctx.beginPath(); ctx.arc(0,0,R*(st.ballScale||1),0,Math.PI*2); ctx.fill(); ctx.restore();
   }
+  /* v1.4 · anillo de la pala que entra (jornada recién desbloqueada; no hay bola todavía) */
+  if(!st.ball&&st.bursts&&st.bursts.length){ (st.bursts).forEach(bu=>{ const u=(now-bu.t0)/420; if(u<0||u>1) return; ctx.save(); ctx.globalAlpha=1-u; ctx.strokeStyle=bu.col||'#fff'; ctx.lineWidth=5*(1-u)+1; ctx.beginPath(); ctx.arc(bu.x,bu.y,20+90*u,0,Math.PI*2); ctx.stroke(); ctx.restore(); }); }
   /* v1.4 · confeti del cierre, dentro de la pista */
   if(st.confetti&&st.confetti.length){ st.confetti.forEach(c=>{ c.x+=c.vx; c.y+=c.vy; c.vy+=0.25; c.r+=c.vr; c.life-=1; }); st.confetti=st.confetti.filter(c=>c.life>0&&c.y<H+10);
     st.confetti.forEach(c=>{ ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.r); ctx.globalAlpha=Math.min(1,c.life/20); ctx.fillStyle=c.col; ctx.fillRect(-5,-3,10,6); ctx.restore(); }); }
@@ -3490,12 +3527,14 @@ function renderMini(spec){
   /* v1.4: la bola descansa en la costura de la barra de partido con el color del favorito (empate: blanca);
      sin bolitas. Al cambiar los Moves viaja a la nueva costura con muelle, se hincha y suelta un anillo. */
   let ballAnim=null;
-  if(spec.a.moves>0||spec.b.moves>0){
+  if((spec.a.moves>0||spec.b.moves>0)&&!spec.score){   // jornada jugada: el marcador grande ocupa la pista, sin bola
     const bkey=spec.w+':'+spec.a.pid+':'+spec.b.pid, x1=restX(spec.p), prevX=MINI_BALL[bkey];
     st.ball={x:x1,y:PONG.H/2,vx:0,vy:0}; st.ballScale=BALL_REST_SCALE; st.ballCol=favCol(spec.a.moves,spec.b.moves); st.bursts=[];
     if(prevX!==undefined&&Math.abs(prevX-x1)>0.5&&!REDUCED()){ ballAnim={x0:prevX,x1,t0:performance.now()}; st.ball.x=prevX; }
     MINI_BALL[bkey]=x1;
   } else delete MINI_BALL[spec.w+':'+spec.a.pid+':'+spec.b.pid];
+  /* v1.4: jornada recién desbloqueada: la pala del rival entra por su lado (muelle) y suelta un anillo al llegar */
+  let enterAnim=(spec.enter&&!REDUCED())?{t0:performance.now()}:null; if(enterAnim){ st.padOffB=140; st.bursts=st.bursts||[]; }
   const loop=(st.haloA>0||st.haloB>0)&&!REDUCED();
   const tracks=[...document.querySelectorAll('.track[data-halo]')];
   const frame=()=>{
@@ -3509,9 +3548,10 @@ function renderMini(spec){
       st['ghost'+k]=a.ghost?{segs:a.ghost.segs,h:a.from+(a.to-a.from)*easeBack(u),a:Math.max(0,1-v)}:null;
       if(v<1) live=true; else { st['h'+k]=a.to; st['flash'+k]=null; st['ghost'+k]=null; }
     }
+    if(enterAnim){ const u=Math.min(1,(now-enterAnim.t0)/420); st.padOffB=140*(1-easeBack(u)); if(u>=1){ st.padOffB=0; enterAnim=null; st.bursts.push({x:PONG.XB-PONG.R-10,y:PONG.H/2,t0:now,col:COURT_COL.B}); } live=true; }
     if(ballAnim){ const u=Math.min(1,(now-ballAnim.t0)/520); st.ball.x=ballAnim.x0+(ballAnim.x1-ballAnim.x0)*easeBack(u); st.ballScale=BALL_REST_SCALE*(1+0.4*Math.sin(Math.PI*u));
       if(u>=1){ st.bursts.push({x:st.ball.x,y:st.ball.y,t0:now}); ballAnim=null; st.ballScale=BALL_REST_SCALE; } live=true; }
-    if(st.bursts&&st.bursts.length){ st.bursts=st.bursts.filter(b=>now-b.t0<400); if(st.bursts.length) live=true; }
+    if(st.bursts&&st.bursts.length){ st.bursts=st.bursts.filter(b=>now-b.t0<420); if(st.bursts.length) live=true; }
     drawCourt(cv,st);
     if(live||loop) miniRAF=requestAnimationFrame(frame);
   };
@@ -3531,10 +3571,9 @@ function renderMini(spec){
 
 let OV_OPEN=null, X2=false;
 /* ============ v1.4 · SONIDO (WebAudio sintetizado, sin ficheros; juego «retro melódico») ============
-   Apagado por defecto; interruptor en el overlay (se guarda en localStorage). El gesto de «¡Jugar!» o del
-   propio interruptor desbloquea el audio en móvil. Victoria/derrota solo en mi duelo. */
-const SND={ctx:null,noise:null,on:false};
-try{ SND.on=localStorage.getItem('yml_sound')==='1'; }catch(e){}
+   Siempre activo (sin interruptor en la app): manda el móvil (silencio / volumen). El gesto de «¡Jugar!»
+   desbloquea el audio en móvil. Victoria/derrota solo en mi duelo. */
+const SND={ctx:null,noise:null,on:true};
 function sndUnlock(){ try{ if(!SND.ctx){ SND.ctx=new (window.AudioContext||window.webkitAudioContext)(); const n=SND.ctx.createBuffer(1,SND.ctx.sampleRate*1.5,SND.ctx.sampleRate), d=n.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; SND.noise=n; } if(SND.ctx.state==='suspended') SND.ctx.resume(); }catch(e){} }
 function sndTone(o){ const c=SND.ctx; if(!c) return; try{ const t0=c.currentTime+(o.at||0), osc=c.createOscillator(), g=c.createGain(); osc.type=o.type||'square'; osc.frequency.setValueAtTime(o.f,t0);
   if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to,t0+o.ms/1000);
@@ -3552,7 +3591,6 @@ const SFX={
   lose:()=>{ [392,349,311].forEach((f,i)=>sndTone({f,ms:150,vol:.06,at:i*.17})); sndTone({f:294,to:262,ms:600,vol:.06,at:.52}); }
 };
 function sfx(k,arg){ if(SND.on&&SFX[k]) SFX[k](arg); }
-function toggleSound(jNum){ SND.on=!SND.on; try{ localStorage.setItem('yml_sound',SND.on?'1':'0'); }catch(e){} if(SND.on) sndUnlock(); const b=$('#sndBtn'); if(b) b.classList.toggle('on',SND.on); try{ track(SND.on?'anim_sound_on':'anim_sound_off',{week:jNum}); }catch(e){} }
 
 /* ---- SORTEO: reproducción del peloteo dictado por el servidor ----
    Para cada bola de d.draws, el DIRECTOR busca un peloteo real (PONG.direct) y aquí
@@ -3564,7 +3602,7 @@ function toggleSound(jNum){ SND.on=!SND.on; try{ localStorage.setItem('yml_sound
    partido en la presentación, la bola descansa en la costura y la recoge el favorito para sacar (anillo al
    sacar), bola de partido (marco + rótulo, cámara lenta final; dorada si la tienen los dos: sale del centro),
    fin de punto (congelado + destello del campo del que gana), cierre (pala ganadora brilla, confeti),
-   «Saltar» = resultado directo, botón ×2, sonido opcional, vibración solo en mi duelo (Android). */
+   «Saltar» = resultado directo, botón ×2, sonido (siempre activo; manda el móvil), vibración solo en mi duelo (Android). */
 async function playPong(jNum,duels,opts){
   const ov=$('#ov'); let skip=false, huboSkip=false; const o=opts||{};
   const w=jNum-1, REF=refMoves(), reduced=REDUCED(), bestOf=bestOfWeek(w), need=(bestOf+1)/2;
@@ -3592,10 +3630,9 @@ async function playPong(jNum,duels,opts){
       ${d.nulo?'':partidoHTML(d.a,d.b,pDuel,'partidoOv',false)}
       <canvas class="court" id="court"></canvas>
       <div id="pscore" class="${reduced?'':'off'}">0 – 0</div><div id="pres"></div>
-      <div class="row" style="justify-content:center">${canSkip?`<button class="btn sec" id="skipBtn">Saltar este duelo</button>`:''}<button class="btn sec" id="x2Btn">×2</button><button class="btn sec${SND.on?' on':''}" id="sndBtn" aria-label="Sonido">♪</button></div>`;
+      <div class="row" style="justify-content:center">${canSkip?`<button class="btn sec" id="skipBtn">Saltar este duelo</button>`:''}<button class="btn sec" id="x2Btn">×2</button></div>`;
     if(canSkip) $('#skipBtn').onclick=()=>{ if(!skip) track('anim_skip',{week:jNum,duelo_i:i+1,bola_i:(OV_OPEN&&OV_OPEN.bola)||0,ms_transcurridos:Date.now()-tAnim}); skip=true; huboSkip=true; $('#skipBtn').disabled=true; };
     $('#x2Btn').onclick=()=>{ X2=!X2; $('#x2Btn').classList.toggle('on',X2); if(X2) track('anim_speed2x',{week:jNum,duelo_i:i+1}); };
-    $('#sndBtn').onclick=()=>toggleSound(jNum);
     const cv=$('#court');
     const st={hA,hB,cyA:PONG.H/2,cyB:PONG.H/2,segsA,segsB,haloA:haloLevel(d.ma),haloB:haloLevel(d.mb),ball:null,trail:[],one:PONG.oneMove(REF),t:performance.now(),
       lights:{n:need,A:0,B:0},ballCol:favCol(d.ma,d.mb),sparks:[],bursts:[]};
